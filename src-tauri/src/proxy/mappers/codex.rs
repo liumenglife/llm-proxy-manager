@@ -2,12 +2,15 @@
 pub fn codex_response_to_chat(body: &serde_json::Value) -> Result<serde_json::Value, String> {
     let model = body.get("model").and_then(|v| v.as_str()).unwrap_or("");
 
-    let messages = body.get("input")
+    let messages = body
+        .get("input")
         .and_then(|v| v.as_str())
-        .map(|text| {
-            serde_json::json!([{"role": "user", "content": text}])
+        .map(|text| serde_json::json!([{"role": "user", "content": text}]))
+        .or_else(|| {
+            body.get("input")
+                .and_then(|v| v.as_array())
+                .map(|a| serde_json::Value::Array(a.clone()))
         })
-        .or_else(|| body.get("input").and_then(|v| v.as_array()).map(|a| serde_json::Value::Array(a.clone())))
         .unwrap_or_default();
 
     let mut chat_body = serde_json::json!({
@@ -17,7 +20,10 @@ pub fn codex_response_to_chat(body: &serde_json::Value) -> Result<serde_json::Va
 
     if let Some(instructions) = body.get("instructions").and_then(|v| v.as_str()) {
         if let Some(obj) = chat_body.as_object_mut() {
-            obj.insert("system".to_string(), serde_json::Value::String(instructions.to_string()));
+            obj.insert(
+                "system".to_string(),
+                serde_json::Value::String(instructions.to_string()),
+            );
         }
     }
 
@@ -32,7 +38,10 @@ pub fn chat_to_codex_response(body: &serde_json::Value) -> Result<serde_json::Va
         for choice in choices {
             if let Some(msg) = choice.get("message") {
                 let content = msg.get("content").and_then(|v| v.as_str()).unwrap_or("");
-                let role = msg.get("role").and_then(|v| v.as_str()).unwrap_or("assistant");
+                let role = msg
+                    .get("role")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("assistant");
 
                 let content_part = serde_json::json!({
                     "type": "text",

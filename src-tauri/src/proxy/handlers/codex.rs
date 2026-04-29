@@ -1,43 +1,46 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use futures::StreamExt;
+use rand::Rng;
 use serde_json::{json, Value};
-use tokio::io::AsyncWriteExt;
 
 use crate::proxy::mappers::codex;
 use crate::proxy::server::AppState;
 
 pub async fn handle_responses(
     State(_state): State<AppState>,
-    _headers: axum::http::HeaderMap,
+    headers: axum::http::HeaderMap,
     Json(body): Json<Value>,
 ) -> impl IntoResponse {
     let model = body.get("model").and_then(|v| v.as_str()).unwrap_or("");
+    let api_key = match extract_codex_api_key(&headers, &body) {
+        Some(k) => k,
+        None => return (StatusCode::UNAUTHORIZED, "Missing API key").into_response(),
+    };
 
     let provider = match crate::proxy::providers::get_provider("codex") {
         Some(p) => p,
         None => {
-            return (StatusCode::SERVICE_UNAVAILABLE, "Codex provider not configured").into_response()
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Codex provider not configured",
+            )
+                .into_response()
         }
     };
 
     let req = crate::proxy::providers::ProviderRequest {
         model: model.to_string(),
         body: body.clone(),
-        account_id: String::new(),
+        account_id: api_key,
     };
 
     match provider.send_request(req).await {
-        Ok(resp) => {
-            (StatusCode::from_u16(resp.status).unwrap_or(StatusCode::OK), Json(resp.body)).into_response()
-        }
-        Err(e) => {
-            (StatusCode::BAD_GATEWAY, format!("Codex proxy error: {}", e)).into_response()
-        }
+        Ok(resp) => (
+            StatusCode::from_u16(resp.status).unwrap_or(StatusCode::OK),
+            Json(resp.body),
+        )
+            .into_response(),
+        Err(e) => (StatusCode::BAD_GATEWAY, format!("Codex proxy error: {}", e)).into_response(),
     }
 }
 
@@ -47,8 +50,6 @@ pub async fn handle_responses_stream(
     body: String,
 ) -> impl IntoResponse {
     let parsed: Value = serde_json::from_str(&body).unwrap_or(json!({}));
-    let model = parsed.get("model").and_then(|v| v.as_str()).unwrap_or("gpt-4o");
-
     let api_key = match extract_codex_api_key(&headers, &parsed) {
         Some(k) => k,
         None => {
@@ -79,27 +80,41 @@ pub async fn handle_responses_stream(
     {
         Ok(r) => r,
         Err(e) => {
-            return (StatusCode::BAD_GATEWAY, format!("Upstream request failed: {}", e)).into_response();
+            return (
+                StatusCode::BAD_GATEWAY,
+                format!("Upstream request failed: {}", e),
+            )
+                .into_response();
         }
     };
 
     if !upstream_resp.status().is_success() {
         let status = upstream_resp.status();
         let text = upstream_resp.text().await.unwrap_or_default();
-        return (StatusCode::BAD_GATEWAY, format!("Upstream error ({}): {}", status, text)).into_response();
+        return (
+            StatusCode::BAD_GATEWAY,
+            format!("Upstream error ({}): {}", status, text),
+        )
+            .into_response();
     }
 
     let stream = upstream_resp.bytes_stream();
+
+    // Generate random IDs outside the stream block (ThreadRng is not Send)
+    let random_id: String = (0..24)
+        .map(|_| {
+            let idx = rand::thread_rng().gen_range(0..62);
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                .chars()
+                .nth(idx)
+                .unwrap()
+        })
+        .collect();
+    let response_id = format!("resp-{}", random_id);
+    let item_id = format!("item-{}", &random_id[..16]);
+
     let transformed = async_stream::stream! {
         let mut buffer = Vec::new();
-        let mut rng = rand::thread_rng();
-        let charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let random_id: String = (0..24).map(|_| {
-            let idx = rng.gen_range(0..charset.len());
-            charset.chars().nth(idx).unwrap()
-        }).collect();
-        let response_id = format!("resp-{}", random_id);
-        let item_id = format!("item-{}", &random_id[..16]);
         let mut started = false;
         let mut completed = false;
 
@@ -204,9 +219,17 @@ pub async fn handle_responses_stream(
     };
 
     use axum::body::Body;
-    use axum::response::Response;
     let body = Body::from_stream(transformed);
-    (StatusCode::OK, [("Content-Type", "text/event-stream"), ("Cache-Control", "no-cache"), ("Connection", "keep-alive")], body).into_response()
+    (
+        StatusCode::OK,
+        [
+            ("Content-Type", "text/event-stream"),
+            ("Cache-Control", "no-cache"),
+            ("Connection", "keep-alive"),
+        ],
+        body,
+    )
+        .into_response()
 }
 
 fn extract_codex_api_key(headers: &axum::http::HeaderMap, body: &Value) -> Option<String> {

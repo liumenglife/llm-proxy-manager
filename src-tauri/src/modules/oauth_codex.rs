@@ -21,7 +21,7 @@ pub fn generate_pkce_pair() -> (String, String) {
     use rand::Rng;
     let verifier: Vec<u8> = (0..32).map(|_| rand::thread_rng().gen()).collect();
     let verifier_b64 = base64url_encode(&verifier);
-    let challenge = Sha256::digest(&verifier);
+    let challenge = Sha256::digest(verifier_b64.as_bytes());
     let challenge_b64 = base64url_encode(&challenge);
     (verifier_b64, challenge_b64)
 }
@@ -68,8 +68,6 @@ fn get_http_client() -> rquest::Client {
     crate::utils::http::get_long_standard_client()
 }
 
-
-
 pub async fn exchange_codex_code(
     code: &str,
     redirect_uri: &str,
@@ -101,13 +99,14 @@ pub async fn exchange_codex_code(
     } else {
         let status = response.status();
         let text = response.text().await.unwrap_or_default();
-        Err(format!("Codex token exchange failed ({}): {}", status, text))
+        Err(format!(
+            "Codex token exchange failed ({}): {}",
+            status, text
+        ))
     }
 }
 
-pub async fn exchange_codex_for_api_key(
-    id_token: &str,
-) -> Result<String, String> {
+pub async fn exchange_codex_for_api_key(id_token: &str) -> Result<String, String> {
     let client = get_http_client();
 
     let body = serde_json::json!({
@@ -250,8 +249,16 @@ mod tests {
         let parsed = url::Url::parse(&url).expect("Should be valid URL");
         let query_params: std::collections::HashMap<_, _> = parsed.query_pairs().collect();
 
-        assert_eq!(query_params.get("response_type").map(|s| s.as_ref()), Some("code"));
-        assert_eq!(query_params.get("code_challenge_method").map(|s| s.as_ref()), Some("S256"));
+        assert_eq!(
+            query_params.get("response_type").map(|s| s.as_ref()),
+            Some("code")
+        );
+        assert_eq!(
+            query_params
+                .get("code_challenge_method")
+                .map(|s| s.as_ref()),
+            Some("S256")
+        );
         assert!(query_params.contains_key("code_challenge"));
     }
 
@@ -262,8 +269,8 @@ mod tests {
         assert!(!verifier.is_empty());
         assert!(!challenge.is_empty());
 
-        let expected_challenge = base64url_encode(&Sha256::digest(&verifier));
-        assert_eq!(challenge, expected_challenge);
+        let expected = base64url_encode(&Sha256::digest(verifier.as_bytes()));
+        assert_eq!(challenge, expected);
     }
 
     #[test]
