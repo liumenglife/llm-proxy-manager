@@ -23,6 +23,9 @@ interface AccountState {
     startOAuthLogin: () => Promise<void>;
     completeOAuthLogin: () => Promise<void>;
     cancelOAuthLogin: () => Promise<void>;
+    startCodexOAuthLogin: () => Promise<void>;
+    completeCodexOAuthLogin: () => Promise<void>;
+    cancelCodexOAuthLogin: () => Promise<void>;
     importV1Accounts: () => Promise<void>;
     importFromDb: () => Promise<void>;
     importFromCustomDb: (path: string) => Promise<void>;
@@ -202,6 +205,39 @@ export const useAccountStore = create<AccountState>((set, get) => ({
             set({ loading: false, error: null });
         } catch (error) {
             console.error('[Store] Cancel OAuth failed:', error);
+        }
+    },
+
+    startCodexOAuthLogin: async () => {
+        set({ loading: true, error: null });
+        try {
+            await accountService.startCodexOAuthLogin();
+            await get().fetchAccounts();
+            set({ loading: false });
+        } catch (error) {
+            set({ error: String(error), loading: false });
+            throw error;
+        }
+    },
+
+    completeCodexOAuthLogin: async () => {
+        set({ loading: true, error: null });
+        try {
+            await accountService.completeCodexOAuthLogin();
+            await get().fetchAccounts();
+            set({ loading: false });
+        } catch (error) {
+            set({ error: String(error), loading: false });
+            throw error;
+        }
+    },
+
+    cancelCodexOAuthLogin: async () => {
+        try {
+            await accountService.cancelCodexOAuthLogin();
+            set({ loading: false, error: null });
+        } catch (error) {
+            console.error('[Store] Cancel Codex OAuth failed:', error);
         }
     },
 

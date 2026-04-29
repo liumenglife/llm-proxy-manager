@@ -25,24 +25,31 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
     const [oauthUrl, setOauthUrl] = useState('');
     const [oauthUrlCopied, setOauthUrlCopied] = useState(false);
     const [manualCode, setManualCode] = useState('');
+    const [oauthCodexUrl, setOauthCodexUrl] = useState('');
+    const [oauthCodexUrlCopied, setOauthCodexUrlCopied] = useState(false);
+    const [oauthProvider, setOauthProvider] = useState<'gemini' | 'codex'>('gemini');
 
     // UI State
     const [status, setStatus] = useState<Status>('idle');
     const [message, setMessage] = useState('');
 
-    const { startOAuthLogin, completeOAuthLogin, cancelOAuthLogin, importFromDb, importV1Accounts, importFromCustomDb } = useAccountStore();
+    const { startOAuthLogin, completeOAuthLogin, cancelOAuthLogin, startCodexOAuthLogin, completeCodexOAuthLogin, cancelCodexOAuthLogin, importFromDb, importV1Accounts, importFromCustomDb } = useAccountStore();
 
     const oauthUrlRef = useRef(oauthUrl);
     const statusRef = useRef(status);
     const activeTabRef = useRef(activeTab);
     const isOpenRef = useRef(isOpen);
+    const oauthCodexUrlRef = useRef(oauthCodexUrl);
+    const oauthProviderRef = useRef(oauthProvider);
 
     useEffect(() => {
         oauthUrlRef.current = oauthUrl;
         statusRef.current = status;
         activeTabRef.current = activeTab;
         isOpenRef.current = isOpen;
-    }, [oauthUrl, status, activeTab, isOpen]);
+        oauthCodexUrlRef.current = oauthCodexUrl;
+        oauthProviderRef.current = oauthProvider;
+    }, [oauthUrl, status, activeTab, isOpen, oauthCodexUrl, oauthProvider]);
 
     // Reset state when dialog opens or tab changes
     useEffect(() => {
@@ -70,7 +77,7 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
         };
     }, []);
 
-    // Listen for OAuth callback completion (user may open the URL manually without clicking Start)
+    // Listen for OAuth callback completion (handles both Gemini and Codex flows)
     useEffect(() => {
         if (!isTauri()) return;
         let unlisten: (() => void) | undefined;
@@ -80,14 +87,21 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
                 if (!isOpenRef.current) return;
                 if (activeTabRef.current !== 'oauth') return;
                 if (statusRef.current === 'loading' || statusRef.current === 'success') return;
-                if (!oauthUrlRef.current) return;
+
+                const provider = oauthProviderRef.current;
+                const url = provider === 'codex' ? oauthCodexUrlRef.current : oauthUrlRef.current;
+                if (!url) return;
 
                 // Auto-complete: exchange code and save account (no browser open)
                 setStatus('loading');
                 setMessage(`${t('accounts.add.tabs.oauth')}...`);
 
                 try {
-                    await completeOAuthLogin();
+                    if (provider === 'codex') {
+                        await completeCodexOAuthLogin();
+                    } else {
+                        await completeOAuthLogin();
+                    }
                     setStatus('success');
                     setMessage(`${t('accounts.add.tabs.oauth')} ${t('common.success')}!`);
                     setTimeout(() => {
@@ -113,9 +127,9 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
         return () => {
             if (unlisten) unlisten();
         };
-    }, [completeOAuthLogin, t]);
+    }, [completeOAuthLogin, completeCodexOAuthLogin, t]);
 
-    // Pre-generate OAuth URL when dialog opens on OAuth tab (so URL is shown BEFORE "Start OAuth")
+    // Pre-generate Gemini OAuth URL when dialog opens on OAuth tab
     useEffect(() => {
         if (!isOpen) return;
         if (activeTab !== 'oauth') return;
@@ -131,15 +145,34 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
             });
     }, [isOpen, activeTab, oauthUrl]);
 
-    // If user navigates away from OAuth tab, cancel prepared flow to release the port.
+    // Pre-generate Codex OAuth URL when dialog opens on OAuth tab
+    useEffect(() => {
+        if (!isOpen) return;
+        if (activeTab !== 'oauth') return;
+        if (oauthCodexUrl) return;
+
+        invoke<any>('prepare_codex_oauth_url')
+            .then((res) => {
+                const url = typeof res === 'string' ? res : res?.url;
+                if (url && url.length > 0) setOauthCodexUrl(url);
+            })
+            .catch((e) => {
+                console.error('Failed to prepare Codex OAuth URL:', e);
+            });
+    }, [isOpen, activeTab, oauthCodexUrl]);
+
+    // If user navigates away from OAuth tab, cancel all prepared flows to release ports.
     useEffect(() => {
         if (!isOpen) return;
         if (activeTab === 'oauth') return;
-        if (!oauthUrl) return;
+        if (!oauthUrl && !oauthCodexUrl) return;
 
         cancelOAuthLogin().catch(() => { });
+        cancelCodexOAuthLogin().catch(() => { });
         setOauthUrl('');
         setOauthUrlCopied(false);
+        setOauthCodexUrl('');
+        setOauthCodexUrlCopied(false);
     }, [isOpen, activeTab]);
 
     const resetState = () => {
@@ -148,6 +181,9 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
         setRefreshToken('');
         setOauthUrl('');
         setOauthUrlCopied(false);
+        setOauthCodexUrl('');
+        setOauthCodexUrlCopied(false);
+        setOauthProvider('gemini');
     };
 
     const handleAction = async (
@@ -364,6 +400,29 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
         }
     };
 
+    const handleCodexOAuth = () => {
+        if (!isTauri()) {
+            handleOAuthWeb();
+            return;
+        }
+        setOauthProvider('codex');
+        handleAction('Codex ' + t('accounts.add.tabs.oauth'), startCodexOAuthLogin, { clearOauthUrl: false });
+    };
+
+    const handleCompleteCodexOAuth = () => {
+        handleAction('Codex ' + t('accounts.add.tabs.oauth'), completeCodexOAuthLogin, { clearOauthUrl: false });
+    };
+
+    const handleCodexCopyUrl = async () => {
+        if (oauthCodexUrl) {
+            const success = await copyToClipboard(oauthCodexUrl);
+            if (success) {
+                setOauthCodexUrlCopied(true);
+                window.setTimeout(() => setOauthCodexUrlCopied(false), 1500);
+            }
+        }
+    };
+
     const handleManualSubmit = async () => {
         if (!manualCode.trim()) return;
 
@@ -528,89 +587,160 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
                         <StatusAlert />
 
                         <div className="min-h-[200px]">
-                            {/* OAuth 授权 */}
+                            {/* OAuth 授权 - Gemini & Codex */}
                             {activeTab === 'oauth' && (
                                 <div className="space-y-6 py-4">
-                                    <div className="text-center space-y-3">
-                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-                                            <Globe className="w-10 h-10 text-blue-500" />
+                                    {/* Gemini Section */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-blue-600 dark:text-blue-400">Gemini</div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <h4 className="font-medium text-gray-900 dark:text-gray-100">{t('accounts.add.oauth.recommend')}</h4>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
-                                                {t('accounts.add.oauth.desc')}
-                                            </p>
+                                        <div className="text-center space-y-3">
+                                            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+                                                <Globe className="w-10 h-10 text-blue-500" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="font-medium text-gray-900 dark:text-gray-100">{t('accounts.add.oauth.recommend')}</h4>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                                                    {t('accounts.add.oauth.desc')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <button
+                                                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                onClick={handleOAuth}
+                                                disabled={status === 'loading' || status === 'success'}
+                                            >
+                                                {status === 'loading' && oauthProvider === 'gemini' ? t('accounts.add.oauth.btn_waiting') : `${t('accounts.add.oauth.btn_start')} Gemini`}
+                                            </button>
+
+                                            {oauthUrl && oauthProvider === 'gemini' && (
+                                                <div className="space-y-2">
+                                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 text-left">
+                                                        {t('accounts.add.oauth.link_label')}
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="w-full px-4 py-2 bg-white dark:bg-base-100 text-gray-600 dark:text-gray-300 text-sm font-medium rounded-xl border border-dashed border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-base-200 transition-all flex items-center gap-2"
+                                                        onClick={handleCopyUrl}
+                                                        title={t('accounts.add.oauth.link_click_to_copy')}
+                                                    >
+                                                        {oauthUrlCopied ? (
+                                                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                                        ) : (
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        )}
+                                                        <code className="text-[11px] font-mono truncate flex-1 text-left">
+                                                            {oauthUrl}
+                                                        </code>
+                                                        <span className="text-[11px] whitespace-nowrap">
+                                                            {oauthUrlCopied ? t('accounts.add.oauth.copied') : t('accounts.add.oauth.copy_link')}
+                                                        </span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        className="w-full px-4 py-2 bg-white dark:bg-base-100 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl border border-gray-200 dark:border-base-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                        onClick={handleCompleteOAuth}
+                                                        disabled={status === 'loading' || status === 'success'}
+                                                    >
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        {t('accounts.add.oauth.btn_finish')}
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
+
+                                    <div className="divider text-xs text-gray-300 dark:text-gray-500">{t('accounts.add.import.or')}</div>
+
+                                    {/* Codex Section */}
                                     <div className="space-y-3">
-                                        <button
-                                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                            onClick={handleOAuth}
-                                            disabled={status === 'loading' || status === 'success'}
-                                        >
-                                            {status === 'loading' ? t('accounts.add.oauth.btn_waiting') : t('accounts.add.oauth.btn_start')}
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Codex</div>
+                                        </div>
+                                        <div className="text-center space-y-3">
+                                            <div className="bg-emerald-50 dark:bg-emerald-900/20 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+                                                <Globe className="w-10 h-10 text-emerald-500" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="font-medium text-gray-900 dark:text-gray-100">Codex OAuth</h4>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                                                    {t('accounts.add.oauth.desc')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <button
+                                                className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                onClick={handleCodexOAuth}
+                                                disabled={status === 'loading' || status === 'success'}
+                                            >
+                                                {status === 'loading' && oauthProvider === 'codex' ? t('accounts.add.oauth.btn_waiting') : `Start Codex OAuth`}
+                                            </button>
 
-                                        {oauthUrl && (
-                                            <div className="space-y-2">
-                                                <div className="text-[11px] text-gray-500 dark:text-gray-400 text-left">
-                                                    {t('accounts.add.oauth.link_label')}
+                                            {oauthCodexUrl && oauthProvider === 'codex' && (
+                                                <div className="space-y-2">
+                                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 text-left">
+                                                        {t('accounts.add.oauth.link_label')}
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="w-full px-4 py-2 bg-white dark:bg-base-100 text-gray-600 dark:text-gray-300 text-sm font-medium rounded-xl border border-dashed border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-base-200 transition-all flex items-center gap-2"
+                                                        onClick={handleCodexCopyUrl}
+                                                        title={t('accounts.add.oauth.link_click_to_copy')}
+                                                    >
+                                                        {oauthCodexUrlCopied ? (
+                                                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                                        ) : (
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        )}
+                                                        <code className="text-[11px] font-mono truncate flex-1 text-left">
+                                                            {oauthCodexUrl}
+                                                        </code>
+                                                        <span className="text-[11px] whitespace-nowrap">
+                                                            {oauthCodexUrlCopied ? t('accounts.add.oauth.copied') : t('accounts.add.oauth.copy_link')}
+                                                        </span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        className="w-full px-4 py-2 bg-white dark:bg-base-100 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl border border-gray-200 dark:border-base-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                        onClick={handleCompleteCodexOAuth}
+                                                        disabled={status === 'loading' || status === 'success'}
+                                                    >
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        {t('accounts.add.oauth.btn_finish')}
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    className="w-full px-4 py-2 bg-white dark:bg-base-100 text-gray-600 dark:text-gray-300 text-sm font-medium rounded-xl border border-dashed border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-base-200 transition-all flex items-center gap-2"
-                                                    onClick={handleCopyUrl}
-                                                    title={t('accounts.add.oauth.link_click_to_copy')}
-                                                >
-                                                    {oauthUrlCopied ? (
-                                                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                                    ) : (
-                                                        <Copy className="w-3.5 h-3.5" />
-                                                    )}
-                                                    <code className="text-[11px] font-mono truncate flex-1 text-left">
-                                                        {oauthUrl}
-                                                    </code>
-                                                    <span className="text-[11px] whitespace-nowrap">
-                                                        {oauthUrlCopied ? t('accounts.add.oauth.copied') : t('accounts.add.oauth.copy_link')}
-                                                    </span>
-                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                                <button
-                                                    type="button"
-                                                    className="w-full px-4 py-2 bg-white dark:bg-base-100 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl border border-gray-200 dark:border-base-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                                    onClick={handleCompleteOAuth}
-                                                    disabled={status === 'loading' || status === 'success'}
-                                                >
-                                                    <CheckCircle2 className="w-4 h-4" />
-                                                    {t('accounts.add.oauth.btn_finish')}
-                                                </button>
+                                    {/* Manual Code Entry - Always enabled to rescue stuck flows */}
+                                    <div className="pt-4 mt-2 border-t border-gray-100 dark:border-base-200">
+                                        <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wider">
+                                            {t('accounts.add.oauth.manual_hint')}
+                                        </div>
+                                        <div className="relative group/manual flex gap-2">
+                                            <div className="relative flex-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full text-xs py-2 px-3 bg-white dark:bg-base-100 border border-gray-200 dark:border-base-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                                                    placeholder={t('accounts.add.oauth.manual_placeholder')}
+                                                    value={manualCode}
+                                                    onChange={(e) => setManualCode(e.target.value)}
+                                                />
                                             </div>
-                                        )}
-
-                                        {/* Manual Code Entry - Always enabled to rescue stuck flows */}
-                                        <div className="pt-4 mt-2 border-t border-gray-100 dark:border-base-200">
-                                            <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wider">
-                                                {t('accounts.add.oauth.manual_hint')}
-                                            </div>
-                                            <div className="relative group/manual flex gap-2">
-                                                <div className="relative flex-1">
-                                                    <input
-                                                        type="text"
-                                                        className="w-full text-xs py-2 px-3 bg-white dark:bg-base-100 border border-gray-200 dark:border-base-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
-                                                        placeholder={t('accounts.add.oauth.manual_placeholder')}
-                                                        value={manualCode}
-                                                        onChange={(e) => setManualCode(e.target.value)}
-                                                    />
-                                                </div>
-                                                <button
-                                                    className="px-4 py-2 bg-neutral text-white dark:bg-white dark:text-neutral text-xs font-semibold rounded-xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex items-center gap-1.5"
-                                                    onClick={handleManualSubmit}
-                                                    disabled={!manualCode.trim()}
-                                                >
-                                                    <Link2 className="w-3.5 h-3.5" />
-                                                    {t('common.submit')}
-                                                </button>
-                                            </div>
+                                            <button
+                                                className="px-4 py-2 bg-neutral text-white dark:bg-white dark:text-neutral text-xs font-semibold rounded-xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex items-center gap-1.5"
+                                                onClick={handleManualSubmit}
+                                                disabled={!manualCode.trim()}
+                                            >
+                                                <Link2 className="w-3.5 h-3.5" />
+                                                {t('common.submit')}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
