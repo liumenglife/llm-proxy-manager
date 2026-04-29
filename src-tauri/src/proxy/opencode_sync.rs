@@ -180,6 +180,26 @@ fn build_model_catalog() -> Vec<ModelDef> {
 /// - Trims trailing `/`
 /// - If already ends with `/v1`, keeps it as-is
 /// - Otherwise appends `/v1`
+
+/// Build the Codex model catalog for llm-proxy-codex provider
+fn build_codex_model_catalog() -> Vec<ModelDef> {
+    vec![
+        ModelDef { id: "PasGPT-5-Codex",    name: "PasGPT-5-Codex",    context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "GPT-5.1",           name: "GPT-5.1",           context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "Codex GPT-5.1",     name: "Codex GPT-5.1",     context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "Codex Max GPT-5.1", name: "Codex Max GPT-5.1", context_limit: 200_000, output_limit: 128_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: true, variant_type: None },
+        ModelDef { id: "Codex mini",        name: "Codex mini",        context_limit: 100_000, output_limit: 32_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "GPT-5.2",           name: "GPT-5.2",           context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: true, variant_type: None },
+        ModelDef { id: "GPT-5.2 Codex",     name: "GPT-5.2 Codex",     context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: true, variant_type: None },
+        ModelDef { id: "GPT-5.3 Codex",     name: "GPT-5.3 Codex",     context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: true, variant_type: None },
+        ModelDef { id: "GPT-5.4",           name: "GPT-5.4",           context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: true, variant_type: None },
+        ModelDef { id: "GPT-5.4 Fast",      name: "GPT-5.4 Fast",      context_limit: 100_000, output_limit: 32_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "GPT-5.4 mini",      name: "GPT-5.4 mini",      context_limit: 100_000, output_limit: 32_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "GPT-5.4 mini Fast", name: "GPT-5.4 mini Fast", context_limit: 100_000, output_limit: 32_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "GPT-5.5 Fast",      name: "GPT-5.5 Fast",      context_limit: 200_000, output_limit: 64_000, input_modalities: &["text"], output_modalities: &["text"], reasoning: false, variant_type: None },
+        ModelDef { id: "GPT-5.5 Pro",       name: "GPT-5.5 Pro",       context_limit: 200_000, output_limit: 128_000, input_modalities: &["text", "image"], output_modalities: &["text"], reasoning: true, variant_type: None },
+    ]
+}
 fn normalize_opencode_base_url(input: &str) -> String {
     let trimmed = input.trim().trim_end_matches('/');
     if trimmed.ends_with("/v1") {
@@ -926,11 +946,53 @@ fn merge_catalog_models(provider: &mut Value, model_ids: Option<&[&str]>) {
     }
 }
 
+/// Merge Codex catalog models into provider.models without deleting user models
+fn merge_codex_catalog_models(provider: &mut Value, model_ids: Option<&[&str]>) {
+    if provider.get("models").is_none() {
+        provider["models"] = serde_json::json!({});
+    }
+    
+    let catalog = build_codex_model_catalog();
+    let catalog_map: HashMap<&str, &ModelDef> = catalog.iter().map(|m| (m.id, m)).collect();
+    
+    if let Some(models) = provider.get_mut("models").and_then(|m| m.as_object_mut()) {
+        let ids_to_sync: Vec<&str> = match model_ids {
+            Some(ids) => ids.to_vec(),
+            None => catalog_map.keys().copied().collect(),
+        };
+        
+        for model_id in ids_to_sync {
+            if let Some(model_def) = catalog_map.get(model_id) {
+                let catalog_model = build_model_json(model_def);
+                
+                if let Some(existing) = models.get(model_id) {
+                    if let Some(existing_obj) = existing.as_object() {
+                        let mut merged = existing_obj.clone();
+                        
+                        if let Some(catalog_obj) = catalog_model.as_object() {
+                            for (key, value) in catalog_obj.iter() {
+                                merged.insert(key.clone(), value.clone());
+                            }
+                        }
+                        
+                        models.insert(model_id.to_string(), Value::Object(merged));
+                    } else {
+                        models.insert(model_id.to_string(), catalog_model);
+                    }
+                } else {
+                    models.insert(model_id.to_string(), catalog_model);
+                }
+            }
+        }
+    }
+}
+
 pub fn sync_opencode_config(
     proxy_url: &str,
     api_key: &str,
     sync_accounts: bool,
     models_to_sync: Option<Vec<String>>,
+    sync_codex: bool,
 ) -> Result<(), String> {
     let Some((config_path, _ag_config_path, ag_accounts_path)) = get_config_paths() else {
         return Err("Failed to get OpenCode config directory".to_string());
@@ -954,7 +1016,7 @@ pub fn sync_opencode_config(
     let model_refs: Option<Vec<&str>> = models_to_sync
         .as_ref()
         .map(|models| models.iter().map(|m| m.as_str()).collect());
-    config = apply_sync_to_config(config, proxy_url, api_key, model_refs.as_deref());
+    config = apply_sync_to_config(config, proxy_url, api_key, model_refs.as_deref(), sync_codex);
 
     let tmp_path = config_path.with_extension("tmp");
     fs::write(&tmp_path, serde_json::to_string_pretty(&config).unwrap())
@@ -1175,6 +1237,7 @@ fn apply_sync_to_config(
     proxy_url: &str,
     api_key: &str,
     models_to_sync: Option<&[&str]>,
+    sync_codex_provider: bool,
 ) -> Value {
     if !config.is_object() {
         config = serde_json::json!({});
@@ -1195,6 +1258,17 @@ fn apply_sync_to_config(
             ensure_provider_string_field(ag_provider, "name", "llm-proxy Manager");
             merge_provider_options(ag_provider, &normalized_url, api_key);
             merge_catalog_models(ag_provider, models_to_sync);
+        }
+
+        if sync_codex_provider {
+            let codex_provider_id = "llm-proxy-codex";
+            ensure_provider_object(provider, codex_provider_id);
+            if let Some(cp) = provider.get_mut(codex_provider_id) {
+                ensure_provider_string_field(cp, "npm", "@ai-sdk/openai");
+                ensure_provider_string_field(cp, "name", "llm-proxy-Manager (Codex)");
+                merge_provider_options(cp, &normalized_url, api_key);
+                merge_codex_catalog_models(cp, models_to_sync);
+            }
         }
     }
 
@@ -1309,7 +1383,7 @@ mod tests {
             }
         });
 
-        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None);
+        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None, false);
 
         // Existing providers should be preserved
         let provider = result.get("provider").unwrap();
@@ -1329,7 +1403,7 @@ mod tests {
     fn test_sync_creates_antigravity_provider() {
         let config = serde_json::json!({});
 
-        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None);
+        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None, false);
 
         // llm-proxy-manager provider should be created
         let provider = result.get("provider").unwrap();
@@ -1349,7 +1423,7 @@ mod tests {
     fn test_sync_creates_models() {
         let config = serde_json::json!({});
 
-        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None);
+        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None, false);
 
         let provider = result.get("provider").unwrap();
         let ag = provider.get(ANTIGRAVITY_PROVIDER_ID).unwrap();
@@ -1372,7 +1446,7 @@ mod tests {
         let config = serde_json::json!({});
         let models_to_sync = &["claude-sonnet-4-6", "gemini-3.1-pro-high"];
 
-        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", Some(models_to_sync));
+        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", Some(models_to_sync), false);
 
         let provider = result.get("provider").unwrap();
         let ag = provider.get(ANTIGRAVITY_PROVIDER_ID).unwrap();
@@ -1527,6 +1601,25 @@ mod tests {
         // Provider object should be removed when empty
         assert!(result.get("provider").is_none(), "empty provider object should be removed");
     }
+
+    #[test]
+    fn test_sync_codex_provider() {
+        let config = serde_json::json!({});
+        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None, true);
+        let provider = result.get("provider").unwrap();
+        let codex = provider.get("llm-proxy-codex").unwrap();
+        assert_eq!(codex.get("npm").unwrap(), "@ai-sdk/openai");
+        assert_eq!(codex.get("name").unwrap(), "llm-proxy-Manager (Codex)");
+        assert!(codex.get("models").unwrap().as_object().unwrap().contains_key("GPT-5.1"));
+    }
+
+    #[test]
+    fn test_sync_codex_provider_not_created_when_disabled() {
+        let config = serde_json::json!({});
+        let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None, false);
+        let provider = result.get("provider").unwrap();
+        assert!(provider.get("llm-proxy-codex").is_none());
+    }
 }
 
 pub fn read_opencode_config_content(file_name: Option<String>) -> Result<String, String> {
@@ -1588,8 +1681,9 @@ pub async fn execute_opencode_sync(
     api_key: String,
     sync_accounts: Option<bool>,
     models: Option<Vec<String>>,
+    sync_codex: Option<bool>,
 ) -> Result<(), String> {
-    sync_opencode_config(&proxy_url, &api_key, sync_accounts.unwrap_or(false), models)
+    sync_opencode_config(&proxy_url, &api_key, sync_accounts.unwrap_or(false), models, sync_codex.unwrap_or(false))
 }
 
 #[tauri::command]

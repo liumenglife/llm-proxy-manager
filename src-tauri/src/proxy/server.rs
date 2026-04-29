@@ -323,6 +323,8 @@ impl AxumServer {
         let debug_logging_state = Arc::new(RwLock::new(debug_logging));
         let is_running_state = Arc::new(RwLock::new(false));
 
+        crate::proxy::providers::init_providers();
+
         let state = AppState {
             token_manager: token_manager.clone(),
             custom_mapping: custom_mapping_state.clone(),
@@ -382,7 +384,8 @@ impl AxumServer {
                 "/v1/completions",
                 post(handlers::openai::handle_completions),
             )
-            .route("/v1/responses", post(handlers::openai::handle_completions)) // 兼容 Codex CLI
+            .route("/v1/responses", post(handlers::codex::handle_responses)) // 兼容 Codex CLI
+            .route("/v1/responses:stream", post(handlers::codex::handle_responses_stream))
             .route(
                 "/v1/images/generations",
                 post(handlers::openai::handle_images_generations),
@@ -3417,6 +3420,8 @@ struct OpencodeSyncRequest {
     #[serde(default)]
     sync_accounts: bool,
     pub models: Option<Vec<String>>,
+    #[serde(default)]
+    sync_codex: bool,
 }
 
 async fn admin_execute_opencode_sync(
@@ -3427,6 +3432,7 @@ async fn admin_execute_opencode_sync(
         payload.api_key,
         Some(payload.sync_accounts),
         payload.models,
+        Some(payload.sync_codex),
     )
     .await
     .map(|_| StatusCode::OK)
