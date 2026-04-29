@@ -25,6 +25,11 @@
 - **决策内容**：新增 `proxy/providers/` 模块，定义 `AiProvider` trait，Codex 实现 `OpenAIProvider`，后续 Gemini 也逐步迁移。
 - **决策原因**：统一不同 AI 提供商的上游调用接口，使 token 刷新、请求发送、模型列表等逻辑可替换。
 - **影响范围**：`src-tauri/src/proxy/providers/`、`token_manager.rs`、`model_mapping.rs`。
+
+### [2026-04-29] 6. OpenCode 同步新增 llm-proxy-codex provider
+- **决策内容**：在 OpenCode 同步中新增 `llm-proxy-codex` provider（`@ai-sdk/openai`），与 `antigravity-manager` provider（`@ai-sdk/anthropic`）并存。
+- **决策原因**：Codex CLI 和 OpenCode 使用 OpenAI 协议，需独立的 OpenAI provider 配置。
+- **影响范围**：`src-tauri/src/proxy/opencode_sync.rs`、`src/components/proxy/OpenCodeSyncModal.tsx`。
 - **决策内容**：Codex (ChatGPT) OAuth 使用 GitHub OAuth 授权流程，与 OpenCode 的 `providers login` GitHub Copilot 流程一致。
 - **决策原因**：ChatGPT Plus/Pro 通过 GitHub OAuth 进行身份验证，无需 OpenAI 专用 OAuth 端点。
 - **影响范围**：`src-tauri/src/modules/oauth_codex.rs`、`src-tauri/src/modules/oauth_server.rs`。
