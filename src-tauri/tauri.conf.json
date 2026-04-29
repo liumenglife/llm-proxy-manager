@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Antigravity Tools",
+  "productName": "llm-proxy-Manager",
   "version": "4.1.32",
-  "identifier": "com.lbjlaq.antigravity-tools",
+  "identifier": "com.llmproxy.llm-proxy-manager",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

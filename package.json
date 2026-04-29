@@ -1,6 +1,6 @@
 {
   "version": "4.1.32",
-  "name": "antigravity-tools",
+  "name": "llm-proxy-manager",
   "type": "module",
   "private": true,
   "scripts": {

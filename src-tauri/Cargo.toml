@@ -1,5 +1,5 @@
 [package]
-name = "antigravity_tools"
+name = "llm_proxy_manager"
 version = "4.1.32"
 description = "A Tauri App"
 authors = ["you"]
