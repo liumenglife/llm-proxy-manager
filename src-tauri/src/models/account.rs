@@ -60,10 +60,13 @@ pub struct Account {
     /// 用户自定义标签
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub custom_label: Option<String>,
+    /// Account provider type: "gemini" or "codex"
+    #[serde(default)]
+    pub provider: String,
 }
 
 impl Account {
-    pub fn new(id: String, email: String, token: TokenData) -> Self {
+    pub fn new(id: String, email: String, token: TokenData, provider: String) -> Self {
         let now = chrono::Utc::now().timestamp();
         Self {
             id,
@@ -89,6 +92,7 @@ impl Account {
             proxy_id: None,
             proxy_bound_at: None,
             custom_label: None,
+            provider,
         }
     }
 
@@ -124,12 +128,13 @@ pub struct AccountSummary {
     pub protected_models: HashSet<String>,
     pub created_at: i64,
     pub last_used: i64,
+    pub provider: String,
 }
 
 impl AccountIndex {
     pub fn new() -> Self {
         Self {
-            version: "2.0".to_string(),
+            version: "2.1".to_string(),
             accounts: Vec::new(),
             current_account_id: None,
         }

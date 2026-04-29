@@ -77,6 +77,7 @@ mod tests {
                 None,
                 true,
             ),
+            "gemini".to_string(),
         );
         
         let content = serde_json::to_string_pretty(&account).expect("Failed to serialize account");
@@ -232,6 +233,7 @@ mod tests {
                     disabled: false,
                     proxy_disabled: false,
                     protected_models: HashSet::new(),
+                    provider: "gemini".to_string(),
                     created_at: now,
                     last_used: now,
                 },
@@ -242,6 +244,7 @@ mod tests {
                     disabled: true,
                     proxy_disabled: true,
                     protected_models: HashSet::new(),
+                    provider: "gemini".to_string(),
                     created_at: now - 100,
                     last_used: now - 50,
                 },
@@ -473,6 +476,7 @@ fn rebuild_index_from_accounts_in_dir(data_dir: &PathBuf) -> Result<AccountIndex
                                         disabled: account.disabled,
                                         proxy_disabled: account.proxy_disabled,
                                         protected_models: account.protected_models,
+                                        provider: account.provider,
                                         created_at: account.created_at,
                                         last_used: account.last_used,
                                     });
@@ -717,7 +721,7 @@ pub fn add_account(
 
     // Create new account
     let account_id = Uuid::new_v4().to_string();
-    let mut account = Account::new(account_id.clone(), email.clone(), token);
+    let mut account = Account::new(account_id.clone(), email.clone(), token, "gemini".to_string());
     account.name = name.clone();
 
     // Save account data
@@ -725,6 +729,7 @@ pub fn add_account(
 
     // Update index
     index.accounts.push(AccountSummary {
+        provider: "gemini".to_string(),
         id: account.id.clone(),
         email: account.email.clone(),
         name: account.name.clone(),
@@ -798,7 +803,7 @@ pub fn upsert_account(
                     account_id, e
                 ));
                 // Index exists but file is missing, recreating
-                let mut account = Account::new(account_id.clone(), email.clone(), token);
+                let mut account = Account::new(account_id.clone(), email.clone(), token, "gemini".to_string());
                 account.name = name.clone();
                 save_account(&account)?;
 
