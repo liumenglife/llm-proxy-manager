@@ -14,12 +14,12 @@ const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 const OPENCODE_DIR: &str = ".config/opencode";
 const OPENCODE_CONFIG_FILE: &str = "opencode.json";
-const ANTIGRAVITY_CONFIG_FILE: &str = "antigravity.json";
-const ANTIGRAVITY_ACCOUNTS_FILE: &str = "antigravity-accounts.json";
-const BACKUP_SUFFIX: &str = ".antigravity-manager.bak";
+const ANTIGRAVITY_CONFIG_FILE: &str = "llm-proxy-manager.json";
+const ANTIGRAVITY_ACCOUNTS_FILE: &str = "llm-proxy-manager-accounts.json";
+const BACKUP_SUFFIX: &str = ".llm-proxy-manager.bak";
 const OLD_BACKUP_SUFFIX: &str = ".antigravity.bak";
 
-const ANTIGRAVITY_PROVIDER_ID: &str = "antigravity-manager";
+const ANTIGRAVITY_PROVIDER_ID: &str = "llm-proxy-manager";
 
 /// Variant type for model variants
 #[derive(Debug, Clone, Copy)]
@@ -47,7 +47,7 @@ struct ModelDef {
     variant_type: Option<VariantType>,
 }
 
-/// Build the complete model catalog for antigravity-manager provider
+/// Build the complete model catalog for llm-proxy-manager provider
 fn build_model_catalog() -> Vec<ModelDef> {
     vec![
         // Claude models
@@ -686,7 +686,7 @@ pub fn get_sync_status(proxy_url: &str) -> (bool, bool, Option<String>) {
     // Normalize proxy URL for comparison
     let normalized_proxy = normalize_opencode_base_url(proxy_url);
 
-    // Only check antigravity-manager provider
+    // Only check llm-proxy-manager provider
     let ag_opts = get_provider_options(&json, ANTIGRAVITY_PROVIDER_ID);
     let ag_url = ag_opts
         .and_then(|o| o.get("baseURL"))
@@ -1192,7 +1192,7 @@ fn apply_sync_to_config(
         ensure_provider_object(provider, ANTIGRAVITY_PROVIDER_ID);
         if let Some(ag_provider) = provider.get_mut(ANTIGRAVITY_PROVIDER_ID) {
             ensure_provider_string_field(ag_provider, "npm", "@ai-sdk/anthropic");
-            ensure_provider_string_field(ag_provider, "name", "Antigravity Manager");
+            ensure_provider_string_field(ag_provider, "name", "llm-proxy Manager");
             merge_provider_options(ag_provider, &normalized_url, api_key);
             merge_catalog_models(ag_provider, models_to_sync);
         }
@@ -1209,7 +1209,7 @@ fn apply_clear_to_config(
     clear_legacy: bool,
 ) -> Value {
     if let Some(provider) = config.get_mut("provider").and_then(|p| p.as_object_mut()) {
-        // 1. Remove antigravity-manager provider
+        // 1. Remove llm-proxy-manager provider
         provider.remove(ANTIGRAVITY_PROVIDER_ID);
 
         // 2. Cleanup legacy entries if requested
@@ -1331,13 +1331,13 @@ mod tests {
 
         let result = apply_sync_to_config(config, "http://localhost:3000", "test-api-key", None);
 
-        // antigravity-manager provider should be created
+        // llm-proxy-manager provider should be created
         let provider = result.get("provider").unwrap();
         let ag = provider.get(ANTIGRAVITY_PROVIDER_ID).unwrap();
 
         // Check npm and name
         assert_eq!(ag.get("npm").unwrap(), "@ai-sdk/anthropic");
-        assert_eq!(ag.get("name").unwrap(), "Antigravity Manager");
+        assert_eq!(ag.get("name").unwrap(), "llm-proxy Manager");
 
         // Check options
         let options = ag.get("options").unwrap();
@@ -1389,7 +1389,7 @@ mod tests {
     fn test_clear_removes_antigravity_provider() {
         let config = serde_json::json!({
             "provider": {
-                "antigravity-manager": {
+                "llm-proxy-manager": {
                     "options": { "baseURL": "http://localhost:3000/v1" }
                 },
                 "google": { "options": { "apiKey": "key" } }
@@ -1399,7 +1399,7 @@ mod tests {
         let result = apply_clear_to_config(config, None, false);
 
         let provider = result.get("provider").unwrap();
-        assert!(provider.get(ANTIGRAVITY_PROVIDER_ID).is_none(), "antigravity-manager should be removed");
+        assert!(provider.get(ANTIGRAVITY_PROVIDER_ID).is_none(), "llm-proxy-manager should be removed");
         assert!(provider.get("google").is_some(), "google should be preserved");
     }
 
@@ -1423,10 +1423,10 @@ mod tests {
         let anthropic = provider.get("anthropic").unwrap();
         let models = anthropic.get("models").unwrap().as_object().unwrap();
 
-        // Antigravity model IDs should be removed
-        assert!(!models.contains_key("claude-sonnet-4-5"), "antigravity model should be removed");
-        // Non-antigravity models should be preserved
-        assert!(models.contains_key("claude-3"), "non-antigravity model should be preserved");
+        // Known model IDs should be removed
+        assert!(!models.contains_key("claude-sonnet-4-5"), "model should be removed");
+        // Non-manager models should be preserved
+        assert!(models.contains_key("claude-3"), "non-manager model should be preserved");
     }
 
     #[test]
@@ -1516,7 +1516,7 @@ mod tests {
     fn test_clear_removes_empty_provider() {
         let config = serde_json::json!({
             "provider": {
-                "antigravity-manager": {
+                "llm-proxy-manager": {
                     "options": { "baseURL": "http://localhost:3000/v1" }
                 }
             }
@@ -1608,7 +1608,7 @@ pub async fn get_opencode_config_content(request: GetOpencodeConfigRequest) -> R
     read_opencode_config_content(request.file_name)
 }
 
-/// List of Antigravity model IDs that may have been added to legacy providers
+/// List of model IDs that may have been added to legacy providers
 const ANTIGRAVITY_MODEL_IDS: &[&str] = &[
     "claude-sonnet-4-6",
     "claude-sonnet-4-6-thinking",
@@ -1634,7 +1634,7 @@ fn base_url_matches(config_url: &str, proxy_url: &str) -> bool {
     normalized_config == normalized_proxy
 }
 
-/// Clear OpenCode config by removing antigravity-manager provider and optionally cleaning up legacy entries
+/// Clear OpenCode config by removing llm-proxy-manager provider and optionally cleaning up legacy entries
 fn clear_opencode_config(proxy_url: Option<String>, clear_legacy: bool) -> Result<(), String> {
     let Some((config_path, _, accounts_path)) = get_config_paths() else {
         return Err("Failed to get OpenCode config directory".to_string());
@@ -1660,7 +1660,7 @@ fn clear_opencode_config(proxy_url: Option<String>, clear_legacy: bool) -> Resul
             .map_err(|e| format!("Failed to rename config file: {}", e))?;
     }
 
-    // Process antigravity-accounts.json
+    // Process accounts file
     let accounts_backup_new = accounts_path.with_file_name(format!(
         "{}{}", ANTIGRAVITY_ACCOUNTS_FILE, BACKUP_SUFFIX
     ));
@@ -1686,7 +1686,7 @@ fn clear_opencode_config(proxy_url: Option<String>, clear_legacy: bool) -> Resul
 /// Cleanup legacy provider entries (anthropic/google) that were configured by old versions
 fn cleanup_legacy_provider(provider: &mut Value, proxy_url: &str) {
     if let Some(provider_obj) = provider.as_object_mut() {
-        // Remove Antigravity model IDs from models list.
+        // Remove known model IDs from models list.
         let remove_models_key = if let Some(models) = provider_obj.get_mut("models").and_then(|m| m.as_object_mut()) {
             for model_id in ANTIGRAVITY_MODEL_IDS {
                 models.remove(*model_id);

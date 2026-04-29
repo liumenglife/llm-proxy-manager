@@ -3,9 +3,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::modules::logger;
 use chrono::Utc;
 
-const GITHUB_API_URL: &str = "https://api.github.com/repos/lbjlaq/Antigravity-Manager/releases/latest";
-const GITHUB_RAW_URL: &str = "https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/package.json";
-const JSDELIVR_URL: &str = "https://cdn.jsdelivr.net/gh/lbjlaq/Antigravity-Manager@main/package.json";
+const GITHUB_API_URL: &str = "https://api.github.com/repos/lbjlaq/llm-proxy-Manager/releases/latest";
+const GITHUB_RAW_URL: &str = "https://raw.githubusercontent.com/lbjlaq/llm-proxy-Manager/main/package.json";
+const JSDELIVR_URL: &str = "https://cdn.jsdelivr.net/gh/lbjlaq/llm-proxy-Manager@main/package.json";
 const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_CHECK_INTERVAL_HOURS: u64 = 24;
 
@@ -51,7 +51,7 @@ struct GitHubRelease {
     published_at: String,
 }
 
-const UPDATER_JSON_URL: &str = "https://github.com/lbjlaq/Antigravity-Manager/releases/latest/download/updater.json";
+const UPDATER_JSON_URL: &str = "https://github.com/lbjlaq/llm-proxy-Manager/releases/latest/download/updater.json";
 
 /// Check for updates with improved strategy:
 /// 1. Check updater.json (Source of Truth for Auto-Update)
@@ -143,7 +143,7 @@ async fn check_updater_json() -> Result<UpdateInfo, String> {
         logger::log_info(&format!("Up to date (updater.json): {} (Matches {})", current_version, latest_version));
     }
 
-    let download_url = format!("https://github.com/lbjlaq/Antigravity-Manager/releases/tag/v{}", latest_version);
+    let download_url = format!("https://github.com/lbjlaq/llm-proxy-Manager/releases/tag/v{}", latest_version);
 
     Ok(UpdateInfo {
         current_version,
@@ -158,7 +158,7 @@ async fn check_updater_json() -> Result<UpdateInfo, String> {
 
 async fn create_client() -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
-        .user_agent("Antigravity-Manager")
+        .user_agent("llm-proxy-Manager")
         .timeout(std::time::Duration::from_secs(10));
 
     // Load config to check for upstream proxy
@@ -256,7 +256,7 @@ async fn check_static_url(url: &str, source_name: &str) -> Result<UpdateInfo, St
     }
 
     // fallback sources generally don't provide release notes or download specific URL, construct generic
-    let download_url = "https://github.com/lbjlaq/Antigravity-Manager/releases/latest".to_string();
+    let download_url = "https://github.com/lbjlaq/llm-proxy-Manager/releases/latest".to_string();
     let release_notes = format!("New version detected via {}. Please check release page for details.", source_name);
 
     Ok(UpdateInfo {
@@ -360,8 +360,8 @@ pub fn is_homebrew_installed() -> bool {
     #[cfg(target_os = "macos")]
     {
         let caskroom_paths = [
-            "/opt/homebrew/Caskroom/antigravity-tools",
-            "/usr/local/Caskroom/antigravity-tools",
+            "/opt/homebrew/Caskroom/llm-proxy-manager",
+            "/usr/local/Caskroom/llm-proxy-manager",
         ];
 
         for path in &caskroom_paths {
@@ -375,7 +375,7 @@ pub fn is_homebrew_installed() -> bool {
     false
 }
 
-/// Execute `brew upgrade --cask antigravity-tools` with timeout (macOS only)
+/// Execute `brew upgrade --cask llm-proxy-manager` with timeout (macOS only)
 #[cfg(not(target_os = "macos"))]
 pub async fn brew_upgrade_cask() -> Result<String, String> {
     Err("brew_not_supported".to_string())
@@ -383,7 +383,7 @@ pub async fn brew_upgrade_cask() -> Result<String, String> {
 
 #[cfg(target_os = "macos")]
 pub async fn brew_upgrade_cask() -> Result<String, String> {
-    logger::log_info("Starting Homebrew Cask upgrade for antigravity-tools...");
+    logger::log_info("Starting Homebrew Cask upgrade for llm-proxy-manager...");
 
     // Find brew binary
     let brew_path = if std::path::Path::new("/opt/homebrew/bin/brew").exists() {
@@ -398,7 +398,7 @@ pub async fn brew_upgrade_cask() -> Result<String, String> {
     let result = tokio::time::timeout(
         std::time::Duration::from_secs(180),
         tokio::process::Command::new(brew_path)
-            .args(["upgrade", "--cask", "antigravity-tools"])
+            .args(["upgrade", "--cask", "llm-proxy-manager"])
             .output()
     ).await;
 

@@ -29,7 +29,7 @@ mod tests {
     impl TestDataDir {
         fn new() -> Self {
             let temp_path = std::env::temp_dir().join(format!(
-                "antigravity_test_{}_{}",
+                "llm_proxy_manager_test_{}_{}",
                 std::process::id(),
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -325,7 +325,7 @@ mod tests {
 static ACCOUNT_INDEX_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 // ... existing constants ...
-const DATA_DIR: &str = ".antigravity_tools";
+const DATA_DIR: &str = ".llm_proxy_manager";
 const ACCOUNTS_INDEX: &str = "accounts.json";
 const ACCOUNTS_DIR: &str = "accounts";
 
@@ -1131,7 +1131,7 @@ fn format_switch_refresh_error(message: &str) -> String {
         || lower.contains("invalid_grant")
     {
         return format!(
-            "Token refresh failed: OAuth client is not authorized for this account. Please sign in again in Antigravity-Manager and complete authorization/verification. Raw error: {}",
+            "Token refresh failed: OAuth client is not authorized for this account. Please sign in again in llm-proxy-Manager and complete authorization/verification. Raw error: {}",
             message
         );
     }
