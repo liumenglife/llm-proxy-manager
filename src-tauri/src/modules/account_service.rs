@@ -109,7 +109,7 @@ impl AccountService {
             modules::integration::SystemManager::Desktop(h) => Some(h.clone()),
             modules::integration::SystemManager::Headless => None,
         };
-        modules::oauth_server::prepare_oauth_url(handle, oauth_client_key).await
+        modules::oauth_server::prepare_oauth_url(handle, oauth_client_key, None).await
     }
 
     pub async fn start_oauth_login(&self, oauth_client_key: Option<String>) -> Result<Account, String> {
@@ -117,7 +117,7 @@ impl AccountService {
             modules::integration::SystemManager::Desktop(h) => Some(h.clone()),
             modules::integration::SystemManager::Headless => None,
         };
-        let token_res = modules::oauth_server::start_oauth_flow(handle, oauth_client_key).await?;
+        let token_res = modules::oauth_server::start_oauth_flow(handle, oauth_client_key, None).await?;
         self.process_oauth_token(token_res).await
     }
 
@@ -126,7 +126,7 @@ impl AccountService {
             modules::integration::SystemManager::Desktop(h) => Some(h.clone()),
             modules::integration::SystemManager::Headless => None,
         };
-        let token_res = modules::oauth_server::complete_oauth_flow(handle).await?;
+        let token_res = modules::oauth_server::complete_oauth_flow(handle, None).await?;
         self.process_oauth_token(token_res).await
     }
 

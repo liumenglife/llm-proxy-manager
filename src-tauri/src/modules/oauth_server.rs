@@ -5,6 +5,7 @@ use tokio::sync::watch;
 use std::sync::{Mutex, OnceLock};
 use tauri::Url;
 use crate::modules::oauth;
+use crate::modules::oauth_codex;
 
 struct OAuthFlowState {
     auth_url: String,
@@ -12,6 +13,7 @@ struct OAuthFlowState {
     redirect_uri: String,
     state: String,
     client_key: String,
+    provider: Option<String>,
     cancel_tx: watch::Sender<bool>,
     code_tx: mpsc::Sender<Result<String, String>>,
     code_rx: Option<mpsc::Receiver<Result<String, String>>>,
@@ -44,7 +46,7 @@ fn oauth_fail_html() -> &'static str {
     </html>"
 }
 
-async fn ensure_oauth_flow_prepared(app_handle: Option<tauri::AppHandle>, requested_client_key: Option<String>) -> Result<String, String> {
+async fn ensure_oauth_flow_prepared(app_handle: Option<tauri::AppHandle>, requested_client_key: Option<String>, provider: Option<&str>) -> Result<String, String> {
     if let Ok(mut state) = get_oauth_flow_state().lock() {
         if let Some(s) = state.as_mut() {
             if let Some(requested_key) = requested_client_key.as_ref() {
@@ -132,11 +134,17 @@ async fn ensure_oauth_flow_prepared(app_handle: Option<tauri::AppHandle>, reques
     };
 
     let state_str = uuid::Uuid::new_v4().to_string();
-    let (auth_url, resolved_client_key) = oauth::get_auth_url_with_client(
-        &redirect_uri,
-        &state_str,
-        requested_client_key.as_deref(),
-    )?;
+    let (auth_url, resolved_client_key) = match provider {
+        Some("codex") => {
+            let url = oauth_codex::get_codex_auth_url(&redirect_uri, &state_str)?;
+            (url, "codex".to_string())
+        }
+        _ => oauth::get_auth_url_with_client(
+            &redirect_uri,
+            &state_str,
+            requested_client_key.as_deref(),
+        )?,
+    };
 
     // Cancellation signal (supports multiple consumers)
     let (cancel_tx, cancel_rx) = watch::channel(false);
@@ -322,6 +330,7 @@ async fn ensure_oauth_flow_prepared(app_handle: Option<tauri::AppHandle>, reques
             redirect_uri,
             state: state_str,
             client_key: resolved_client_key,
+            provider: provider.map(|s| s.to_string()),
             cancel_tx,
             code_tx,
             code_rx: Some(code_rx),
@@ -338,8 +347,8 @@ async fn ensure_oauth_flow_prepared(app_handle: Option<tauri::AppHandle>, reques
 }
 
 /// Pre-generate OAuth URL (does not open browser, does not block waiting for callback)
-pub async fn prepare_oauth_url(app_handle: Option<tauri::AppHandle>, oauth_client_key: Option<String>) -> Result<String, String> {
-    ensure_oauth_flow_prepared(app_handle, oauth_client_key).await
+pub async fn prepare_oauth_url(app_handle: Option<tauri::AppHandle>, oauth_client_key: Option<String>, provider: Option<String>) -> Result<String, String> {
+    ensure_oauth_flow_prepared(app_handle, oauth_client_key, provider.as_deref()).await
 }
 
 /// Cancel current OAuth flow
@@ -353,9 +362,9 @@ pub fn cancel_oauth_flow() {
 }
 
 /// Start OAuth flow and wait for callback, then exchange token
-pub async fn start_oauth_flow(app_handle: Option<tauri::AppHandle>, oauth_client_key: Option<String>) -> Result<oauth::TokenResponse, String> {
+pub async fn start_oauth_flow(app_handle: Option<tauri::AppHandle>, oauth_client_key: Option<String>, provider: Option<String>) -> Result<oauth::TokenResponse, String> {
     // Ensure URL + listener are ready (this way if the user authorizes first, it won't get stuck)
-    let auth_url = ensure_oauth_flow_prepared(app_handle.clone(), oauth_client_key).await?;
+    let auth_url = ensure_oauth_flow_prepared(app_handle.clone(), oauth_client_key, provider.as_deref()).await?;
 
     if let Some(h) = app_handle {
         // Open default browser
@@ -366,7 +375,7 @@ pub async fn start_oauth_flow(app_handle: Option<tauri::AppHandle>, oauth_client
     }
 
     // Take code_rx to wait for it
-    let (mut code_rx, redirect_uri, client_key) = {
+    let (mut code_rx, redirect_uri, client_key, provider) = {
         let mut lock = get_oauth_flow_state()
             .lock()
             .map_err(|_| "OAuth state lock corrupted".to_string())?;
@@ -377,7 +386,7 @@ pub async fn start_oauth_flow(app_handle: Option<tauri::AppHandle>, oauth_client
             .code_rx
             .take()
             .ok_or_else(|| "OAuth authorization already in progress".to_string())?;
-        (rx, state.redirect_uri.clone(), state.client_key.clone())
+        (rx, state.redirect_uri.clone(), state.client_key.clone(), state.provider.clone())
     };
 
     // Wait for code (if user has already authorized, this returns immediately)
@@ -393,18 +402,29 @@ pub async fn start_oauth_flow(app_handle: Option<tauri::AppHandle>, oauth_client
         *lock = None;
     }
 
-    oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
+    if provider.as_deref() == Some("codex") {
+        let codex_res = oauth_codex::exchange_codex_code(&code, &redirect_uri).await?;
+        Ok(oauth::TokenResponse {
+            access_token: codex_res.access_token,
+            expires_in: codex_res.expires_in,
+            token_type: codex_res.token_type,
+            refresh_token: codex_res.refresh_token,
+            oauth_client_key: Some("codex".to_string()),
+        })
+    } else {
+        oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
+    }
 }
 
 /// Завершить OAuth flow без открытия браузера.
 /// Предполагается, что пользователь открыл ссылку вручную (или ранее была открыта),
 /// а мы только ждём callback и обмениваем code на token.
-pub async fn complete_oauth_flow(app_handle: Option<tauri::AppHandle>) -> Result<oauth::TokenResponse, String> {
+pub async fn complete_oauth_flow(app_handle: Option<tauri::AppHandle>, provider: Option<String>) -> Result<oauth::TokenResponse, String> {
     // Ensure URL + listeners exist
-    let _ = ensure_oauth_flow_prepared(app_handle, None).await?;
+    let _ = ensure_oauth_flow_prepared(app_handle, None, provider.as_deref()).await?;
 
     // Take receiver to wait for code
-    let (mut code_rx, redirect_uri, client_key) = {
+    let (mut code_rx, redirect_uri, client_key, provider) = {
         let mut lock = get_oauth_flow_state()
             .lock()
             .map_err(|_| "OAuth state lock corrupted".to_string())?;
@@ -415,7 +435,7 @@ pub async fn complete_oauth_flow(app_handle: Option<tauri::AppHandle>) -> Result
             .code_rx
             .take()
             .ok_or_else(|| "OAuth authorization already in progress".to_string())?;
-        (rx, state.redirect_uri.clone(), state.client_key.clone())
+        (rx, state.redirect_uri.clone(), state.client_key.clone(), state.provider.clone())
     };
 
     let code = match code_rx.recv().await {
@@ -428,7 +448,18 @@ pub async fn complete_oauth_flow(app_handle: Option<tauri::AppHandle>) -> Result
         *lock = None;
     }
 
-    oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
+    if provider.as_deref() == Some("codex") {
+        let codex_res = oauth_codex::exchange_codex_code(&code, &redirect_uri).await?;
+        Ok(oauth::TokenResponse {
+            access_token: codex_res.access_token,
+            expires_in: codex_res.expires_in,
+            token_type: codex_res.token_type,
+            refresh_token: codex_res.refresh_token,
+            oauth_client_key: Some("codex".to_string()),
+        })
+    } else {
+        oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
+    }
 }
 
 /// Manually submit an OAuth code to complete the flow.
@@ -473,9 +504,14 @@ pub async fn submit_oauth_code(code_input: String, state_input: Option<String>) 
 }
 /// Manually prepare an OAuth flow without starting listeners.
 /// Useful for Web/Docker environments where we only need manual code submission.
-pub fn prepare_oauth_flow_manually(redirect_uri: String, state_str: String, oauth_client_key: Option<String>) -> Result<(String, mpsc::Receiver<Result<String, String>>), String> {
-    let (auth_url, resolved_client_key) =
-        oauth::get_auth_url_with_client(&redirect_uri, &state_str, oauth_client_key.as_deref())?;
+pub fn prepare_oauth_flow_manually(redirect_uri: String, state_str: String, oauth_client_key: Option<String>, provider: Option<&str>) -> Result<(String, mpsc::Receiver<Result<String, String>>), String> {
+    let (auth_url, resolved_client_key) = match provider {
+        Some("codex") => {
+            let url = oauth_codex::get_codex_auth_url(&redirect_uri, &state_str)?;
+            (url, "codex".to_string())
+        }
+        _ => oauth::get_auth_url_with_client(&redirect_uri, &state_str, oauth_client_key.as_deref())?,
+    };
     
     // Check if we can reuse existing state
     if let Ok(mut lock) = get_oauth_flow_state().lock() {
@@ -497,6 +533,7 @@ pub fn prepare_oauth_flow_manually(redirect_uri: String, state_str: String, oaut
             redirect_uri: redirect_uri.clone(),
             state: state_str,
             client_key: resolved_client_key,
+            provider: provider.map(|s| s.to_string()),
             cancel_tx,
             code_tx,
             code_rx: None, // We return it directly

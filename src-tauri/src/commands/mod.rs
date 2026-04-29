@@ -452,6 +452,48 @@ pub async fn cancel_oauth_login() -> Result<(), String> {
     Ok(())
 }
 
+// --- Codex OAuth 命令 ---
+
+#[tauri::command]
+pub async fn prepare_codex_oauth_url(
+    app_handle: tauri::AppHandle,
+    oauth_client_key: Option<String>,
+) -> Result<String, String> {
+    crate::modules::oauth_server::prepare_oauth_url(
+        Some(app_handle),
+        oauth_client_key,
+        Some("codex".to_string()),
+    ).await
+}
+
+#[tauri::command]
+pub async fn start_codex_oauth_login(
+    app_handle: tauri::AppHandle,
+    oauth_client_key: Option<String>,
+) -> Result<crate::modules::oauth::TokenResponse, String> {
+    crate::modules::oauth_server::start_oauth_flow(
+        Some(app_handle),
+        oauth_client_key,
+        Some("codex".to_string()),
+    ).await
+}
+
+#[tauri::command]
+pub async fn complete_codex_oauth_login(
+    app_handle: tauri::AppHandle,
+) -> Result<crate::modules::oauth::TokenResponse, String> {
+    crate::modules::oauth_server::complete_oauth_flow(
+        Some(app_handle),
+        Some("codex".to_string()),
+    ).await
+}
+
+#[tauri::command]
+pub async fn cancel_codex_oauth_login() -> Result<(), String> {
+    crate::modules::oauth_server::cancel_oauth_flow();
+    Ok(())
+}
+
 /// 手动提交 OAuth Code (用于 Docker/远程环境无法自动回调时)
 #[tauri::command]
 pub async fn submit_oauth_code(code: String, state: Option<String>) -> Result<(), String> {
