@@ -20,6 +20,11 @@
 - **影响范围**：`src-tauri/src/models/account.rs`、`src/types/account.ts`、所有 `Account::new()` 调用点。
 
 ### [2026-04-29] 4. Codex OAuth 使用 GitHub OAuth 流程
+
+### [2026-04-29] 5. Provider 抽象 — AiProvider trait + 注册表
+- **决策内容**：新增 `proxy/providers/` 模块，定义 `AiProvider` trait，Codex 实现 `OpenAIProvider`，后续 Gemini 也逐步迁移。
+- **决策原因**：统一不同 AI 提供商的上游调用接口，使 token 刷新、请求发送、模型列表等逻辑可替换。
+- **影响范围**：`src-tauri/src/proxy/providers/`、`token_manager.rs`、`model_mapping.rs`。
 - **决策内容**：Codex (ChatGPT) OAuth 使用 GitHub OAuth 授权流程，与 OpenCode 的 `providers login` GitHub Copilot 流程一致。
 - **决策原因**：ChatGPT Plus/Pro 通过 GitHub OAuth 进行身份验证，无需 OpenAI 专用 OAuth 端点。
 - **影响范围**：`src-tauri/src/modules/oauth_codex.rs`、`src-tauri/src/modules/oauth_server.rs`。
