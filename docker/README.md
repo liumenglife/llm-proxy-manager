@@ -1,6 +1,6 @@
-# 🐋 Antigravity Manager 原生 Docker 部署手冊
+# 🐋 llm-proxy-Manager 原生 Docker 部署手冊
 
-本目錄包含 Antigravity Manager 的原生 Headless Docker 部署方案。該方案支持完整的 Web 管理界面、API 反代以及數據持久化，無需複雜的 VNC 或桌面環境。
+本目錄包含 llm-proxy-Manager 的原生 Headless Docker 部署方案。該方案支持完整的 Web 管理界面、API 反代以及數據持久化，無需複雜的 VNC 或桌面環境。
 
 ## 🆕 本版本部署方案（本地前端構建復用）
 適用於「前端近期不改、後端經常調整」的場景。思路是先在本地生成 `dist/`，Docker 只編譯後端並直接拷貝 `dist/`，大幅縮短構建時間並降低前端構建風險。
@@ -43,18 +43,18 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.localdist.y
 > *   **API Key**：通過 `-e API_KEY=xxx` 設置，用於所有 AI 協議的 API 調用鑒權。
 > *   **Web 管理密碼**：通過 `-e WEB_PASSWORD=xxx` 設置，僅用於 Web UI 登錄。
 > *   **默認行為**：若未設置 `WEB_PASSWORD`，系統會自動回退使用 `API_KEY` 作為登錄密碼。若兩者皆未設置，則生成隨機 Key。
-> *   **查看方式**：執行 `docker logs antigravity-manager` 尋找 `Current API Key` 或 `Web UI Password`，或執行 `grep -E '"api_key"|"admin_password"' ~/.antigravity_tools/gui_config.json` 查看。
+> *   **查看方式**：執行 `docker logs llm-proxy-manager` 尋找 `Current API Key` 或 `Web UI Password`，或執行 `grep -E '"api_key"|"admin_password"' ~/.llm_proxy_manager/gui_config.json` 查看。
 
 ```bash
 # 啟動容器 (請替换 your-secret-key 為強密鑰)
 docker run -d \
-  --name antigravity-manager \
+  --name llm-proxy-manager \
   -p 8045:8045 \
   -e API_KEY=your-api-key \
   -e WEB_PASSWORD=your-login-password \
   -e ABV_MAX_BODY_SIZE=104857600 \
-  -v ~/.antigravity_tools:/root/.antigravity_tools \
-  lbjlaq/antigravity-manager:latest
+  -v ~/.llm_proxy_manager:/root/.llm_proxy_manager \
+  lbjlaq/llm-proxy-manager:latest
 ```
 
 #### 🔐 鑒權邏輯 (Security Scenarios)
@@ -86,7 +86,7 @@ docker compose up -d
 如果您需要修改代碼或自定義構建，請在項目根目錄下執行：
 ```bash
 # 默認構建最新標籤
-docker build -t antigravity-manager:latest -f docker/Dockerfile .
+docker build -t llm-proxy-manager:latest -f docker/Dockerfile .
 ```
 
 #### 💡 構建參數
@@ -99,7 +99,7 @@ docker build -t antigravity-manager:latest -f docker/Dockerfile .
 示例：
 ```bash
 # 強制使用国内镜像加速構建
-docker build --build-arg USE_MIRROR=true -t antigravity-manager:latest -f docker/Dockerfile .
+docker build --build-arg USE_MIRROR=true -t llm-proxy-manager:latest -f docker/Dockerfile .
 ```
 
 ## ⚙️ 環境變量配置
@@ -115,7 +115,7 @@ docker build --build-arg USE_MIRROR=true -t antigravity-manager:latest -f docker
 | `ABV_PUBLIC_URL` | - | 用於遠程 OAuth 回調的公網 URL (可選) |
 
 ## 📂 數據持久化
-請務必將宿主機目錄掛載至容器內的 `/root/.antigravity_tools`，否則賬號和配置在容器重啟後會丟失。
+請務必將宿主機目錄掛載至容器內的 `/root/.llm_proxy_manager`，否則賬號和配置在容器重啟後會丟失。
 
 ## 🌐 訪問位址
 *   **管理界面**: [http://localhost:8045](http://localhost:8045)
@@ -125,8 +125,8 @@ docker build --build-arg USE_MIRROR=true -t antigravity-manager:latest -f docker
 若要推送至你的倉庫：
 ```bash
 # 打上版本標籤並推送
-docker tag antigravity-manager:latest lbjlaq/antigravity-manager:latest
-docker tag antigravity-manager:latest lbjlaq/antigravity-manager:4.1.32
-docker push lbjlaq/antigravity-manager:latest
-docker push lbjlaq/antigravity-manager:4.1.32
+docker tag llm-proxy-manager:latest lbjlaq/llm-proxy-manager:latest
+docker tag llm-proxy-manager:latest lbjlaq/llm-proxy-manager:4.1.32
+docker push lbjlaq/llm-proxy-manager:latest
+docker push lbjlaq/llm-proxy-manager:4.1.32
 ```

@@ -1,4 +1,4 @@
-# Antigravity Tools Install Script for Windows
+# llm-proxy-Manager Install Script for Windows
 # Usage: irm https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/install.ps1 | iex
 #
 # Parameters (set before running):
@@ -11,7 +11,7 @@ if (-not $DryRun) { $DryRun = $false }
 $ErrorActionPreference = "Continue"
 
 $Repo = "lbjlaq/Antigravity-Manager"
-$AppName = "Antigravity Tools"
+$AppName = "llm-proxy-Manager"
 $GithubApi = "https://api.github.com/repos/$Repo/releases"
 $script:ReleaseVersion = ""
 $script:DownloadUrl = ""
@@ -52,7 +52,7 @@ function Get-ReleaseVersion {
     # Method 1: Try GitHub API
     try {
         $release = Invoke-RestMethod -Uri "$GithubApi/latest" -Headers @{
-            "User-Agent" = "Antigravity-Installer"
+            "User-Agent" = "llm-proxy-Installer"
             "Accept"     = "application/vnd.github.v3+json"
         } -TimeoutSec 10
         $script:ReleaseVersion = $release.tag_name -replace "^v", ""
@@ -90,9 +90,9 @@ function Get-ReleaseVersion {
 }
 
 function Get-DownloadUrl {
-    # NSIS installer: Antigravity.Tools_4.1.32_x64-setup.exe
-    $script:DownloadUrl = "https://github.com/$Repo/releases/download/v$($script:ReleaseVersion)/Antigravity.Tools_$($script:ReleaseVersion)_x64-setup.exe"
-    $script:Filename = "Antigravity.Tools_$($script:ReleaseVersion)_x64-setup.exe"
+    # NSIS installer: llm-proxy-manager_4.1.32_x64-setup.exe
+    $script:DownloadUrl = "https://github.com/$Repo/releases/download/v$($script:ReleaseVersion)/llm-proxy-manager_$($script:ReleaseVersion)_x64-setup.exe"
+    $script:Filename = "llm-proxy-manager_$($script:ReleaseVersion)_x64-setup.exe"
 
     Info "Download URL: $($script:DownloadUrl)"
 }
