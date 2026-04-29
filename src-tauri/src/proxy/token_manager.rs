@@ -36,6 +36,7 @@ pub struct ProxyToken {
     pub validation_url: Option<String>,    // [NEW] Validation URL (#1522)
     pub model_quotas: HashMap<String, i32>, // [OPTIMIZATION] In-memory cache for model-specific quotas
     pub model_limits: HashMap<String, u64>, // [NEW] max_output_tokens per model from quota data
+    pub provider: String,                   // [NEW] Provider type: "gemini" or "codex"
 }
 
 pub struct TokenManager {
@@ -479,6 +480,13 @@ impl TokenManager {
             .and_then(|q| self.calculate_quota_stats(q));
             // .filter(|&r| r > 0); // 移除 >0 过滤，因为 0% 也是有效数据，只是优先级低
 
+        // [NEW] 提取 provider 类型 ("gemini" | "codex")
+        let provider = account
+            .get("provider")
+            .and_then(|v| v.as_str())
+            .unwrap_or("gemini")
+            .to_string();
+
         // 【新增 #621】提取受限模型列表
         let protected_models: HashSet<String> = account
             .get("protected_models")
@@ -549,6 +557,7 @@ impl TokenManager {
             validation_url: account.get("validation_url").and_then(|v| v.as_str()).map(|s| s.to_string()),
             model_quotas,
             model_limits,
+            provider,
         }))
     }
 
@@ -1323,26 +1332,56 @@ impl TokenManager {
                             } else {
                                 // 确实需要刷新
                                 tracing::debug!("账号 {} 的 token 即将过期 ({}s)，正在刷新...", token.email, token.timestamp - now);
-                                match crate::modules::oauth::refresh_access_token(&token.refresh_token, Some(&token.account_id))
-                                    .await
-                                {
-                                    Ok(token_response) => {
-                                        token.access_token = token_response.access_token.clone();
-                                        token.expires_in = token_response.expires_in;
-                                        token.timestamp = now + token_response.expires_in;
+                                match token.provider.as_str() {
+                                    "codex" => {
+                                        match crate::modules::oauth_codex::refresh_codex_token(&token.refresh_token).await {
+                                            Ok(codex_response) => {
+                                                token.access_token = codex_response.access_token.clone();
+                                                token.expires_in = codex_response.expires_in;
+                                                token.timestamp = now + codex_response.expires_in;
 
-                                        if let Some(mut entry) = self.tokens.get_mut(&token.account_id) {
-                                            entry.access_token = token.access_token.clone();
-                                            entry.expires_in = token.expires_in;
-                                            entry.timestamp = token.timestamp;
+                                                if let Some(mut entry) = self.tokens.get_mut(&token.account_id) {
+                                                    entry.access_token = token.access_token.clone();
+                                                    entry.expires_in = token.expires_in;
+                                                    entry.timestamp = token.timestamp;
+                                                }
+                                                let token_response = crate::modules::oauth::TokenResponse {
+                                                    access_token: codex_response.access_token,
+                                                    expires_in: codex_response.expires_in,
+                                                    token_type: codex_response.token_type,
+                                                    refresh_token: codex_response.refresh_token,
+                                                    oauth_client_key: None,
+                                                };
+                                                let _ = self.save_refreshed_token(&token.account_id, &token_response).await;
+                                            }
+                                            Err(e) => {
+                                                tracing::warn!("Preferred account Codex token refresh failed: {}", e);
+                                            }
                                         }
-                                        let _ = self
-                                            .save_refreshed_token(&token.account_id, &token_response)
-                                            .await;
                                     }
-                                    Err(e) => {
-                                        tracing::warn!("Preferred account token refresh failed: {}", e);
-                                        // 继续使用旧 token，让后续逻辑处理失败
+                                    _ => {
+                                        match crate::modules::oauth::refresh_access_token(&token.refresh_token, Some(&token.account_id))
+                                            .await
+                                        {
+                                            Ok(token_response) => {
+                                                token.access_token = token_response.access_token.clone();
+                                                token.expires_in = token_response.expires_in;
+                                                token.timestamp = now + token_response.expires_in;
+
+                                                if let Some(mut entry) = self.tokens.get_mut(&token.account_id) {
+                                                    entry.access_token = token.access_token.clone();
+                                                    entry.expires_in = token.expires_in;
+                                                    entry.timestamp = token.timestamp;
+                                                }
+                                                let _ = self
+                                                    .save_refreshed_token(&token.account_id, &token_response)
+                                                    .await;
+                                            }
+                                            Err(e) => {
+                                                tracing::warn!("Preferred account token refresh failed: {}", e);
+                                                // 继续使用旧 token，让后续逻辑处理失败
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1674,32 +1713,68 @@ impl TokenManager {
                         tracing::debug!("账号 {} 已由并发线程在循环中刷新，跳过", token.email);
                     } else {
                         tracing::debug!("账号 {} 的 token 即将过期，正在执行主路径刷新...", token.email);
-                        // 调用 OAuth 刷新 token
-                        match crate::modules::oauth::refresh_access_token(&token.refresh_token, Some(&token.account_id)).await {
-                            Ok(token_response) => {
-                                tracing::debug!("Token 刷新成功！");
-                                token.access_token = token_response.access_token.clone();
-                                token.expires_in = token_response.expires_in;
-                                token.timestamp = now + token_response.expires_in;
+                        match token.provider.as_str() {
+                            "codex" => {
+                                match crate::modules::oauth_codex::refresh_codex_token(&token.refresh_token).await {
+                                    Ok(codex_response) => {
+                                        tracing::debug!("Codex Token 刷新成功！");
+                                        token.access_token = codex_response.access_token.clone();
+                                        token.expires_in = codex_response.expires_in;
+                                        token.timestamp = now + codex_response.expires_in;
 
-                                if let Some(mut entry) = self.tokens.get_mut(&token.account_id) {
-                                    entry.access_token = token.access_token.clone();
-                                    entry.expires_in = token.expires_in;
-                                    entry.timestamp = token.timestamp;
+                                        if let Some(mut entry) = self.tokens.get_mut(&token.account_id) {
+                                            entry.access_token = token.access_token.clone();
+                                            entry.expires_in = token.expires_in;
+                                            entry.timestamp = token.timestamp;
+                                        }
+                                        let token_response = crate::modules::oauth::TokenResponse {
+                                            access_token: codex_response.access_token,
+                                            expires_in: codex_response.expires_in,
+                                            token_type: codex_response.token_type,
+                                            refresh_token: codex_response.refresh_token,
+                                            oauth_client_key: None,
+                                        };
+                                        let _ = self.save_refreshed_token(&token.account_id, &token_response).await;
+                                    }
+                                    Err(e) => {
+                                        tracing::error!("Codex Token 刷新失败 ({}): {}，尝试下一个账号", token.email, e);
+                                        last_error = Some(format!("Codex token refresh failed: {}", e));
+                                        attempted.insert(token.account_id.clone());
+                                        if quota_group != "image_gen" && matches!(&last_used_account_id, Some((id, _)) if id == &token.account_id) {
+                                            need_update_last_used = Some((String::new(), std::time::Instant::now()));
+                                        }
+                                        continue;
+                                    }
                                 }
-                                let _ = self.save_refreshed_token(&token.account_id, &token_response).await;
                             }
-                            Err(e) => {
-                                tracing::error!("Token 刷新失败 ({}): {}，尝试下一个账号", token.email, e);
-                                if e.contains("\"invalid_grant\"") || e.contains("invalid_grant") {
-                                    self.disable_account(&token.account_id, &format!("invalid_grant: {}", e)).await;
+                            _ => {
+                                match crate::modules::oauth::refresh_access_token(&token.refresh_token, Some(&token.account_id)).await {
+                                    Ok(token_response) => {
+                                        tracing::debug!("Token 刷新成功！");
+                                        token.access_token = token_response.access_token.clone();
+                                        token.expires_in = token_response.expires_in;
+                                        token.timestamp = now + token_response.expires_in;
+
+                                        if let Some(mut entry) = self.tokens.get_mut(&token.account_id) {
+                                            entry.access_token = token.access_token.clone();
+                                            entry.expires_in = token.expires_in;
+                                            entry.timestamp = token.timestamp;
+                                        }
+                                        let _ = self.save_refreshed_token(&token.account_id, &token_response).await;
+                                    }
+                                    Err(e) => {
+                                        tracing::error!("Token 刷新失败 ({}): {}，尝试下一个账号", token.email, e);
+                                        if e.contains("\"invalid_grant\"") || e.contains("invalid_grant") {
+                                            self.disable_account(&token.account_id, &format!("invalid_grant: {}", e)).await;
+                                        }
+                                        last_error = Some(format!("Token refresh failed: {}", e));
+                                        attempted.insert(token.account_id.clone());
+                                        if quota_group != "image_gen" && matches!(&last_used_account_id, Some((id, _)) if id == &token.account_id) {
+                                            need_update_last_used = Some((String::new(), std::time::Instant::now()));
+                                        }
+                                        continue;
+                                    }
                                 }
-                                last_error = Some(format!("Token refresh failed: {}", e));
-                                attempted.insert(token.account_id.clone());
-                                if quota_group != "image_gen" && matches!(&last_used_account_id, Some((id, _)) if id == &token.account_id) {
-                                    need_update_last_used = Some((String::new(), std::time::Instant::now()));
-                                }
-                                continue;
                             }
                         }
                     }
@@ -1908,6 +1983,7 @@ impl TokenManager {
                         token.expires_in,
                         chrono::Utc::now().timestamp(),
                         token.project_id.clone(),
+                        token.provider.clone(),
                     ));
                     break;
                 }
@@ -1923,6 +1999,7 @@ impl TokenManager {
             expires_in,
             now,
             project_id_opt,
+            provider,
         ) = match token_info {
             Some(info) => info,
             None => return Err(format!("未找到账号: {}", email)),
@@ -1939,36 +2016,66 @@ impl TokenManager {
 
         tracing::info!("[Warmup] Token for {} is expiring, refreshing...", email);
 
-        // 调用 OAuth 刷新 token
-        match crate::modules::oauth::refresh_access_token(&refresh_token, Some(&account_id)).await {
-            Ok(token_response) => {
-                tracing::info!("[Warmup] Token refresh successful for {}", email);
-                let new_now = chrono::Utc::now().timestamp();
+        match provider.as_str() {
+            "codex" => {
+                match crate::modules::oauth_codex::refresh_codex_token(&refresh_token).await {
+                    Ok(codex_response) => {
+                        tracing::info!("[Warmup] Codex token refresh successful for {}", email);
+                        let new_now = chrono::Utc::now().timestamp();
 
-                // 更新缓存
-                if let Some(mut entry) = self.tokens.get_mut(&account_id) {
-                    entry.access_token = token_response.access_token.clone();
-                    entry.expires_in = token_response.expires_in;
-                    entry.timestamp = new_now;
+                        if let Some(mut entry) = self.tokens.get_mut(&account_id) {
+                            entry.access_token = codex_response.access_token.clone();
+                            entry.expires_in = codex_response.expires_in;
+                            entry.timestamp = new_now;
+                        }
+
+                        let token_response = crate::modules::oauth::TokenResponse {
+                            access_token: codex_response.access_token.clone(),
+                            expires_in: codex_response.expires_in,
+                            token_type: codex_response.token_type,
+                            refresh_token: codex_response.refresh_token,
+                            oauth_client_key: None,
+                        };
+                        let _ = self.save_refreshed_token(&account_id, &token_response).await;
+
+                        Ok((codex_response.access_token, project_id, email.to_string(), account_id, 0))
+                    }
+                    Err(e) => Err(format!(
+                        "[Warmup] Codex token refresh failed for {}: {}",
+                        email, e
+                    )),
                 }
-
-                // 保存到磁盘
-                let _ = self
-                    .save_refreshed_token(&account_id, &token_response)
-                    .await;
-
-                Ok((
-                    token_response.access_token,
-                    project_id,
-                    email.to_string(),
-                    account_id,
-                    0,
-                ))
             }
-            Err(e) => Err(format!(
-                "[Warmup] Token refresh failed for {}: {}",
-                email, e
-            )),
+            _ => {
+                match crate::modules::oauth::refresh_access_token(&refresh_token, Some(&account_id)).await {
+                    Ok(token_response) => {
+                        tracing::info!("[Warmup] Token refresh successful for {}", email);
+                        let new_now = chrono::Utc::now().timestamp();
+
+                        if let Some(mut entry) = self.tokens.get_mut(&account_id) {
+                            entry.access_token = token_response.access_token.clone();
+                            entry.expires_in = token_response.expires_in;
+                            entry.timestamp = new_now;
+                        }
+
+                        let _ = self
+                            .save_refreshed_token(&account_id, &token_response)
+                            .await;
+
+                        Ok((
+                            token_response.access_token,
+                            project_id,
+                            email.to_string(),
+                            account_id,
+                            0,
+                        ))
+                    }
+                    Err(e) => Err(format!(
+                        "[Warmup] Token refresh failed for {}: {}",
+                        email, e
+                    )),
+                }
+            }
         }
     }
 
@@ -2943,6 +3050,7 @@ mod tests {
             validation_url: None,
             model_quotas: HashMap::new(),
             model_limits: HashMap::new(),
+            provider: "gemini".to_string(),
         }
     }
 
@@ -3201,6 +3309,7 @@ mod tests {
             validation_url: None,
             model_quotas: HashMap::new(),
             model_limits: HashMap::new(),
+            provider: "gemini".to_string(),
         }
     }
 

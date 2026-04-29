@@ -330,6 +330,11 @@ pub fn normalize_to_standard_id(model_name: &str) -> Option<String> {
         return Some("claude".to_string());
     }
 
+    // 5. Codex/ChatGPT 模型系列 — 保留原名传递到上游，不映射到 Gemini
+    if lower.contains("pasgpt") || lower.contains("gpt-5.") || lower.contains("codex") {
+        return Some("codex".to_string());
+    }
+
     None
 }
 
@@ -486,5 +491,29 @@ mod tests {
         assert_eq!(resolve_model_route("random-model", &custom), "catch-all");
         // Multi-wildcard: "a*b*c" (3)
         assert_eq!(resolve_model_route("a-test-b-foo-c", &custom), "multi-wild");
+    }
+
+    #[test]
+    fn test_codex_model_normalization() {
+        // Codex models should be categorized under "codex" standard ID
+        assert_eq!(
+            normalize_to_standard_id("PasGPT-5-Codex"),
+            Some("codex".to_string())
+        );
+        assert_eq!(
+            normalize_to_standard_id("GPT-5.1"),
+            Some("codex".to_string())
+        );
+
+        // Existing Gemini models should NOT be caught by gpt-5 check
+        assert_eq!(
+            normalize_to_standard_id("gpt-4-turbo"),
+            None
+        );
+
+        // Codex models should pass through resolve_model_route unchanged
+        let custom = std::collections::HashMap::new();
+        assert_eq!(resolve_model_route("PasGPT-5-Codex", &custom), "PasGPT-5-Codex");
+        assert_eq!(resolve_model_route("GPT-5.1", &custom), "GPT-5.1");
     }
 }
