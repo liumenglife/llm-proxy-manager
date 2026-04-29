@@ -36,10 +36,11 @@
 - `[•]` 代表正在执行
 
 ## 9. 当前正在做
-- 等待用户下发具体开发任务。
+- 批次 2：Account 模型加 provider 字段 — Task 2.1 已完成，等待子 Agent QA 审查
 
 ## 10. 已完成里程碑
 - [✓] 初始化 planning 文件体系（current.md / history.md / decisions.md）
+- [✓] 批次 1：项目改名 Antigravity → llm-proxy-Manager
 
 ## 11. 当前阻塞
 - 无。

@@ -8,3 +8,13 @@
 - **决策内容**：启用 `superpowers-planning-with-files` 工作流，以 `current.md` 维护主线状态。
 - **决策原因**：为了在多 Agent 协作和跨 Session 开发中保持一致的全局真相，防止任务偏航。
 - **影响范围**：整个项目生命周期内，主 Agent 需遵守该规范进行读写。
+
+### [2026-04-29] 2. 项目更名为 llm-proxy-Manager
+- **决策内容**：项目从 Antigravity Tools 更名为 llm-proxy-Manager，全项目文件同步。
+- **决策原因**：原名称 Antigravity 不再反映项目的新定位和功能范围。
+- **影响范围**：全项目—Rust 源码、前端源码、配置、文档、安装脚本、Docker、README。
+
+### [2026-04-29] 3. Account 模型新增 provider 字段
+- **决策内容**：Account 模型增加 `provider: String` 字段，取值为 `"gemini"` 或 `"codex"`，默认 `"gemini"`。
+- **决策原因**：支持多 Provider（Gemini + OpenAI ChatGPT）的账号管理。
+- **影响范围**：`src-tauri/src/models/account.rs`、`src/types/account.ts`、所有 `Account::new()` 调用点。
