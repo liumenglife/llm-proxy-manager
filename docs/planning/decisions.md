@@ -18,3 +18,8 @@
 - **决策内容**：Account 模型增加 `provider: String` 字段，取值为 `"gemini"` 或 `"codex"`，默认 `"gemini"`。
 - **决策原因**：支持多 Provider（Gemini + OpenAI ChatGPT）的账号管理。
 - **影响范围**：`src-tauri/src/models/account.rs`、`src/types/account.ts`、所有 `Account::new()` 调用点。
+
+### [2026-04-29] 4. Codex OAuth 使用 GitHub OAuth 流程
+- **决策内容**：Codex (ChatGPT) OAuth 使用 GitHub OAuth 授权流程，与 OpenCode 的 `providers login` GitHub Copilot 流程一致。
+- **决策原因**：ChatGPT Plus/Pro 通过 GitHub OAuth 进行身份验证，无需 OpenAI 专用 OAuth 端点。
+- **影响范围**：`src-tauri/src/modules/oauth_codex.rs`、`src-tauri/src/modules/oauth_server.rs`。
