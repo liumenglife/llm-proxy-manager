@@ -345,7 +345,7 @@ export const CliSyncCard = ({ proxyUrl, apiKey, className }: CliSyncCardProps) =
                                 className="checkbox checkbox-xs checkbox-primary"
                             />
                             <label htmlFor="opencode-sync-accounts" className="text-[10px] text-gray-600 dark:text-gray-400 cursor-pointer select-none">
-                                {t('proxy.opencode_sync.sync_accounts', { defaultValue: 'Sync accounts to antigravity-accounts.json' })}
+                                {t('proxy.opencode_sync.sync_accounts', { defaultValue: 'Sync accounts to llm-proxy-manager-accounts.json' })}
                             </label>
                         </div>
                     )}

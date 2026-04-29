@@ -186,7 +186,7 @@ export function OpenCodeSyncModal({ proxyUrl, apiKey, onClose, onSyncDone }: Ope
                                 type="text"
                                 value={customBaseUrl}
                                 onChange={(e) => setCustomBaseUrl(e.target.value)}
-                                placeholder="e.g. http://antigravity-manager:8045/v1"
+                                placeholder="e.g. http://llm-proxy-manager:8045/v1"
                                 className="w-full px-3 py-1.5 text-xs bg-white dark:bg-base-100 border border-gray-200 dark:border-base-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                             />
                             {customBaseUrl !== proxyUrl && (
@@ -247,9 +247,9 @@ export function OpenCodeSyncModal({ proxyUrl, apiKey, onClose, onSyncDone }: Ope
                 {hasAuthPlugin && (
                     <div className="px-5 py-2 shrink-0 bg-amber-50 dark:bg-amber-900/20 border-y border-amber-100 dark:border-amber-900/30">
                         <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                            {t('proxy.config.opencode_sync.auth_plugin_warning', {
-                                defaultValue: 'Sync chỉ tạo provider antigravity-manager và không ghi đè google provider/plugin.'
-                            })}
+{t('proxy.config.opencode_sync.auth_plugin_warning', {
+    defaultValue: 'Sync chỉ tạo provider llm-proxy-manager và không ghi đè google provider/plugin.'
+})}
                         </p>
                     </div>
                 )}
