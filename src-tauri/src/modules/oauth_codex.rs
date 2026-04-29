@@ -52,7 +52,7 @@ pub fn get_codex_auth_url(
     let params = vec![
         ("client_id", get_client_id()),
         ("redirect_uri", redirect_uri.to_string()),
-        ("response_type", "code"),
+        ("response_type", "code".to_string()),
         ("scope", "openid profile email offline_access".to_string()),
         ("code_challenge", code_challenge.to_string()),
         ("code_challenge_method", "S256".to_string()),
@@ -64,9 +64,11 @@ pub fn get_codex_auth_url(
     Ok(url.to_string())
 }
 
-fn get_http_client() -> crate::utils::http::HttpClient {
+fn get_http_client() -> rquest::Client {
     crate::utils::http::get_long_standard_client()
 }
+
+
 
 pub async fn exchange_codex_code(
     code: &str,
