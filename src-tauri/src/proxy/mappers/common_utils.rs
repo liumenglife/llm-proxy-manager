@@ -355,19 +355,26 @@ fn calculate_aspect_ratio_from_size(size: &str) -> &'static str {
 }
 
 /// Inject current googleSearch tool and ensure no duplicate legacy search tools
-pub fn inject_google_search_tool(body: &mut Value, _mapped_model: Option<&str>) {
+pub fn inject_google_search_tool(body: &mut Value, mapped_model: Option<&str>) {
     if let Some(obj) = body.as_object_mut() {
         let tools_entry = obj.entry("tools").or_insert_with(|| json!([]));
         if let Some(tools_arr) = tools_entry.as_array_mut() {
             let has_functions = tools_arr.iter().any(|t| {
                 t.as_object()
-                    .map_or(false, |o| o.contains_key("functionDeclarations"))
+                    .is_some_and(|o| o.contains_key("functionDeclarations"))
             });
 
-            // [FIX] v1internal (cloudcode-pa) does NOT support mixing googleSearch
-            // with functionDeclarations — it lacks includeServerSideToolInvocations.
-            // Skip googleSearch injection entirely when function tools are present.
-            if has_functions {
+            let supports_mixed_tools = mapped_model
+                .map(|m| {
+                    let lower = m.to_lowercase();
+                    lower.contains("gemini-2.0")
+                        || lower.contains("gemini-2.5")
+                        || lower.contains("gemini-3")
+                })
+                .unwrap_or(false);
+
+            // Gemini 2.0+ 支持 googleSearch 与 functionDeclarations 混用；旧模型仍保持互斥。
+            if has_functions && !supports_mixed_tools {
                 tracing::debug!(
                     "Skipping googleSearch injection: functionDeclarations present (v1internal incompatible)"
                 );

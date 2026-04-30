@@ -176,11 +176,6 @@ fn build_model_catalog() -> Vec<ModelDef> {
     ]
 }
 
-/// Normalize OpenCode base URL to ensure it ends with `/v1` (Anthropic protocol requirement)
-/// - Trims trailing `/`
-/// - If already ends with `/v1`, keeps it as-is
-/// - Otherwise appends `/v1`
-
 /// Build the Codex model catalog for llm-proxy-codex provider
 fn build_codex_model_catalog() -> Vec<ModelDef> {
     vec![
@@ -447,7 +442,7 @@ fn extract_version(raw: &str) -> String {
 
 fn is_valid_version(s: &str) -> bool {
     // A valid version should start with digit and contain at least one dot
-    s.chars().next().map_or(false, |c| c.is_ascii_digit())
+    s.chars().next().is_some_and(|c| c.is_ascii_digit())
         && s.contains('.')
         && s.chars().all(|c| c.is_ascii_digit() || c == '.')
 }

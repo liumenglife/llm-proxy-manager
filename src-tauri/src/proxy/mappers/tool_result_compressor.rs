@@ -178,7 +178,7 @@ fn compact_browser_snapshot(text: &str, max_chars: usize) -> Option<String> {
 
     // 计算头部和尾部长度
     let head_len = (budget as f64 * SNAPSHOT_HEAD_RATIO).floor() as usize;
-    let head_len = head_len.min(10_000).max(500);
+    let head_len = head_len.clamp(500, 10_000);
     let tail_len = budget.saturating_sub(head_len).min(3_000);
 
     let head = &text[..head_len.min(text.len())];
@@ -297,12 +297,11 @@ pub fn sanitize_tool_result_blocks(blocks: &mut Vec<Value>) {
         // 压缩文本内容
         if let Some(text) = block.get("text").and_then(|v| v.as_str()) {
             let remaining = MAX_TOOL_RESULT_CHARS.saturating_sub(used_chars);
-            if remaining == 0 {
-                debug!("[ToolCompressor] Reached character limit, stopping");
-                break;
-            }
-
-            let compacted = compact_tool_result_text(text, remaining);
+            let compacted = if remaining == 0 {
+                String::new()
+            } else {
+                compact_tool_result_text(text, remaining)
+            };
             let mut new_block = block.clone();
             new_block["text"] = Value::String(compacted.clone());
             cleaned_blocks.push(new_block);
@@ -314,13 +313,9 @@ pub fn sanitize_tool_result_blocks(blocks: &mut Vec<Value>) {
                 compacted.len()
             );
         } else {
-            // 保留其他类型的块 (例如图片), 但受总长度块数限制, 此处不单独截断
+            // 非文本块是结构化内容，不能因为文本预算耗尽而丢失。
             cleaned_blocks.push(block.clone());
             used_chars += 100; // 估算非文本块大小
-        }
-
-        if used_chars >= MAX_TOOL_RESULT_CHARS {
-            break;
         }
     }
 

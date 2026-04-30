@@ -1,4 +1,33 @@
-import { Gemini, Claude } from '@lobehub/icons';
+import { createElement, type ComponentType } from 'react';
+
+type ModelIconProps = { size?: number; className?: string };
+
+const createModelIcon = (label: string, color: string): ComponentType<ModelIconProps> => {
+    return ({ size = 16, className }) => createElement(
+        'svg',
+        {
+            width: size,
+            height: size,
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            className,
+            role: 'img',
+            'aria-label': label,
+        },
+        createElement('circle', { cx: 12, cy: 12, r: 10, fill: color }),
+        createElement('text', {
+            x: 12,
+            y: 16,
+            textAnchor: 'middle',
+            fontSize: 11,
+            fontWeight: 700,
+            fill: 'white',
+        }, label[0]),
+    );
+};
+
+const GeminiIcon = createModelIcon('Gemini', '#4285f4');
+const ClaudeIcon = createModelIcon('Claude', '#d97757');
 
 /**
  * 模型配置接口
@@ -11,7 +40,7 @@ export interface ModelConfig {
     /** 保护模型的键名 */
     protectedKey: string;
     /** 模型图标组件 */
-    Icon: React.ComponentType<{ size?: number; className?: string }>;
+    Icon: ComponentType<ModelIconProps>;
     /** 国际化键名 (用于动态名称) */
     i18nKey: string;
     /** 描述信息键名 (用于详细说明) */
@@ -33,7 +62,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3.1 Pro High',
         shortLabel: 'G3.1 Pro',
         protectedKey: 'gemini-pro',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.pro_high',
         i18nDescKey: 'proxy.model.pro_high',
         group: 'Gemini 3',
@@ -44,7 +73,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3.1 Pro High',
         shortLabel: 'G3.1 Pro',
         protectedKey: 'gemini-pro',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.pro_high',
         i18nDescKey: 'proxy.model.pro_high',
         group: 'Gemini 3',
@@ -54,7 +83,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3 Flash',
         shortLabel: 'G3 Flash',
         protectedKey: 'gemini-flash',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.flash_preview',
         i18nDescKey: 'proxy.model.flash_preview',
         group: 'Gemini 3',
@@ -64,7 +93,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3.1 Flash Image',
         shortLabel: 'G3.1 Image',
         protectedKey: 'gemini-3-pro-image',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.pro_image',
         i18nDescKey: 'proxy.model.pro_image_1_1',
         group: 'Gemini 3',
@@ -74,7 +103,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3 Image',
         shortLabel: 'G3 Image',
         protectedKey: 'gemini-3-pro-image',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.pro_image',
         i18nDescKey: 'proxy.model.pro_image_1_1',
         group: 'Gemini 3',
@@ -84,7 +113,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3.1 Pro Low',
         shortLabel: 'G3.1 Low',
         protectedKey: 'gemini-pro',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.pro_low',
         i18nDescKey: 'proxy.model.pro_low',
         group: 'Gemini 3',
@@ -95,7 +124,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 3.1 Pro Low',
         shortLabel: 'G3.1 Low',
         protectedKey: 'gemini-pro',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.pro_low',
         i18nDescKey: 'proxy.model.pro_low',
         group: 'Gemini 3',
@@ -107,7 +136,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 2.5 Flash',
         shortLabel: 'G2.5 Flash',
         protectedKey: 'gemini-flash',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.gemini_2_5_flash',
         i18nDescKey: 'proxy.model.gemini_2_5_flash',
         group: 'Gemini 2.5',
@@ -117,7 +146,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 2.5 Flash Lite',
         shortLabel: 'G2.5 Lite',
         protectedKey: 'gemini-flash',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.flash_lite',
         i18nDescKey: 'proxy.model.flash_lite',
         group: 'Gemini 2.5',
@@ -127,7 +156,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 2.5 Flash Think',
         shortLabel: 'G2.5 Think',
         protectedKey: 'gemini-flash',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.flash_thinking',
         i18nDescKey: 'proxy.model.flash_thinking',
         group: 'Gemini 2.5',
@@ -137,7 +166,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Gemini 2.5 Pro',
         shortLabel: 'G2.5 Pro',
         protectedKey: 'gemini-pro',
-        Icon: Gemini.Color,
+        Icon: GeminiIcon,
         i18nKey: 'proxy.model.gemini_2_5_pro',
         i18nDescKey: 'proxy.model.gemini_2_5_pro',
         group: 'Gemini 2.5',
@@ -149,7 +178,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Claude 4.6',
         shortLabel: 'Claude 4.6',
         protectedKey: 'claude',
-        Icon: Claude.Color,
+        Icon: ClaudeIcon,
         i18nKey: 'proxy.model.claude_sonnet',
         i18nDescKey: 'proxy.model.claude_sonnet',
         group: 'Claude',
@@ -159,7 +188,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Claude 4.6 TK',
         shortLabel: 'Claude 4.6 TK',
         protectedKey: 'claude',
-        Icon: Claude.Color,
+        Icon: ClaudeIcon,
         i18nKey: 'proxy.model.claude_sonnet_thinking',
         i18nDescKey: 'proxy.model.claude_sonnet_thinking',
         group: 'Claude',
@@ -169,7 +198,7 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
         label: 'Claude Opus 4.6 TK',
         shortLabel: 'Claude Opus 4.6 TK',
         protectedKey: 'claude',
-        Icon: Claude.Color,
+        Icon: ClaudeIcon,
         i18nKey: 'proxy.model.claude_opus_thinking',
         i18nDescKey: 'proxy.model.claude_opus_thinking',
         group: 'Claude',

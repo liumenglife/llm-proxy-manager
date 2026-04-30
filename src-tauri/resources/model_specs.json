@@ -35,6 +35,11 @@
             "thinking_budget": 32768,
             "is_thinking": true
         },
+        "claude-3-7-sonnet-thinking": {
+            "max_output_tokens": 64000,
+            "thinking_budget": 16000,
+            "is_thinking": true
+        },
         "gpt-oss-120b-medium": {
             "max_output_tokens": 32768,
             "thinking_budget": 0,

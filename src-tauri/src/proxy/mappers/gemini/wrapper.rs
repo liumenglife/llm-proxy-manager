@@ -279,7 +279,7 @@ pub fn wrap_request(
         // Google v1internal requires maxOutputTokens > thinkingBudget.
         // [FIX #1825] Handle adaptive fallback (incl. -1 and thinkingLevel)
         let thinking_config_opt = gen_config.get("thinkingConfig");
-        let is_adaptive = thinking_config_opt.map_or(false, |t| {
+        let is_adaptive = thinking_config_opt.is_some_and(|t| {
             t.get("thinkingLevel").is_some()
                 || t.get("thinkingBudget").and_then(|v| v.as_i64()) == Some(-1)
         }) || (thinking_config_opt
@@ -300,14 +300,14 @@ pub fn wrap_request(
                 .or(req_max_tokens);
 
             if is_adaptive {
-                if current_max.map_or(true, |m| m < 131072) {
+                if current_max.is_none_or(|m| m < 131072) {
                     gen_config.insert("maxOutputTokens".to_string(), json!(131072));
                 }
             } else if let Some(budget_i64) = budget_opt {
                 if budget_i64 > 0 {
                     let budget = budget_i64 as u64;
                     let min_required_max = budget + 8192;
-                    if current_max.map_or(true, |m| m <= budget) {
+                    if current_max.is_none_or(|m| m <= budget) {
                         tracing::info!(
                             "[Gemini-Wrap] Bumping maxOutputTokens from {:?} to {} to satisfy thinkingBudget ({})",
                             current_max, min_required_max, budget
@@ -350,7 +350,7 @@ pub fn wrap_request(
     let tools_val: Option<Vec<Value>> = inner_request
         .get("tools")
         .and_then(|t| t.as_array())
-        .map(|arr| arr.clone());
+        .cloned();
 
     // [FIX] Extract OpenAI-compatible image parameters from root (for gemini-3-pro-image)
     let size = body.get("size").and_then(|v| v.as_str());
@@ -515,7 +515,7 @@ pub fn wrap_request(
                 if let Some(parts_array) = parts.as_array_mut() {
                     // 检查第一个 part 是否已包含 Antigravity 身份
                     let has_antigravity = parts_array
-                        .get(0)
+                        .first()
                         .and_then(|p| p.get("text"))
                         .and_then(|t| t.as_str())
                         .map(|s| s.contains("You are Antigravity"))
@@ -532,7 +532,7 @@ pub fn wrap_request(
                         && !global_prompt_config.content.trim().is_empty()
                     {
                         // 插入位置：Antigravity 身份之后 (index 1)
-                        let insert_pos = if has_antigravity { 1 } else { 1 };
+                        let insert_pos = 1;
                         if insert_pos <= parts_array.len() {
                             parts_array
                                 .insert(insert_pos, json!({"text": global_prompt_config.content}));
@@ -558,7 +558,7 @@ pub fn wrap_request(
     }
 
     // [ADDED v4.1.24] 扩展 toolConfig 到 VALIDATED 模式
-    if inner_request.get("tools").is_some() && !inner_request.get("toolConfig").is_some() {
+    if inner_request.get("tools").is_some() && inner_request.get("toolConfig").is_none() {
         inner_request["toolConfig"] = json!({
             "functionCallingConfig": { "mode": "VALIDATED" }
         });
@@ -768,8 +768,7 @@ mod tests {
 
     #[test]
     fn test_gemini_flash_thinking_budget_capping() {
-        // Ensure default config (Auto mode)
-        crate::proxy::config::update_thinking_budget_config(
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
             crate::proxy::config::ThinkingBudgetConfig::default(),
         );
 
@@ -945,16 +944,14 @@ mod tests {
     #[test]
     fn test_gemini_pro_thinking_budget_processing() {
         // Update global config to Custom mode to verify logic execution
-        use crate::proxy::config::{
-            update_thinking_budget_config, ThinkingBudgetConfig, ThinkingBudgetMode,
-        };
+        use crate::proxy::config::{ThinkingBudgetConfig, ThinkingBudgetMode};
 
-        // Save old config (optional, but good practice if tests ran in parallel, but here it's fine)
-        update_thinking_budget_config(ThinkingBudgetConfig {
-            mode: ThinkingBudgetMode::Custom,
-            custom_value: 1024, // Distinct value
-            effort: None,
-        });
+        let _thinking_budget_guard =
+            crate::proxy::config::thinking_budget_test_guard(ThinkingBudgetConfig {
+                mode: ThinkingBudgetMode::Custom,
+                custom_value: 1024, // Distinct value
+                effort: None,
+            });
 
         let body = json!({
             "model": "gemini-3-pro-preview",
@@ -981,9 +978,6 @@ mod tests {
             budget, 1024,
             "Budget should be overridden to 1024 by custom config, proving logic execution"
         );
-
-        // Restore default (Auto 24576)
-        update_thinking_budget_config(ThinkingBudgetConfig::default());
     }
 
     #[cfg(test)]
@@ -996,8 +990,7 @@ mod tests {
             // 验证 Claude 模型不会在根目录注入 thinking，而是注入到 generationConfig.thinkingConfig
             // 并且 budget 默认为 16000
 
-            // 使用 Auto 模式避免干扰
-            crate::proxy::config::update_thinking_budget_config(
+            let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
                 crate::proxy::config::ThinkingBudgetConfig {
                     mode: crate::proxy::config::ThinkingBudgetMode::Auto,
                     custom_value: 0,
@@ -1047,6 +1040,10 @@ mod tests {
         #[test]
         fn test_gemini_thinking_injection_default() {
             // 验证 Gemini 模型注入默认预算 24576
+            let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+                crate::proxy::config::ThinkingBudgetConfig::default(),
+            );
+
             let body = json!({
                 "model": "gemini-2.0-flash-thinking-exp",
                 "contents": [{"role": "user", "parts": [{"text": "hi"}]}]
@@ -1074,8 +1071,7 @@ mod tests {
 
     #[test]
     fn test_gemini_pro_auto_inject_thinking() {
-        // Reset thinking budget to auto mode at the start to avoid interference from parallel tests
-        crate::proxy::config::update_thinking_budget_config(
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
             crate::proxy::config::ThinkingBudgetConfig {
                 mode: crate::proxy::config::ThinkingBudgetMode::Auto,
                 custom_value: 24576,

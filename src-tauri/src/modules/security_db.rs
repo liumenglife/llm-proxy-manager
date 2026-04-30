@@ -1,9 +1,26 @@
 //! Security Database Module
 //! 安全监控相关的数据库操作
 
+use once_cell::sync::Lazy;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::RwLock;
+
+static BLACKLIST_CACHE: Lazy<RwLock<Option<Vec<IpBlacklistEntry>>>> =
+    Lazy::new(|| RwLock::new(None));
+static WHITELIST_CACHE: Lazy<RwLock<Option<Vec<IpWhitelistEntry>>>> =
+    Lazy::new(|| RwLock::new(None));
+
+#[cfg(test)]
+static SECURITY_DB_TEST_LOCK: Lazy<std::sync::Mutex<()>> = Lazy::new(|| std::sync::Mutex::new(()));
+
+#[cfg(test)]
+pub(crate) fn security_db_test_guard() -> std::sync::MutexGuard<'static, ()> {
+    SECURITY_DB_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+}
 
 /// IP 访问日志
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,15 +92,7 @@ fn connect_db() -> Result<Connection, String> {
     let db_path = get_security_db_path()?;
     let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
 
-    // Enable WAL mode for better concurrency
-    conn.pragma_update(None, "journal_mode", "WAL")
-        .map_err(|e| e.to_string())?;
-
-    // Set busy timeout
     conn.pragma_update(None, "busy_timeout", 5000)
-        .map_err(|e| e.to_string())?;
-
-    conn.pragma_update(None, "synchronous", "NORMAL")
         .map_err(|e| e.to_string())?;
 
     Ok(conn)
@@ -92,6 +101,11 @@ fn connect_db() -> Result<Connection, String> {
 /// 初始化安全数据库
 pub fn init_db() -> Result<(), String> {
     let conn = connect_db()?;
+
+    conn.pragma_update(None, "journal_mode", "WAL")
+        .map_err(|e| e.to_string())?;
+    conn.pragma_update(None, "synchronous", "NORMAL")
+        .map_err(|e| e.to_string())?;
 
     // IP 访问日志表
     conn.execute(
@@ -400,6 +414,8 @@ pub fn add_to_blacklist(
     )
     .map_err(|e| e.to_string())?;
 
+    invalidate_blacklist_cache();
+
     Ok(IpBlacklistEntry {
         id,
         ip_pattern: ip_pattern.to_string(),
@@ -418,23 +434,75 @@ pub fn remove_from_blacklist(id: &str) -> Result<(), String> {
     conn.execute("DELETE FROM ip_blacklist WHERE id = ?1", [id])
         .map_err(|e| e.to_string())?;
 
+    invalidate_blacklist_cache();
+
     Ok(())
 }
 
 /// 获取黑名单列表
 pub fn get_blacklist() -> Result<Vec<IpBlacklistEntry>, String> {
-    let conn = connect_db()?;
+    get_blacklist_cached()
+}
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT id, ip_pattern, reason, created_at, expires_at, created_by, hit_count
-             FROM ip_blacklist
-             ORDER BY created_at DESC",
-        )
-        .map_err(|e| e.to_string())?;
+fn invalidate_blacklist_cache() {
+    if let Ok(mut cache) = BLACKLIST_CACHE.write() {
+        *cache = None;
+    }
+}
+
+fn get_blacklist_cached() -> Result<Vec<IpBlacklistEntry>, String> {
+    if let Ok(cache) = BLACKLIST_CACHE.read() {
+        if let Some(entries) = cache.as_ref() {
+            return Ok(entries.clone());
+        }
+    }
+
+    let conn = connect_db()?;
+    let entries = get_blacklist_with_conn(&conn)?;
+
+    if let Ok(mut cache) = BLACKLIST_CACHE.write() {
+        *cache = Some(entries.clone());
+    }
+
+    Ok(entries)
+}
+
+fn get_blacklist_with_conn(conn: &Connection) -> Result<Vec<IpBlacklistEntry>, String> {
+    get_blacklist_with_sql(
+        conn,
+        "SELECT id, ip_pattern, reason, created_at, expires_at, created_by, hit_count
+         FROM ip_blacklist
+         ORDER BY created_at DESC",
+        [],
+    )
+}
+
+fn get_active_blacklist_with_conn(
+    conn: &Connection,
+    now: i64,
+) -> Result<Vec<IpBlacklistEntry>, String> {
+    get_blacklist_with_sql(
+        conn,
+        "SELECT id, ip_pattern, reason, created_at, expires_at, created_by, hit_count
+         FROM ip_blacklist
+         WHERE expires_at IS NULL OR expires_at >= ?1
+         ORDER BY created_at DESC",
+        [now],
+    )
+}
+
+fn get_blacklist_with_sql<P>(
+    conn: &Connection,
+    sql: &str,
+    params: P,
+) -> Result<Vec<IpBlacklistEntry>, String>
+where
+    P: rusqlite::Params,
+{
+    let mut stmt = conn.prepare(sql).map_err(|e| e.to_string())?;
 
     let entries_iter = stmt
-        .query_map([], |row| {
+        .query_map(params, |row| {
             Ok(IpBlacklistEntry {
                 id: row.get(0)?,
                 ip_pattern: row.get(1)?,
@@ -456,7 +524,18 @@ pub fn get_blacklist() -> Result<Vec<IpBlacklistEntry>, String> {
 
 /// 检查 IP 是否在黑名单中
 pub fn is_ip_in_blacklist(ip: &str) -> Result<bool, String> {
-    get_blacklist_entry_for_ip(ip).map(|entry| entry.is_some())
+    let conn = connect_db()?;
+    let now = chrono::Utc::now().timestamp();
+    let entries = get_active_blacklist_with_conn(&conn, now)?;
+    for entry in entries {
+        if entry.ip_pattern == ip
+            || entry.ip_pattern.contains('/') && cidr_match(ip, &entry.ip_pattern)
+        {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
 }
 
 /// 获取 IP 对应的黑名单条目（如果存在）
@@ -465,10 +544,14 @@ pub fn get_blacklist_entry_for_ip(ip: &str) -> Result<Option<IpBlacklistEntry>, 
     let now = chrono::Utc::now().timestamp();
 
     // 清理过期的黑名单条目
-    let _ = conn.execute(
+    if let Ok(deleted) = conn.execute(
         "DELETE FROM ip_blacklist WHERE expires_at IS NOT NULL AND expires_at < ?1",
         [now],
-    );
+    ) {
+        if deleted > 0 {
+            invalidate_blacklist_cache();
+        }
+    }
 
     // 精确匹配
     let entry_result = conn.query_row(
@@ -494,21 +577,21 @@ pub fn get_blacklist_entry_for_ip(ip: &str) -> Result<Option<IpBlacklistEntry>, 
             "UPDATE ip_blacklist SET hit_count = hit_count + 1 WHERE ip_pattern = ?1",
             [ip],
         );
+        invalidate_blacklist_cache();
         return Ok(Some(entry));
     }
 
     // CIDR 匹配
-    let entries = get_blacklist()?;
+    let entries = get_active_blacklist_with_conn(&conn, now)?;
     for entry in entries {
-        if entry.ip_pattern.contains('/') {
-            if cidr_match(ip, &entry.ip_pattern) {
-                // 增加命中计数
-                let _ = conn.execute(
-                    "UPDATE ip_blacklist SET hit_count = hit_count + 1 WHERE id = ?1",
-                    [&entry.id],
-                );
-                return Ok(Some(entry));
-            }
+        if entry.ip_pattern.contains('/') && cidr_match(ip, &entry.ip_pattern) {
+            // 增加命中计数
+            let _ = conn.execute(
+                "UPDATE ip_blacklist SET hit_count = hit_count + 1 WHERE id = ?1",
+                [&entry.id],
+            );
+            invalidate_blacklist_cache();
+            return Ok(Some(entry));
         }
     }
 
@@ -527,6 +610,10 @@ fn cidr_match(ip: &str, cidr: &str) -> bool {
         Ok(p) => p,
         Err(_) => return false,
     };
+
+    if prefix_len > 32 {
+        return false;
+    }
 
     let ip_parts: Vec<u8> = ip.split('.').filter_map(|s| s.parse().ok()).collect();
     let net_parts: Vec<u8> = network.split('.').filter_map(|s| s.parse().ok()).collect();
@@ -568,6 +655,8 @@ pub fn add_to_whitelist(
     )
     .map_err(|e| e.to_string())?;
 
+    invalidate_whitelist_cache();
+
     Ok(IpWhitelistEntry {
         id,
         ip_pattern: ip_pattern.to_string(),
@@ -583,13 +672,40 @@ pub fn remove_from_whitelist(id: &str) -> Result<(), String> {
     conn.execute("DELETE FROM ip_whitelist WHERE id = ?1", [id])
         .map_err(|e| e.to_string())?;
 
+    invalidate_whitelist_cache();
+
     Ok(())
 }
 
 /// 获取白名单列表
 pub fn get_whitelist() -> Result<Vec<IpWhitelistEntry>, String> {
-    let conn = connect_db()?;
+    get_whitelist_cached()
+}
 
+fn invalidate_whitelist_cache() {
+    if let Ok(mut cache) = WHITELIST_CACHE.write() {
+        *cache = None;
+    }
+}
+
+fn get_whitelist_cached() -> Result<Vec<IpWhitelistEntry>, String> {
+    if let Ok(cache) = WHITELIST_CACHE.read() {
+        if let Some(entries) = cache.as_ref() {
+            return Ok(entries.clone());
+        }
+    }
+
+    let conn = connect_db()?;
+    let entries = get_whitelist_with_conn(&conn)?;
+
+    if let Ok(mut cache) = WHITELIST_CACHE.write() {
+        *cache = Some(entries.clone());
+    }
+
+    Ok(entries)
+}
+
+fn get_whitelist_with_conn(conn: &Connection) -> Result<Vec<IpWhitelistEntry>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT id, ip_pattern, description, created_at
@@ -618,28 +734,12 @@ pub fn get_whitelist() -> Result<Vec<IpWhitelistEntry>, String> {
 
 /// 检查 IP 是否在白名单中
 pub fn is_ip_in_whitelist(ip: &str) -> Result<bool, String> {
-    let conn = connect_db()?;
-
-    // 精确匹配
-    let count: i64 = conn
-        .query_row(
-            "SELECT COUNT(*) FROM ip_whitelist WHERE ip_pattern = ?1",
-            [ip],
-            |row| row.get(0),
-        )
-        .map_err(|e| e.to_string())?;
-
-    if count > 0 {
-        return Ok(true);
-    }
-
-    // CIDR 匹配
-    let entries = get_whitelist()?;
+    let entries = get_whitelist_cached()?;
     for entry in entries {
-        if entry.ip_pattern.contains('/') {
-            if cidr_match(ip, &entry.ip_pattern) {
-                return Ok(true);
-            }
+        if entry.ip_pattern == ip
+            || entry.ip_pattern.contains('/') && cidr_match(ip, &entry.ip_pattern)
+        {
+            return Ok(true);
         }
     }
 

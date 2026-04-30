@@ -278,9 +278,4 @@ mod tests {
         // 此测试由于涉及 Next 中间件调用比较复杂,主要验证核心逻辑
         // 我们在 auth_middleware_internal 基础上做了逻辑校验即可
     }
-
-    #[test]
-    fn test_auth_placeholder() {
-        assert!(true);
-    }
 }

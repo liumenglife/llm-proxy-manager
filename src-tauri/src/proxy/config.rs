@@ -26,6 +26,37 @@ pub fn normalize_proxy_url(url: &str) -> String {
 // ============================================================================
 static GLOBAL_THINKING_BUDGET_CONFIG: OnceLock<RwLock<ThinkingBudgetConfig>> = OnceLock::new();
 
+#[cfg(test)]
+static THINKING_BUDGET_TEST_LOCK: OnceLock<std::sync::Mutex<()>> = OnceLock::new();
+
+#[cfg(test)]
+pub(crate) struct ThinkingBudgetTestGuard {
+    _lock: std::sync::MutexGuard<'static, ()>,
+    previous: ThinkingBudgetConfig,
+}
+
+#[cfg(test)]
+impl Drop for ThinkingBudgetTestGuard {
+    fn drop(&mut self) {
+        update_thinking_budget_config(self.previous.clone());
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn thinking_budget_test_guard(config: ThinkingBudgetConfig) -> ThinkingBudgetTestGuard {
+    let lock = THINKING_BUDGET_TEST_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .expect("thinking budget test lock poisoned");
+    let previous = get_thinking_budget_config();
+    update_thinking_budget_config(config);
+
+    ThinkingBudgetTestGuard {
+        _lock: lock,
+        previous,
+    }
+}
+
 /// 获取当前 Thinking Budget 配置
 pub fn get_thinking_budget_config() -> ThinkingBudgetConfig {
     GLOBAL_THINKING_BUDGET_CONFIG
@@ -122,7 +153,7 @@ pub fn update_image_thinking_mode(mode: Option<String>) {
 }
 
 /// 全局系统提示词配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GlobalSystemPromptConfig {
     /// 是否启用全局系统提示词
     #[serde(default)]
@@ -132,34 +163,23 @@ pub struct GlobalSystemPromptConfig {
     pub content: String,
 }
 
-impl Default for GlobalSystemPromptConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            content: String::new(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ProxyAuthMode {
     Off,
     Strict,
     AllExceptHealth,
+    #[default]
     Auto,
-}
-
-impl Default for ProxyAuthMode {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ZaiDispatchMode {
     /// Never use z.ai.
+    #[default]
     Off,
     /// Use z.ai for all Anthropic protocol requests.
     Exclusive,
@@ -167,12 +187,6 @@ pub enum ZaiDispatchMode {
     Pooled,
     /// Use z.ai only when the Google pool is unavailable.
     Fallback,
-}
-
-impl Default for ZaiDispatchMode {
-    fn default() -> Self {
-        Self::Off
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -198,7 +212,7 @@ impl Default for ZaiModelDefaults {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ZaiMcpConfig {
     #[serde(default)]
     pub enabled: bool,
@@ -208,17 +222,6 @@ pub struct ZaiMcpConfig {
     pub web_reader_enabled: bool,
     #[serde(default)]
     pub vision_enabled: bool,
-}
-
-impl Default for ZaiMcpConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            web_search_enabled: false,
-            web_reader_enabled: false,
-            vision_enabled: false,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -317,8 +320,10 @@ fn default_threshold_l3() -> f32 {
 /// 控制如何处理调用方传入的 thinking_budget 参数
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ThinkingBudgetMode {
     /// 自动限制：对特定模型（Flash/Thinking）应用 24576 上限
+    #[default]
     Auto,
     /// 透传：完全使用调用方传入的值，不做任何修改
     Passthrough,
@@ -326,12 +331,6 @@ pub enum ThinkingBudgetMode {
     Custom,
     /// 自适应：使用 effort 参数控制思考强度 (Claude 4.6+)
     Adaptive,
-}
-
-impl Default for ThinkingBudgetMode {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 /// Thinking Budget 配置
@@ -370,21 +369,12 @@ fn default_false() -> bool {
     false
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DebugLoggingConfig {
     #[serde(default)]
     pub enabled: bool,
     #[serde(default)]
     pub output_dir: Option<String>,
-}
-
-impl Default for DebugLoggingConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            output_dir: None,
-        }
-    }
 }
 
 /// IP 黑名单配置
@@ -434,7 +424,7 @@ impl Default for IpWhitelistConfig {
 }
 
 /// 安全监控配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityMonitorConfig {
     /// IP 黑名单配置
     #[serde(default)]
@@ -443,15 +433,6 @@ pub struct SecurityMonitorConfig {
     /// IP 白名单配置
     #[serde(default)]
     pub whitelist: IpWhitelistConfig,
-}
-
-impl Default for SecurityMonitorConfig {
-    fn default() -> Self {
-        Self {
-            blacklist: IpBlacklistConfig::default(),
-            whitelist: IpWhitelistConfig::default(),
-        }
-    }
 }
 
 /// 反代服务配置
@@ -704,6 +685,28 @@ pub enum ProxySelectionStrategy {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn thinking_budget_test_guard_restores_previous_config() {
+        let previous;
+        {
+            let guard = thinking_budget_test_guard(ThinkingBudgetConfig {
+                mode: ThinkingBudgetMode::Custom,
+                custom_value: 1024,
+                effort: None,
+            });
+            previous = guard.previous.clone();
+
+            let config = get_thinking_budget_config();
+            assert_eq!(config.mode, ThinkingBudgetMode::Custom);
+            assert_eq!(config.custom_value, 1024);
+        }
+
+        let config = get_thinking_budget_config();
+        assert_eq!(config.mode, previous.mode);
+        assert_eq!(config.custom_value, previous.custom_value);
+        assert_eq!(config.effort, previous.effort);
+    }
 
     #[test]
     fn test_normalize_proxy_url() {

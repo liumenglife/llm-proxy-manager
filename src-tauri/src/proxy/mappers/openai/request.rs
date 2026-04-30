@@ -15,10 +15,7 @@ pub fn transform_openai_request(
         crate::proxy::session_manager::SessionManager::extract_openai_session_id(request);
     let message_count = request.messages.len();
     // 将 OpenAI 工具转为 Value 数组以便探测
-    let tools_val = request
-        .tools
-        .as_ref()
-        .map(|list| list.iter().map(|v| v.clone()).collect::<Vec<_>>());
+    let tools_val = request.tools.as_ref().map(|list| list.to_vec());
 
     let mapped_model_lower = mapped_model.to_lowercase();
 
@@ -152,11 +149,11 @@ pub fn transform_openai_request(
 
     // 从缓存获取当前会话的思维签名
     let thought_sig = session_thought_sig;
-    if thought_sig.is_some() {
+    if let Some(sig) = &thought_sig {
         tracing::debug!(
             "[OpenAI-Request] Using session signature (sid: {}, len: {})",
             session_id,
-            thought_sig.as_ref().unwrap().len()
+            sig.len()
         );
     }
 
@@ -199,7 +196,7 @@ pub fn transform_openai_request(
             if let Some(reasoning) = &msg.reasoning_content {
                 // [FIX #1506] 增强对占位符 [undefined] 的识别
                 let is_invalid_placeholder = reasoning == "[undefined]" || reasoning.is_empty();
-                
+
                 if !is_invalid_placeholder {
                     let thought_part = json!({
                         "text": reasoning,
@@ -216,13 +213,13 @@ pub fn transform_openai_request(
                     "text": "Applying tool decisions and generating response...",
                     "thought": true,
                 });
-                
+
                 // [FIX #1575] 占位符永远不能使用真实签名（签名与真实思考内容绑定）
                 // 仅 Gemini 支持哨兵值跳过验证
                 if is_gemini_3_thinking {
                     thought_part["thoughtSignature"] = json!("skip_thought_signature_validator");
                 }
-                
+
                 parts.push(thought_part);
             }
 
@@ -249,7 +246,7 @@ pub fn transform_openai_request(
                                             let mime_part = &image_url.url[5..pos];
                                             let mime_type = mime_part.split(';').next().unwrap_or("image/jpeg");
                                             let data = &image_url.url[pos + 1..];
-                                            
+
                                             parts.push(json!({
                                                 "inlineData": { "mimeType": mime_type, "data": data }
                                             }));
@@ -269,14 +266,14 @@ pub fn transform_openai_request(
                                         } else {
                                             image_url.url.clone()
                                         };
-                                        
+
                                         tracing::debug!("[OpenAI-Request] Reading local image: {}", file_path);
-                                        
+
                                         // 读取文件并转换为 base64
                                         if let Ok(file_bytes) = std::fs::read(&file_path) {
                                             use base64::Engine as _;
                                             let b64 = base64::engine::general_purpose::STANDARD.encode(&file_bytes);
-                                            
+
                                             // 根据文件扩展名推断 MIME 类型
                                             let mime_type = if file_path.to_lowercase().ends_with(".png") {
                                                 "image/png"
@@ -287,7 +284,7 @@ pub fn transform_openai_request(
                                             } else {
                                                 "image/jpeg"
                                             };
-                                            
+
                                             parts.push(json!({
                                                 "inlineData": { "mimeType": mime_type, "data": b64 }
                                             }));
@@ -311,7 +308,7 @@ pub fn transform_openai_request(
 
             // Handle tool calls (assistant message)
             if let Some(tool_calls) = &msg.tool_calls {
-                for (_index, tc) in tool_calls.iter().enumerate() {
+                for tc in tool_calls.iter() {
                     /* 暂时移除：防止 Codex CLI 界面碎片化
                     if index == 0 && parts.is_empty() {
                          if mapped_model.contains("gemini-3") {
@@ -322,7 +319,7 @@ pub fn transform_openai_request(
 
 
                     let mut args = serde_json::from_str::<Value>(&tc.function.arguments).unwrap_or(json!({}));
-                    
+
                     // [New] 利用通用引擎修正参数类型 (替代以前硬编码的 shell 工具修复逻辑)
                     if let Some(original_schema) = tool_name_to_schema.get(&tc.function.name) {
                         crate::proxy::common::json_schema::fix_tool_call_args(&mut args, original_schema);
@@ -375,7 +372,7 @@ pub fn transform_openai_request(
                                             let mime_part = &image_url.url[5..pos];
                                             let mime_type = mime_part.split(';').next().unwrap_or("image/jpeg");
                                             let data = &image_url.url[pos + 1..];
-                                            
+
                                             extra_parts.push(json!({
                                                 "inlineData": { "mimeType": mime_type, "data": data }
                                             }));
@@ -482,7 +479,17 @@ pub fn transform_openai_request(
                 .map(|b| b as i64)
                 .unwrap_or(default_budget as i64);
 
-            let budget = match tb_config.mode {
+            let budget_mode = if matches!(
+                tb_config.mode,
+                crate::proxy::config::ThinkingBudgetMode::Adaptive
+            ) && user_enabled_thinking
+            {
+                crate::proxy::config::ThinkingBudgetMode::Auto
+            } else {
+                tb_config.mode.clone()
+            };
+
+            let budget = match budget_mode {
                 crate::proxy::config::ThinkingBudgetMode::Passthrough => user_budget,
                 crate::proxy::config::ThinkingBudgetMode::Custom => {
                     let mut custom_value = tb_config.custom_value as i64;
@@ -762,16 +769,12 @@ pub fn transform_openai_request(
 
 fn enforce_uppercase_types(value: &mut Value) {
     if let Value::Object(map) = value {
-        if let Some(type_val) = map.get_mut("type") {
-            if let Value::String(ref mut s) = type_val {
-                *s = s.to_uppercase();
-            }
+        if let Some(Value::String(s)) = map.get_mut("type") {
+            *s = s.to_uppercase();
         }
-        if let Some(properties) = map.get_mut("properties") {
-            if let Value::Object(ref mut props) = properties {
-                for v in props.values_mut() {
-                    enforce_uppercase_types(v);
-                }
+        if let Some(Value::Object(props)) = map.get_mut("properties") {
+            for v in props.values_mut() {
+                enforce_uppercase_types(v);
             }
         }
         if let Some(items) = map.get_mut("items") {
@@ -790,6 +793,10 @@ mod tests {
 
     #[test]
     fn test_issue_1592_gemini_3_pro_budget_capping() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         // [FIX #1592] Regression test for gemini-3-pro thinking budget capping
         let req = OpenAIRequest {
             model: "gemini-3-pro".to_string(),
@@ -819,16 +826,15 @@ mod tests {
     #[test]
     fn test_issue_1602_custom_mode_gemini_capping() {
         // [FIX #1602] Regression test for custom mode capping
-        use crate::proxy::config::{
-            update_thinking_budget_config, ThinkingBudgetConfig, ThinkingBudgetMode,
-        };
+        use crate::proxy::config::{ThinkingBudgetConfig, ThinkingBudgetMode};
 
         // 设置自定义模式，且数值超过 24k
-        update_thinking_budget_config(ThinkingBudgetConfig {
-            mode: ThinkingBudgetMode::Custom,
-            custom_value: 32000,
-            effort: None,
-        });
+        let _thinking_budget_guard =
+            crate::proxy::config::thinking_budget_test_guard(ThinkingBudgetConfig {
+                mode: ThinkingBudgetMode::Custom,
+                custom_value: 32000,
+                effort: None,
+            });
 
         let req = OpenAIRequest {
             model: "gemini-2.0-flash-thinking".to_string(),
@@ -874,9 +880,6 @@ mod tests {
         // 如果不是 gemini 模型且协议中没带 thinking 配置，可能会是 None 或 32000
         // 在该测试环境下，由于模拟的是 OpenAI 格式转 Gemini 路径，如果没有 gemini 关键词通常不进入 thinking 逻辑
         // 我们只需确保 gemini 路径正确受限即可。
-
-        // 恢复默认配置
-        update_thinking_budget_config(ThinkingBudgetConfig::default());
     }
 
     #[test]
@@ -887,9 +890,9 @@ mod tests {
                 role: "user".to_string(),
                 content: Some(OpenAIContent::Array(vec![
                     OpenAIContentBlock::Text { text: "What is in this image?".to_string() },
-                    OpenAIContentBlock::ImageUrl { image_url: OpenAIImageUrl { 
+                    OpenAIContentBlock::ImageUrl { image_url: OpenAIImageUrl {
                         url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==".to_string(),
-                        detail: None 
+                        detail: None
                     } }
                 ])),
                 reasoning_content: None,
@@ -923,6 +926,10 @@ mod tests {
 
     #[test]
     fn test_gemini_pro_thinking_injection() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         let req = OpenAIRequest {
             model: "gemini-3-pro-preview".to_string(),
             messages: vec![OpenAIMessage {
@@ -1005,6 +1012,10 @@ mod tests {
 
     #[test]
     fn test_default_max_tokens_openai() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         let req = OpenAIRequest {
             model: "gpt-4".to_string(),
             messages: vec![OpenAIMessage {
@@ -1045,6 +1056,10 @@ mod tests {
 
     #[test]
     fn test_flash_thinking_budget_capping() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         let req = OpenAIRequest {
             model: "gpt-4".to_string(),
             messages: vec![OpenAIMessage {
@@ -1121,7 +1136,7 @@ mod tests {
             transform_openai_request(&req, "test-v", mapped_model, None);
 
         // Extract the tool call part from contents
-        let contents = result["contents"].as_array().unwrap();
+        let contents = result["request"]["contents"].as_array().unwrap();
         // Identify the part with functionCall
         let parts = contents[0]["parts"].as_array().unwrap();
         let tool_part = parts
@@ -1175,7 +1190,7 @@ mod tests {
             let tool_part = parts
                 .iter()
                 .find(|p| p.get("functionCall").is_some())
-                .expect(&format!("[{model}] Should find functionCall part"));
+                .unwrap_or_else(|| panic!("[{model}] Should find functionCall part"));
 
             assert_eq!(
                 tool_part["thoughtSignature"].as_str(),

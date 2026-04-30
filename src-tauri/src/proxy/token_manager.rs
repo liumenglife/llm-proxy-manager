@@ -9,6 +9,9 @@ use tokio_util::sync::CancellationToken;
 use crate::proxy::rate_limit::RateLimitTracker;
 use crate::proxy::sticky_config::StickySessionConfig;
 
+type LoadCodeAssistInflight =
+    Arc<DashMap<String, tokio::sync::watch::Receiver<Option<Result<String, String>>>>>;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum OnDiskAccountState {
     Enabled,
@@ -57,8 +60,7 @@ pub struct TokenManager {
 
     // [NEW] loadCodeAssist (fetch_project_id) 的异步 SingleFlight 合并表
     // Key 为 account_id，Value 为结果观察者，确保并发请求共享同一个上游探测结果
-    load_code_assist_inflight:
-        Arc<DashMap<String, tokio::sync::watch::Receiver<Option<Result<String, String>>>>>,
+    load_code_assist_inflight: LoadCodeAssistInflight,
 
     /// 支持优雅关闭时主动 abort 后台任务
     auto_cleanup_handle: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
@@ -696,18 +698,16 @@ impl TokenManager {
                     .get("protected_models")
                     .and_then(|v| v.as_array());
 
-                let is_protected = protected_models.map_or(false, |arr| {
-                    arr.iter().any(|m| m.as_str() == Some(std_id as &str))
-                });
+                let is_protected = protected_models
+                    .is_some_and(|arr| arr.iter().any(|m| m.as_str() == Some(std_id as &str)));
 
-                if is_protected {
-                    if self
+                if is_protected
+                    && self
                         .restore_quota_protection(account_json, &account_id, account_path, std_id)
                         .await
                         .unwrap_or(false)
-                    {
-                        changed = true;
-                    }
+                {
+                    changed = true;
                 }
             }
         }
@@ -722,10 +722,7 @@ impl TokenManager {
     /// 计算账号的最大剩余配额百分比（用于排序）
     /// 返回值: Option<i32> (max_percentage)
     fn calculate_quota_stats(&self, quota: &serde_json::Value) -> Option<i32> {
-        let models = match quota.get("models").and_then(|m| m.as_array()) {
-            Some(m) => m,
-            None => return None,
-        };
+        let models = quota.get("models").and_then(|m| m.as_array())?;
 
         let mut max_percentage = 0;
         let mut has_data = false;
@@ -1550,12 +1547,9 @@ impl TokenManager {
                     .unwrap_or_else(|| target_model.to_string());
 
             // 模式 A: 粘性会话处理 (CacheFirst 或 Balance 且有 session_id)
-            if !rotate
-                && session_id.is_some()
-                && scheduling.mode != SchedulingMode::PerformanceFirst
+            if let Some(sid) = session_id
+                .filter(|_| !rotate && scheduling.mode != SchedulingMode::PerformanceFirst)
             {
-                let sid = session_id.unwrap();
-
                 // 1. 检查会话是否已绑定账号
                 if let Some(bound_id) = self.session_accounts.get(sid).map(|v| v.clone()) {
                     // 【修复】先通过 account_id 找到对应的账号，获取其 email
@@ -1576,8 +1570,8 @@ impl TokenManager {
                                 bound_token.email, reset_sec
                             );
                             self.session_accounts.remove(sid);
-                        } else if !attempted.contains(&bound_id)
-                            && !(quota_protection_enabled
+                        } else if !(attempted.contains(&bound_id)
+                            || quota_protection_enabled
                                 && bound_token.protected_models.contains(&normalized_target))
                         {
                             // 3. 账号可用且未被标记为尝试失败，优先复用
@@ -1615,10 +1609,10 @@ impl TokenManager {
                             tokens_snapshot.iter().find(|t| &t.account_id == account_id)
                         {
                             // 【修复】检查限流状态和配额保护，避免复用已被锁定的账号
-                            if !self
+                            if !(self
                                 .is_rate_limited(&found.account_id, Some(&normalized_target))
                                 .await
-                                && !(quota_protection_enabled
+                                || quota_protection_enabled
                                     && found.protected_models.contains(&normalized_target))
                             {
                                 tracing::debug!(
@@ -1734,12 +1728,12 @@ impl TokenManager {
 
                             // 重新尝试选择账号
                             let retry_token = tokens_snapshot.iter().find(|t| {
-                                !attempted.contains(&t.account_id)
-                                    && !self.is_rate_limited_sync(
+                                !(attempted.contains(&t.account_id)
+                                    || self.is_rate_limited_sync(
                                         &t.account_id,
                                         Some(&normalized_target),
                                     )
-                                    && !(quota_protection_enabled
+                                    || quota_protection_enabled
                                         && t.protected_models.contains(&normalized_target))
                             });
 
@@ -1761,8 +1755,8 @@ impl TokenManager {
 
                                 // 再次尝试选择账号
                                 let final_token = tokens_snapshot.iter().find(|t| {
-                                    !attempted.contains(&t.account_id)
-                                        && !(quota_protection_enabled
+                                    !(attempted.contains(&t.account_id)
+                                        || quota_protection_enabled
                                             && t.protected_models.contains(&normalized_target))
                                 });
 
@@ -2447,7 +2441,7 @@ impl TokenManager {
         // [FIX #2209] 统一归一化模型名称
         let normalized_model = model
             .as_deref()
-            .and_then(|m| crate::proxy::common::model_mapping::normalize_to_standard_id(m));
+            .and_then(crate::proxy::common::model_mapping::normalize_to_standard_id);
         let model_to_lock = normalized_model.or(model);
 
         if let Some(reset_time_str) = self.get_quota_reset_time(account_id) {
@@ -2580,7 +2574,7 @@ impl TokenManager {
     ) {
         // [FIX #2209] 统一归一化模型名称，确保锁定 Key 与负载均衡检查 Key 一致
         let normalized_model =
-            model.and_then(|m| crate::proxy::common::model_mapping::normalize_to_standard_id(m));
+            model.and_then(crate::proxy::common::model_mapping::normalize_to_standard_id);
         let model_to_track = normalized_model.as_deref().or(model);
 
         // [NEW] 检查熔断是否启用
@@ -3046,8 +3040,7 @@ fn truncate_reason(reason: &str, max_len: usize) -> String {
         let end = reason
             .char_indices()
             .map(|(i, _)| i)
-            .filter(|&i| i <= max_len - 3)
-            .last()
+            .rfind(|&i| i <= max_len - 3)
             .unwrap_or(0);
         format!("{}...", &reason[..end])
     }
@@ -3147,6 +3140,11 @@ mod tests {
                     "expires_in": 3600,
                     "expiry_timestamp": now + 3600,
                     "project_id": format!("pid-{}", id)
+                },
+                "quota": {
+                    "models": [
+                        { "name": "gemini-1.5-flash", "percentage": 80 }
+                    ]
                 },
                 "disabled": false,
                 "proxy_disabled": proxy_disabled,
@@ -3460,7 +3458,7 @@ mod tests {
     fn test_full_sorting_integration() {
         let now = chrono::Utc::now().timestamp();
 
-        let mut tokens = vec![
+        let mut tokens = [
             create_test_token(
                 "free_high@test.com",
                 Some("FREE"),
@@ -3539,7 +3537,7 @@ mod tests {
         // b 应该排在 a 前面（刷新时间更近）
         assert_eq!(compare_tokens(&account_b, &account_a), Ordering::Less);
 
-        let mut tokens = vec![account_a.clone(), account_b.clone()];
+        let mut tokens = [account_a.clone(), account_b.clone()];
         tokens.sort_by(compare_tokens);
 
         assert_eq!(tokens[0].email, "b@test.com");
@@ -3926,7 +3924,7 @@ mod tests {
     /// 测试完整排序场景：混合账号池
     #[test]
     fn test_full_sorting_mixed_accounts() {
-        fn sort_tokens_for_model(tokens: &mut Vec<ProxyToken>, target_model: &str) {
+        fn sort_tokens_for_model(tokens: &mut [ProxyToken], target_model: &str) {
             const ULTRA_REQUIRED_MODELS: &[&str] = &["claude-opus-4-6", "claude-opus-4-5", "opus"];
             let requires_ultra = {
                 let lower = target_model.to_lowercase();

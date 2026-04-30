@@ -14,7 +14,7 @@ mod security_db_tests {
         add_to_blacklist, add_to_whitelist, cleanup_old_ip_logs, clear_ip_access_logs,
         get_blacklist, get_blacklist_entry_for_ip, get_ip_access_logs, get_ip_stats, get_whitelist,
         init_db, is_ip_in_blacklist, is_ip_in_whitelist, remove_from_blacklist,
-        remove_from_whitelist, save_ip_access_log, IpAccessLog,
+        remove_from_whitelist, save_ip_access_log, security_db_test_guard, IpAccessLog,
     };
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -50,6 +50,7 @@ mod security_db_tests {
 
     #[test]
     fn test_db_initialization() {
+        let _guard = security_db_test_guard();
         // 验证数据库初始化不会 panic
         let result = init_db();
         assert!(
@@ -61,6 +62,7 @@ mod security_db_tests {
 
     #[test]
     fn test_db_multiple_initializations() {
+        let _guard = security_db_test_guard();
         // 验证多次初始化不会出错 (幂等性)
         for _ in 0..3 {
             let result = init_db();
@@ -77,6 +79,7 @@ mod security_db_tests {
 
     #[test]
     fn test_blacklist_add_and_check() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -106,6 +109,7 @@ mod security_db_tests {
 
     #[test]
     fn test_blacklist_remove() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -127,6 +131,7 @@ mod security_db_tests {
 
     #[test]
     fn test_blacklist_get_entry_details() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -160,6 +165,7 @@ mod security_db_tests {
 
     #[test]
     fn test_cidr_matching_basic() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -195,6 +201,7 @@ mod security_db_tests {
 
     #[test]
     fn test_cidr_matching_various_masks() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -227,6 +234,7 @@ mod security_db_tests {
 
     #[test]
     fn test_cidr_edge_cases() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -265,6 +273,7 @@ mod security_db_tests {
 
     #[test]
     fn test_blacklist_expiration() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -287,6 +296,7 @@ mod security_db_tests {
 
     #[test]
     fn test_blacklist_not_yet_expired() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -306,6 +316,7 @@ mod security_db_tests {
 
     #[test]
     fn test_permanent_blacklist() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -329,6 +340,7 @@ mod security_db_tests {
 
     #[test]
     fn test_whitelist_add_and_check() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -345,6 +357,7 @@ mod security_db_tests {
 
     #[test]
     fn test_whitelist_cidr() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -367,6 +380,7 @@ mod security_db_tests {
 
     #[test]
     fn test_access_log_save_and_retrieve() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -406,6 +420,7 @@ mod security_db_tests {
 
     #[test]
     fn test_access_log_blocked_filter() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -458,6 +473,7 @@ mod security_db_tests {
 
     #[test]
     fn test_ip_stats() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -512,6 +528,7 @@ mod security_db_tests {
 
     #[test]
     fn test_cleanup_old_logs() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -573,6 +590,7 @@ mod security_db_tests {
     fn test_concurrent_access() {
         use std::thread;
 
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -606,6 +624,7 @@ mod security_db_tests {
 
     #[test]
     fn test_duplicate_blacklist_entry() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -622,6 +641,7 @@ mod security_db_tests {
 
     #[test]
     fn test_empty_ip_pattern() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -636,6 +656,7 @@ mod security_db_tests {
 
     #[test]
     fn test_special_characters_in_reason() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -654,6 +675,7 @@ mod security_db_tests {
 
     #[test]
     fn test_hit_count_increment() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
         cleanup_test_data();
 
@@ -713,13 +735,14 @@ mod ip_filter_middleware_tests {
 #[cfg(test)]
 mod performance_benchmarks {
     use crate::modules::security_db::{
-        add_to_blacklist, get_blacklist, init_db, is_ip_in_blacklist,
+        add_to_blacklist, get_blacklist, init_db, is_ip_in_blacklist, security_db_test_guard,
     };
     use std::time::Instant;
 
     /// 基准测试：黑名单查找性能
     #[test]
     fn benchmark_blacklist_lookup() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
 
         // 清理并添加 100 个黑名单条目
@@ -760,6 +783,7 @@ mod performance_benchmarks {
     /// 基准测试：CIDR 匹配性能
     #[test]
     fn benchmark_cidr_matching() {
+        let _guard = security_db_test_guard();
         let _ = init_db();
 
         // 清理并添加 CIDR 规则

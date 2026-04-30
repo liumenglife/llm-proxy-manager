@@ -355,7 +355,7 @@ pub fn get_auth_url_with_client(
 ) -> Result<(String, String), String> {
     let client = select_auth_client(client_key)?;
 
-    let scopes = vec![
+    let scopes = [
         "https://www.googleapis.com/auth/cloud-platform",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",

@@ -49,10 +49,8 @@ pub fn load_app_config() -> Result<AppConfig, String> {
         {
             for (k, v) in anthropic.iter() {
                 // Only move non-series fields, as series fields are now handled by Preset logic or builtin tables
-                if !k.ends_with("-series") {
-                    if !custom_mapping.contains_key(k) {
-                        custom_mapping.insert(k.clone(), v.clone());
-                    }
+                if !k.ends_with("-series") && !custom_mapping.contains_key(k) {
+                    custom_mapping.insert(k.clone(), v.clone());
                 }
             }
             // Remove old field
@@ -66,10 +64,8 @@ pub fn load_app_config() -> Result<AppConfig, String> {
             .and_then(|m| m.as_object_mut())
         {
             for (k, v) in openai.iter() {
-                if !k.ends_with("-series") {
-                    if !custom_mapping.contains_key(k) {
-                        custom_mapping.insert(k.clone(), v.clone());
-                    }
+                if !k.ends_with("-series") && !custom_mapping.contains_key(k) {
+                    custom_mapping.insert(k.clone(), v.clone());
                 }
             }
             // Remove old field

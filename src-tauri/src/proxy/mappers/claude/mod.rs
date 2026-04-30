@@ -26,6 +26,7 @@ use futures::Stream;
 use std::pin::Pin;
 
 /// 创建从 Gemini SSE 流到 Claude SSE 流的转换
+#[allow(clippy::too_many_arguments)]
 pub fn create_claude_sse_stream<S, E>(
     mut gemini_stream: Pin<Box<S>>,
     trace_id: String,
@@ -224,7 +225,7 @@ fn process_sse_line(
             if let Some(query) = grounding
                 .get("webSearchQueries")
                 .and_then(|v| v.as_array())
-                .and_then(|arr| arr.get(0))
+                .and_then(|arr| arr.first())
                 .and_then(|v| v.as_str())
             {
                 state.web_search_query = Some(query.to_string());

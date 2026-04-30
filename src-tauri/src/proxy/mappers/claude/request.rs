@@ -40,7 +40,7 @@ impl SafetyThreshold {
     }
 
     /// Convert to Gemini API threshold string
-    pub fn to_gemini_threshold(&self) -> &'static str {
+    pub fn to_gemini_threshold(self) -> &'static str {
         match self {
             SafetyThreshold::Off => "OFF",
             SafetyThreshold::BlockLowAndAbove => "BLOCK_LOW_AND_ABOVE",
@@ -192,7 +192,7 @@ fn sort_thinking_blocks_first(messages: &mut [Message]) {
                 let mut needs_reorder = false;
                 let mut saw_non_thinking = false;
 
-                for (_i, block) in blocks.iter().enumerate() {
+                for block in blocks.iter() {
                     match block {
                         ContentBlock::Thinking { .. } | ContentBlock::RedactedThinking { .. } => {
                             if saw_non_thinking {
@@ -298,8 +298,6 @@ pub fn merge_consecutive_messages(messages: &mut Vec<Message>) {
     *messages = merged;
 }
 
-/// 转换 Claude 请求为 Gemini v1internal 格式
-
 /// [FIX #709] Reorder serialized Gemini parts to ensure thinking blocks are first
 fn reorder_gemini_parts(parts: &mut Vec<Value>) {
     if parts.len() <= 1 {
@@ -360,7 +358,15 @@ pub fn transform_claude_request_in(
     // [FIX #1747] If thinking is auto-enabled by model default (e.g. Opus) but no
     // ThinkingConfig was provided by the client, inject a default config with a budget
     // to prevent 'thinking requires a budget' errors from upstream APIs.
-    if cleaned_req.thinking.is_none() && should_enable_thinking_by_default(&cleaned_req.model) {
+    let global_thinking_budget_config = crate::proxy::config::get_thinking_budget_config();
+    let global_adaptive_thinking = matches!(
+        global_thinking_budget_config.mode,
+        crate::proxy::config::ThinkingBudgetMode::Adaptive
+    );
+    if cleaned_req.thinking.is_none()
+        && should_enable_thinking_by_default(&cleaned_req.model)
+        && !global_adaptive_thinking
+    {
         let default_budget =
             crate::proxy::model_specs::get_thinking_budget(&cleaned_req.model, token);
         tracing::info!(
@@ -902,6 +908,7 @@ fn build_system_instruction(
 }
 
 /// 构建 Contents (Messages)
+#[allow(clippy::too_many_arguments)]
 fn build_contents(
     content: &MessageContent,
     is_assistant: bool,
@@ -1173,30 +1180,28 @@ fn build_contents(
                                 // [NEW v3.3.17] Try session-based signature cache first (Layer 3)
                                 // This provides conversation-level isolation
                                 crate::proxy::SignatureCache::global().get_session_signature(session_id)
-                                    .map(|s| {
+                                    .inspect(|s| {
                                         tracing::info!(
                                             "[Claude-Request] Recovered signature from SESSION cache (session: {}, len: {})",
                                             session_id, s.len()
                                         );
-                                        s
                                     })
                             })
                             .or_else(|| {
                                 // Try tool-specific signature cache (Layer 1)
                                 crate::proxy::SignatureCache::global().get_tool_signature(id)
-                                    .map(|s| {
+                                    .inspect(|_| {
                                         tracing::info!("[Claude-Request] Recovered signature from TOOL cache for tool_id: {}", id);
-                                        s
                                     })
                             })
                             .or_else(|| {
                                 // [DEPRECATED] Global store fallback - kept for backward compatibility
                                 let global_sig = get_thought_signature();
-                                if global_sig.is_some() {
+                                if let Some(sig) = &global_sig {
                                     tracing::warn!(
                                         "[Claude-Request] Using deprecated GLOBAL thought_signature fallback (length: {}). \
                                          This indicates session cache miss.",
-                                        global_sig.as_ref().unwrap().len()
+                                        sig.len()
                                     );
                                 }
                                 global_sig
@@ -1305,22 +1310,21 @@ fn build_contents(
                                 for block in arr {
                                     if let Some(text) = block.get("text").and_then(|v| v.as_str()) {
                                         texts.push(text.to_string());
-                                    } else if block.get("source").is_some() {
-                                        if block.get("type").and_then(|v| v.as_str())
+                                    } else if block.get("source").is_some()
+                                        && block.get("type").and_then(|v| v.as_str())
                                             == Some("image")
-                                        {
-                                            let source = block.get("source").unwrap();
-                                            if let (Some(media_type), Some(data)) = (
-                                                source.get("media_type").and_then(|v| v.as_str()),
-                                                source.get("data").and_then(|v| v.as_str()),
-                                            ) {
-                                                extra_parts.push(json!({
-                                                    "inlineData": {
-                                                        "mimeType": media_type,
-                                                        "data": data
-                                                    }
-                                                }));
-                                            }
+                                    {
+                                        let source = block.get("source").unwrap();
+                                        if let (Some(media_type), Some(data)) = (
+                                            source.get("media_type").and_then(|v| v.as_str()),
+                                            source.get("data").and_then(|v| v.as_str()),
+                                        ) {
+                                            extra_parts.push(json!({
+                                                "inlineData": {
+                                                    "mimeType": media_type,
+                                                    "data": data
+                                                }
+                                            }));
                                         }
                                     }
                                 }
@@ -1445,7 +1449,7 @@ fn build_contents(
         } else {
             // [Crucial Check] 即使有 thought 块，也必须保证它位于 parts 的首位 (Index 0)
             // 且必须包含 thought: true 标记
-            let first_is_thought = parts.get(0).map_or(false, |p| {
+            let first_is_thought = parts.first().is_some_and(|p| {
                 (p.get("thought").is_some() || p.get("thoughtSignature").is_some())
                     && p.get("text").is_some() // 对于 v1internal，通常 text + thought: true 才是合规的思维块
             });
@@ -1476,6 +1480,7 @@ fn build_contents(
 }
 
 /// 构建 Contents (Messages)
+#[allow(clippy::too_many_arguments)]
 fn build_google_content(
     msg: &Message,
     claude_req: &ClaudeRequest,
@@ -1561,6 +1566,7 @@ fn build_google_content(
 }
 
 /// 构建 Contents (Messages)
+#[allow(clippy::too_many_arguments)]
 fn build_google_contents(
     messages: &[Message],
     claude_req: &ClaudeRequest,
@@ -1597,7 +1603,7 @@ fn build_google_contents(
         }
     }
 
-    for (_i, msg) in messages.iter().enumerate() {
+    for msg in messages.iter() {
         let google_content = build_google_content(
             msg,
             claude_req,
@@ -1797,7 +1803,19 @@ fn build_generation_config(
             crate::proxy::model_specs::get_thinking_budget(mapped_model, token);
 
         let tb_config = crate::proxy::config::get_thinking_budget_config();
-        let budget = match tb_config.mode {
+        let global_mode_is_adaptive = matches!(
+            tb_config.mode,
+            crate::proxy::config::ThinkingBudgetMode::Adaptive
+        );
+        let adaptive_mode_applies =
+            user_is_adaptive || (global_mode_is_adaptive && claude_req.thinking.is_none());
+        let budget_mode = if global_mode_is_adaptive && !adaptive_mode_applies {
+            crate::proxy::config::ThinkingBudgetMode::Auto
+        } else {
+            tb_config.mode.clone()
+        };
+
+        let budget = match budget_mode {
             crate::proxy::config::ThinkingBudgetMode::Passthrough => budget_tokens as u64,
             crate::proxy::config::ThinkingBudgetMode::Custom => {
                 let mut custom_value = tb_config.custom_value as u64;
@@ -1837,12 +1855,8 @@ fn build_generation_config(
             crate::proxy::config::ThinkingBudgetMode::Adaptive => budget_tokens as u64, // Adaptive 模式透传原始预算（但不作为限制），用于后续逻辑判断
         };
 
-        let global_mode_is_adaptive = matches!(
-            tb_config.mode,
-            crate::proxy::config::ThinkingBudgetMode::Adaptive
-        );
         // 只要用户指定 adaptive 或者全局配置为 adaptive，且是支持的思维模型，就启用自适应
-        let should_use_adaptive = (user_is_adaptive || global_mode_is_adaptive)
+        let should_use_adaptive = adaptive_mode_applies
             && (mapped_model.to_lowercase().contains("claude")
                 || mapped_model.to_lowercase().contains("gemini-3"));
 
@@ -1950,7 +1964,9 @@ fn build_generation_config(
         .map(|t| t.type_ == "adaptive")
         .unwrap_or(false);
 
-    let is_adaptive_effective = (req_adaptive || global_adaptive) && model_lower.contains("claude");
+    let is_adaptive_effective = is_thinking_enabled
+        && (req_adaptive || (global_adaptive && claude_req.thinking.is_none()))
+        && model_lower.contains("claude");
     // [FIX] Lower default overhead to keep total under 65536
     let final_overhead = if is_adaptive_effective { 64000 } else { 32768 };
 
@@ -2760,6 +2776,10 @@ mod tests {
     }
     #[test]
     fn test_claude_flash_thinking_budget_capping() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         // Use full path or ensure import of ThinkingConfig
         // transform_claude_request and models are needed.
         // Assuming models are available via super imports, but let's be explicit if needed.
@@ -2827,6 +2847,10 @@ mod tests {
 
     #[test]
     fn test_gemini_pro_thinking_support() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         // Setup request for Gemini Pro (no -thinking suffix)
         let req = ClaudeRequest {
             model: "gemini-3-pro-preview".to_string(),
@@ -2872,6 +2896,10 @@ mod tests {
 
     #[test]
     fn test_gemini_pro_default_thinking() {
+        let _thinking_budget_guard = crate::proxy::config::thinking_budget_test_guard(
+            crate::proxy::config::ThinkingBudgetConfig::default(),
+        );
+
         // Setup request for Gemini Pro WITHOUT thinking config
         let req = ClaudeRequest {
             model: "gemini-3-pro-preview".to_string(),
@@ -2954,12 +2982,12 @@ mod tests {
     #[test]
     fn test_claude_adaptive_global_config() {
         // Set global config to Adaptive + High effort
-        let config = ThinkingBudgetConfig {
-            mode: crate::proxy::config::ThinkingBudgetMode::Adaptive,
-            custom_value: 0,
-            effort: Some("high".to_string()),
-        };
-        crate::proxy::config::update_thinking_budget_config(config);
+        let _thinking_budget_guard =
+            crate::proxy::config::thinking_budget_test_guard(ThinkingBudgetConfig {
+                mode: crate::proxy::config::ThinkingBudgetMode::Adaptive,
+                custom_value: 0,
+                effort: Some("high".to_string()),
+            });
 
         let req = ClaudeRequest {
             model: "claude-3-7-sonnet-thinking".to_string(), // thinking capable
@@ -2992,16 +3020,14 @@ mod tests {
 
         // Check injection
         assert_eq!(thinking_config["includeThoughts"], true);
-        assert_eq!(thinking_config["thinkingBudget"], -1);
+        assert_eq!(thinking_config["thinkingLevel"], "high");
+        assert!(thinking_config.get("thinkingBudget").is_none());
         assert!(thinking_config.get("thinkingType").is_none());
         assert!(thinking_config.get("effort").is_none());
 
         // Check maxOutputTokens default for adaptive
         let max_output_tokens = gen_config["maxOutputTokens"].as_i64().unwrap();
-        assert_eq!(max_output_tokens, 131072);
-
-        // Reset global config
-        crate::proxy::config::update_thinking_budget_config(ThinkingBudgetConfig::default());
+        assert_eq!(max_output_tokens, 64000);
     }
 
     #[test]
