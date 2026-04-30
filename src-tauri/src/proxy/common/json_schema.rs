@@ -798,11 +798,14 @@ fn fix_single_arg_recursive(value: &mut Value, schema: &Value) {
                 }
             }
         }
-        "string" => {
+        "string"
+            if !value.is_string()
+                && !value.is_null()
+                && !value.is_object()
+                && !value.is_array() =>
+        {
             // 非字符串 → 字符串 (防止客户端误传数字给文本字段)
-            if !value.is_string() && !value.is_null() && !value.is_object() && !value.is_array() {
-                *value = Value::String(value.to_string());
-            }
+            *value = Value::String(value.to_string());
         }
         _ => {}
     }

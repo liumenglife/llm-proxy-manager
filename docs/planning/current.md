@@ -17,8 +17,8 @@
 
 ## 4. 当前阶段
 - [ ] 需求分析与架构设计 (Spec & Plan)
-- [✓] 核心代码开发
-- [✓] 测试与验证
+- [✓] CI 失败修复
+- [•] PR CI 重新验证
 
 ## 5. 编码阶段任务清单
 - [✓] 探索项目脚本、锁文件、Tauri/Rust/Docker 配置。
@@ -32,7 +32,8 @@
 - [✓] 重新验证 `cargo clippy --all-targets --all-features -- -D warnings` 与 `cargo test --all-targets --all-features`。
 - [✓] 移除非必要 native updater 签名链路，解决 `TAURI_SIGNING_PRIVATE_KEY` 构建要求。
 - [✓] 再验证 `npm run tauri build -- --debug`。
-- [•] 最终 QA 通过，正在提交并推送到 `feature/multi-provider`，再检查 PR CI 状态。
+- [✓] 修复 PR #1 GitHub Actions `Quality / Rust clippy` 在 Rust stable 1.95.0 下失败的 10 个 lint 错误。
+- [•] 提交并推送 clippy 修复后，检查 PR #1 CI 状态。
 
 ## 6. 子 Agent 执行协议
 - 遇到可以独立完成的编码任务，优先采用 Subagent-Driven Development。
@@ -50,7 +51,10 @@
 - `[•]` 代表正在执行
 
 ## 9. 当前正在做
-- 最终 QA 已通过，正在提交 CI 支线并推送当前 PR 分支。
+- PR #1 CI clippy 失败已按 `systematic-debugging` 完成最小修复，等待提交、推送并检查新一轮 PR CI。
+- 失败 run：`25153112782`，失败 job：`73728186352`。
+- 根因：GitHub Actions 使用 Rust stable `1.95.0`，本地先前验证环境为 Rust `1.94.0`，Clippy lint 集存在版本差异。
+- 本地复验：`cargo fmt --all -- --check`、`cargo +1.95.0 clippy --all-targets --all-features -- -D warnings`、`cargo +1.95.0 test --all-targets --all-features` 已通过。
 
 ## 10. 已完成里程碑
 - [✓] 初始化 planning 文件体系（current.md / history.md / decisions.md）
@@ -67,13 +71,13 @@
 - [✓] 已移除非必要 Tauri native updater 签名链路，`npm run tauri build -- --debug` 已通过。
 
 ## 11. 当前阻塞
-- 无。
+- PR #1 需要推送修复提交后重新运行 GitHub Actions。
 
 ## 12. 活跃支线
-- CI 支线：新增 GitHub Actions、构建性能优化、依赖清理、Rust clippy 修复、Rust 全量测试修复、native updater 签名链路清理，等待提交推送。
+- CI clippy 修复支线：最小修复 Rust stable `1.95.0` 新触发的 10 个 clippy 错误，本地 Rust 1.95.0 fmt/clippy/test 已通过。
 
 ## 13. 下一步唯一动作
-- 提交当前 CI 支线改动，推送到 `feature/multi-provider`，然后检查 PR CI 状态。
+- 提交并推送 clippy 修复到 `feature/multi-provider`，然后检查 PR #1 CI 状态。
 
 ## 14. 恢复提示
 - Session 恢复时，请检查此文件的状态，并沿着“当前阶段”与“下一步唯一动作”继续推进。

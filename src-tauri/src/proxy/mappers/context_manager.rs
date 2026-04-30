@@ -373,19 +373,17 @@ fn identify_tool_rounds(messages: &[Message]) -> Vec<ToolRound> {
 
     for (i, msg) in messages.iter().enumerate() {
         match msg.role.as_str() {
-            "assistant" => {
-                if has_tool_use(&msg.content) {
-                    // Save previous round if exists
-                    if let Some(round) = current_round.take() {
-                        rounds.push(round);
-                    }
-                    // Start new round
-                    current_round = Some(ToolRound {
-                        _assistant_index: i,
-                        tool_result_indices: Vec::new(),
-                        indices: vec![i],
-                    });
+            "assistant" if has_tool_use(&msg.content) => {
+                // Save previous round if exists
+                if let Some(round) = current_round.take() {
+                    rounds.push(round);
                 }
+                // Start new round
+                current_round = Some(ToolRound {
+                    _assistant_index: i,
+                    tool_result_indices: Vec::new(),
+                    indices: vec![i],
+                });
             }
             "user" => {
                 if let Some(ref mut round) = current_round {

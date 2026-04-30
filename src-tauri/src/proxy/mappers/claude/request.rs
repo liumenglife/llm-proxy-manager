@@ -86,50 +86,42 @@ pub fn clean_cache_control_from_messages(messages: &mut [Message]) {
         if let MessageContent::Array(blocks) = &mut msg.content {
             for (block_idx, block) in blocks.iter_mut().enumerate() {
                 match block {
-                    ContentBlock::Thinking { cache_control, .. } => {
-                        if cache_control.is_some() {
-                            tracing::info!(
-                                "[ISSUE-744] Found cache_control in Thinking block at message[{}].content[{}]: {:?}",
-                                idx,
-                                block_idx,
-                                cache_control
-                            );
-                            *cache_control = None;
-                            total_cleaned += 1;
-                        }
+                    ContentBlock::Thinking { cache_control, .. } if cache_control.is_some() => {
+                        tracing::info!(
+                            "[ISSUE-744] Found cache_control in Thinking block at message[{}].content[{}]: {:?}",
+                            idx,
+                            block_idx,
+                            cache_control
+                        );
+                        *cache_control = None;
+                        total_cleaned += 1;
                     }
-                    ContentBlock::Image { cache_control, .. } => {
-                        if cache_control.is_some() {
-                            tracing::debug!(
-                                "[Cache-Control-Cleaner] Removed cache_control from Image block at message[{}].content[{}]",
-                                idx,
-                                block_idx
-                            );
-                            *cache_control = None;
-                            total_cleaned += 1;
-                        }
+                    ContentBlock::Image { cache_control, .. } if cache_control.is_some() => {
+                        tracing::debug!(
+                            "[Cache-Control-Cleaner] Removed cache_control from Image block at message[{}].content[{}]",
+                            idx,
+                            block_idx
+                        );
+                        *cache_control = None;
+                        total_cleaned += 1;
                     }
-                    ContentBlock::Document { cache_control, .. } => {
-                        if cache_control.is_some() {
-                            tracing::debug!(
-                                "[Cache-Control-Cleaner] Removed cache_control from Document block at message[{}].content[{}]",
-                                idx,
-                                block_idx
-                            );
-                            *cache_control = None;
-                            total_cleaned += 1;
-                        }
+                    ContentBlock::Document { cache_control, .. } if cache_control.is_some() => {
+                        tracing::debug!(
+                            "[Cache-Control-Cleaner] Removed cache_control from Document block at message[{}].content[{}]",
+                            idx,
+                            block_idx
+                        );
+                        *cache_control = None;
+                        total_cleaned += 1;
                     }
-                    ContentBlock::ToolUse { cache_control, .. } => {
-                        if cache_control.is_some() {
-                            tracing::debug!(
-                                "[Cache-Control-Cleaner] Removed cache_control from ToolUse block at message[{}].content[{}]",
-                                idx,
-                                block_idx
-                            );
-                            *cache_control = None;
-                            total_cleaned += 1;
-                        }
+                    ContentBlock::ToolUse { cache_control, .. } if cache_control.is_some() => {
+                        tracing::debug!(
+                            "[Cache-Control-Cleaner] Removed cache_control from ToolUse block at message[{}].content[{}]",
+                            idx,
+                            block_idx
+                        );
+                        *cache_control = None;
+                        total_cleaned += 1;
                     }
                     _ => {}
                 }

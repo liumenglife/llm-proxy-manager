@@ -1,6 +1,8 @@
 use crate::modules::process;
 use std::fs;
-use std::path::{Path, PathBuf};
+#[cfg(target_os = "macos")]
+use std::path::Path;
+use std::path::PathBuf;
 
 /// Antigravity 版本信息
 #[derive(Debug, Clone)]
