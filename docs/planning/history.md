@@ -27,4 +27,6 @@
 - [✓] Rust 全量测试修复：修复 mapper thinking 并发污染、安全数据库测试隔离、CIDR/性能、TokenManager、retry delay 等失败项。
 - [✓] 非必要配置清理：移除 native updater 自动下载/安装和签名链路，不再要求 `TAURI_SIGNING_PRIVATE_KEY`。
 - [✓] 最终 QA：`npm ci --legacy-peer-deps=false`、lint 检测、`npx tsc --noEmit`、`npx vite build`、`npm run build`、Rust fmt/clippy/check/test、`npm run tauri build -- --debug` 全部通过。
-- [•] 待完成：提交、推送到当前 PR 分支，并检查 PR CI 状态。
+- [✓] PR CI 修复 1：修复 Rust stable `1.95.0` 下新增 clippy lint，PR #1 `Quality` job 通过。
+- [✓] PR CI 修复 2：修复 `Dockerfile.backend` 的 `FRONTEND_IMAGE` ARG 作用域、Tauri 编译期 `dist` 可见性和旧 `/app/antigravity-tools` 路径残留。
+- [✓] PR #1 最新 GitHub Actions checks 通过：`Quality` 与 `Package` 均为 pass。

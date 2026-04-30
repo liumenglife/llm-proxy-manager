@@ -18,7 +18,7 @@
 ## 4. 当前阶段
 - [ ] 需求分析与架构设计 (Spec & Plan)
 - [✓] CI 失败修复
-- [•] PR CI 重新验证
+- [✓] PR CI 重新验证
 
 ## 5. 编码阶段任务清单
 - [✓] 探索项目脚本、锁文件、Tauri/Rust/Docker 配置。
@@ -35,7 +35,7 @@
 - [✓] 修复 PR #1 GitHub Actions `Quality / Rust clippy` 在 Rust stable 1.95.0 下失败的 10 个 lint 错误。
 - [✓] 推送 clippy 修复后，PR #1 `Quality` job 已通过。
 - [✓] 修复 PR #1 `Package / Docker build backend image` 的 `FRONTEND_IMAGE` ARG 作用域问题。
-- [•] 提交并推送 Dockerfile 修复后，检查 PR #1 CI 状态。
+- [✓] 提交并推送 Dockerfile 修复后，PR #1 最新 `Quality` 与 `Package` checks 已通过。
 
 ## 6. 子 Agent 执行协议
 - 遇到可以独立完成的编码任务，优先采用 Subagent-Driven Development。
@@ -53,7 +53,7 @@
 - `[•]` 代表正在执行
 
 ## 9. 当前正在做
-- PR #1 `Quality` job 已通过，`Package` job 新失败点已定位并修复，等待提交、推送并检查新一轮 PR CI。
+- PR #1 最新 GitHub Actions checks 已通过，当前无正在执行的修复任务。
 - clippy 失败 run：`25153112782`，失败 job：`73728186352`。
 - Docker 失败 run：`25156233365`，失败 job：`73739837190`。
 - clippy 根因：GitHub Actions 使用 Rust stable `1.95.0`，本地先前验证环境为 Rust `1.94.0`，Clippy lint 集存在版本差异。
@@ -76,13 +76,13 @@
 - [✓] 已移除非必要 Tauri native updater 签名链路，`npm run tauri build -- --debug` 已通过。
 
 ## 11. 当前阻塞
-- PR #1 需要推送 Dockerfile 修复提交后重新运行 GitHub Actions。
+- 无。
 
 ## 12. 活跃支线
-- CI Docker 修复支线：修复 `Dockerfile.backend` 的 `FRONTEND_IMAGE` 作用域、Tauri 编译期 `dist` 可见性和旧 `/app/antigravity-tools` 路径残留。
+- 无。
 
 ## 13. 下一步唯一动作
-- 提交并推送 Dockerfile 修复到 `feature/multi-provider`，然后检查 PR #1 CI 状态。
+- 等待用户决定是否合并 PR、继续新功能或进行发布收尾。
 
 ## 14. 恢复提示
 - Session 恢复时，请检查此文件的状态，并沿着“当前阶段”与“下一步唯一动作”继续推进。
