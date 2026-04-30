@@ -1,4 +1,9 @@
 # --- Backend Build Stage (no frontend build) ---
+ARG FRONTEND_IMAGE=llm-proxy-manager:latest
+
+# --- Frontend Dist Stage (reuse prebuilt image) ---
+FROM ${FRONTEND_IMAGE} AS frontend-prebuilt
+
 FROM rust:1-slim-bookworm AS backend-builder
 ARG USE_MIRROR=auto
 
@@ -40,6 +45,7 @@ RUN if [ "$USE_MIRROR" = "true" ] || ( [ "$USE_MIRROR" = "auto" ] && ! timeout 3
 WORKDIR /app
 COPY src-tauri ./src-tauri
 COPY src/locales ./src/locales
+COPY --from=frontend-prebuilt /app/dist ./dist
 
 WORKDIR /app/src-tauri
 RUN --mount=type=cache,target=/root/.cargo/registry \
@@ -47,10 +53,6 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/app/src-tauri/target \
     cargo build --release --bin llm_proxy_manager && \
     cp target/release/llm_proxy_manager /tmp/llm_proxy_manager
-
-# --- Frontend Dist Stage (reuse prebuilt image) ---
-ARG FRONTEND_IMAGE=llm-proxy-manager:latest
-FROM ${FRONTEND_IMAGE} AS frontend-prebuilt
 
 # --- Final Runtime Stage ---
 FROM debian:bookworm-slim
@@ -78,7 +80,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=backend-builder /tmp/llm_proxy_manager /app/antigravity-tools
+COPY --from=backend-builder /tmp/llm_proxy_manager /app/llm-proxy-manager
 
 # Copy frontend dist from prebuilt image
 COPY --from=frontend-prebuilt /app/dist /app/dist

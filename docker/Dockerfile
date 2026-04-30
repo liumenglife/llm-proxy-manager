@@ -112,7 +112,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=backend-builder /tmp/llm_proxy_manager /app/antigravity-tools
+COPY --from=backend-builder /tmp/llm_proxy_manager /app/llm-proxy-manager
 
 # Copy frontend dist from builder
 COPY --from=frontend-builder /app/dist /app/dist

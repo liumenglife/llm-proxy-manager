@@ -40,6 +40,7 @@ RUN if [ "$USE_MIRROR" = "true" ] || ( [ "$USE_MIRROR" = "auto" ] && ! timeout 3
 WORKDIR /app
 COPY src-tauri ./src-tauri
 COPY src/locales ./src/locales
+COPY dist ./dist
 
 WORKDIR /app/src-tauri
 RUN --mount=type=cache,target=/root/.cargo/registry \
@@ -74,7 +75,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=backend-builder /tmp/llm_proxy_manager /app/antigravity-tools
+COPY --from=backend-builder /tmp/llm_proxy_manager /app/llm-proxy-manager
 
 # Copy frontend dist from local build context
 COPY dist /app/dist
