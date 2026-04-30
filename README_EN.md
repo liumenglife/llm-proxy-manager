@@ -1,8 +1,8 @@
-# Antigravity Tools 🚀
+# llm-proxy-Manager 🚀
 > Professional AI Account Management & Protocol Proxy System (v4.1.32)
 
 <div align="center">
-  <img src="public/icon.png" alt="Antigravity Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+  <img src="public/icon.png" alt="llm-proxy-Manager Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
 
   <h3>Your Personal High-Performance AI Dispatch Gateway</h3>
   <p>Seamlessly proxy Gemini & Claude. OpenAI-Compatible. Privacy First.</p>
@@ -33,7 +33,7 @@
 
 ---
 
-**Antigravity Tools** is an all-in-one desktop application designed for developers and AI enthusiasts. It perfectly combines multi-account management, protocol conversion, and smart request scheduling to provide you with a stable, high-speed, and low-cost **Local AI Relay Station**.
+**llm-proxy-Manager** is an all-in-one desktop application designed for developers and AI enthusiasts. It perfectly combines multi-account management, protocol conversion, and smart request scheduling to provide you with a stable, high-speed, and low-cost **Local AI Relay Station**.
 
 By leveraging this app, you can transform common Web Sessions (Google/Anthropic) into standardized API interfaces, completely eliminating the protocol gap between different providers.
 
@@ -42,7 +42,7 @@ By leveraging this app, you can transform common Web Sessions (Google/Anthropic)
 | Sponsor | Description |
 | :---: | :--- |
 | <img src="docs/images/packycode_logo.png" width="200" alt="PackyCode Logo"> | Thanks to **PackyCode** for sponsoring this project! PackyCode is a reliable and efficient API relay service provider, offering relays for various services such as Claude Code, Codex, and Gemini. PackyCode provides a special offer for users of this project: Register using [this link](https://www.packyapi.com/register?aff=Ctrler) and enter the **"Ctrler"** coupon code when topping up to enjoy a **10% discount**. |
-| <img src="docs/images/AICodeMirror.jpg" width="200" alt="AICodeMirror Logo"> | Thanks to **AICodeMirror** for sponsoring this project! AICodeMirror provides official high-stability relay services for Claude Code / Codex / Gemini CLI, supporting enterprise-grade concurrency, fast invoicing, and 24/7 dedicated technical support. Claude Code / Codex / Gemini official channels at 38% / 2% / 9% of original price, with extra discounts on top-ups! AICodeMirror offers special benefits for Antigravity-Manager users: register via [this link](https://www.aicodemirror.com/register?invitecode=MV5XUM) to enjoy 20% off your first top-up, and enterprise customers can get up to 25% off! |
+| <img src="docs/images/AICodeMirror.jpg" width="200" alt="AICodeMirror Logo"> | Thanks to **AICodeMirror** for sponsoring this project! AICodeMirror provides official high-stability relay services for Claude Code / Codex / Gemini CLI, supporting enterprise-grade concurrency, fast invoicing, and 24/7 dedicated technical support. Claude Code / Codex / Gemini official channels at 38% / 2% / 9% of original price, with extra discounts on top-ups! AICodeMirror offers special benefits for llm-proxy-Manager users: register via [this link](https://www.aicodemirror.com/register?invitecode=MV5XUM) to enjoy 20% off your first top-up, and enterprise customers can get up to 25% off! |
 | <img src="https://coder.visioncoder.cn/logo.png" width="200" alt="VisionCoder Logo"> | Thanks to VisionCoder for supporting this project. [VisionCoder Developer Platform](https://coder.visioncoder.cn) is a reliable and efficient API relay service provider, offering access to mainstream AI models such as Claude Code, Codex, and Gemini. It helps developers and teams integrate AI capabilities more easily and improve productivity. VisionCoder is offering a limited-time [Token Plan](https://coder.visioncoder.cn) promotion for our users: register via [this link](https://coder.visioncoder.cn) and buy 1 month to get 1 month free. |
 
 
@@ -97,7 +97,7 @@ If you like this project, you might also be interested in:
 | | |
 | :---: | :---: |
 | ![Dashboard - Global Quota Monitoring & One-click Switch](docs/images/dashboard-light.png) <br> Dashboard | ![Account List - High-density Quota Display & Smart 403 Labeling](docs/images/accounts-light.png) <br> Account List |
-| ![About Page - About Antigravity Tools](docs/images/about-dark.png) <br> About Page | ![API Proxy - Service Control](docs/images/v3/proxy-settings.png) <br> API Proxy |
+| ![About Page - About llm-proxy-Manager](docs/images/about-dark.png) <br> About Page | ![API Proxy - Service Control](docs/images/v3/proxy-settings.png) <br> API Proxy |
 | ![Settings - General Config](docs/images/settings-dark.png) <br> Settings | |
 
 ### 💡 Usage Examples
@@ -111,7 +111,7 @@ If you like this project, you might also be interested in:
 
 ```mermaid
 graph TD
-    Client([External Apps: Claude Code/NextChat]) -->|OpenAI/Anthropic| Gateway[Antigravity Axum Server]
+    Client([External Apps: Claude Code/NextChat]) -->|OpenAI/Anthropic| Gateway[llm-proxy-Manager Axum Server]
     Gateway --> Middleware[Middleware: Auth/Rate Limit/Logs]
     Middleware --> Router[Model Router: ID Mapping]
     Router --> Dispatcher[Dispatcher: Rotation/Weights]
@@ -148,10 +148,10 @@ If you have [Homebrew](https://brew.sh/) installed, you can also install via:
 
 ```bash
 # 1. Tap the repository
-brew tap lbjlaq/antigravity-manager https://github.com/lbjlaq/Antigravity-Manager
+brew tap lbjlaq/llm-proxy-manager https://github.com/lbjlaq/Antigravity-Manager
 
 # 2. Install the app
-brew install --cask antigravity-tools
+brew install --cask llm-proxy-manager
 ```
 > **Tip**: If you encounter permission issues, add the `--no-quarantine` flag.
 
@@ -165,8 +165,8 @@ curl -sSL https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/depl
 
 **Option 2: via Homebrew** (If you have [Linuxbrew](https://sh.brew.sh/) installed)
 ```bash
-brew tap lbjlaq/antigravity-manager https://github.com/lbjlaq/Antigravity-Manager
-brew install --cask antigravity-tools
+brew tap lbjlaq/llm-proxy-manager https://github.com/lbjlaq/Antigravity-Manager
+brew install --cask llm-proxy-manager
 ```
 
 #### Other Linux Distributions
@@ -185,15 +185,15 @@ If you prefer running in a containerized environment, we provide a native Docker
 # Option 1: Direct Run (Recommended)
 # - API_KEY: Required. Used for AI request authentication.
 # - WEB_PASSWORD: Optional. Used for Web UI login. Defaults to API_KEY if NOT set.
-docker run -d --name antigravity-manager \
+docker run -d --name llm-proxy-manager \
   -p 8045:8045 \
   -e API_KEY=sk-your-api-key \
   -e WEB_PASSWORD=your-login-password \
   -e ABV_MAX_BODY_SIZE=104857600 \
-  -v ~/.antigravity_tools:/root/.antigravity_tools \
-  lbjlaq/antigravity-manager:latest
+  -v ~/.llm_proxy_manager:/root/.llm_proxy_manager \
+  lbjlaq/llm-proxy-manager:latest
 
-# Forgot keys? Run `docker logs antigravity-manager` or `grep -E '"api_key"|"admin_password"' ~/.antigravity_tools/gui_config.json`
+# Forgot keys? Run `docker logs llm-proxy-manager` or `grep -E '"api_key"|"admin_password"' ~/.llm_proxy_manager/gui_config.json`
 
 #### 🔐 Authentication Scenarios
 *   **Scenario A: Only `API_KEY` is set**
@@ -207,7 +207,7 @@ docker run -d --name antigravity-manager \
 If you are upgrading from v4.0.1 or earlier, your installation won't have a `WEB_PASSWORD` set by default. You can add one using any of these methods:
 1.  **Web UI (Recommended)**: Log in using your existing `API_KEY`, go to the **API Proxy Settings** page, find the **Web UI Management Password** section below the API Key, set your new password, and save.
 2.  **Environment Variable (Docker)**: Stop the old container and start the new one with the added parameter `-e WEB_PASSWORD=your_new_password`. **Note: Environment variables have the highest priority and will override any changes in the UI.**
-3.  **Config File (Persistent)**: Directly edit `~/.antigravity_tools/gui_config.json` and add/modify `"admin_password": "your_new_password"` inside the `proxy` object.
+3.  **Config File (Persistent)**: Directly edit `~/.llm_proxy_manager/gui_config.json` and add/modify `"admin_password": "your_new_password"` inside the `proxy` object.
     - *Note: `WEB_PASSWORD` is the environment variable name, while `admin_password` is the JSON key in the config file.*
 
 > [!TIP]
@@ -225,7 +225,7 @@ docker compose up -d
 > **Access URL**: `http://localhost:8045` (Admin Console) | `http://localhost:8045/v1` (API Base)
 > **System Requirements**:
 > - **RAM**: **1GB** recommended (minimum 256MB).
-> - **Persistence**: Mount `/root/.antigravity_tools` to persist your data.
+> - **Persistence**: Mount `/root/.llm_proxy_manager` to persist your data.
 > - **Architecture**: Supports x86_64 and ARM64.
 > **See**: [Docker Deployment Guide (docker)](./docker/README.md)
 
@@ -234,7 +234,7 @@ docker compose up -d
 #### macOS says "App is damaged"?
 Due to macOS security gatekeeper, non-App Store apps might show this. Run this in Terminal to fix:
 ```bash
-sudo xattr -rd com.apple.quarantine "/Applications/Antigravity Tools.app"
+sudo xattr -rd com.apple.quarantine "/Applications/llm-proxy-Manager.app"
 ```
 
 ## 🔌 Quick Integration Examples
@@ -248,10 +248,10 @@ sudo xattr -rd com.apple.quarantine "/Applications/Antigravity Tools.app"
 > Note: the auth URL contains a one-time local callback port. Always use the latest URL shown in the dialog. If the app isn’t running or the dialog is closed during auth, the browser may show `localhost refused connection`.
 
 ### How to use with Claude Code CLI?
-1. Start Antigravity service in the "API Proxy" tab.
+1. Start llm-proxy-Manager service in the "API Proxy" tab.
 2. In your terminal:
 ```bash
-export ANTHROPIC_API_KEY="sk-antigravity"
+export ANTHROPIC_API_KEY="sk-llm-proxy"
 export ANTHROPIC_BASE_URL="http://127.0.0.1:8045"
 claude
 ```
@@ -259,18 +259,18 @@ claude
 ### How to use with OpenCode?
 1. Go to **API Proxy** → **External Providers** → click the **OpenCode Sync** card.
 2. Click **Sync** to generate `~/.config/opencode/opencode.json`:
-    - Creates a dedicated provider `antigravity-manager` (does not overwrite google/anthropic providers)
-    - Optional: Check **Sync accounts** to export `antigravity-accounts.json` (plugin-compatible v3 format) for the OpenCode plugin
+    - Creates a dedicated provider `llm-proxy-manager` (does not overwrite google/anthropic providers)
+    - Optional: Check **Sync accounts** to export `llm-proxy-accounts.json` (plugin-compatible v3 format) for the OpenCode plugin
 3. Click **Clear Config** to remove Manager configuration and clean up legacy entries; click **Restore** to revert from backup.
 4. On Windows, the path is `C:\Users\<User>\.config\opencode\` (same `~/.config/opencode` rule).
 
 **Quick verification commands:**
 ```bash
-# Test antigravity-manager provider (supports --variant)
-opencode run "test" --model antigravity-manager/claude-sonnet-4-5-thinking --variant high
+# Test llm-proxy-manager provider (supports --variant)
+opencode run "test" --model llm-proxy-manager/claude-sonnet-4-5-thinking --variant high
 
-# If opencode-antigravity-auth is installed, verify google provider still works independently
-opencode run "test" --model google/antigravity-claude-sonnet-4-5-thinking --variant max
+# If opencode-llm-proxy-auth is installed, verify google provider still works independently
+opencode run "test" --model google/llm-proxy-claude-sonnet-4-5-thinking --variant max
 ```
 
 ### How to use in Python?
@@ -278,7 +278,7 @@ opencode run "test" --model google/antigravity-claude-sonnet-4-5-thinking --vari
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-antigravity",
+    api_key="sk-llm-proxy",
     base_url="http://127.0.0.1:8045/v1"
 )
 
@@ -305,7 +305,7 @@ print(response.choices[0].message.content)
             -   **Fingerprint Sync**: Implemented synchronous injection of `serviceMachineId` between disk config and `state.vscdb` database, resolving the persistent issue where VS Code pops up "Environment Changed" and requires re-login after switching accounts.
             -   **Validation Downgrade**: Weakened the enterprise account pre-check logic. When a `project_id` cannot be automatically resolved, the system now records a warning instead of throwing an error to block the switch, ensuring accounts with restricted permissions can still be switched and used.
         -   **[Important Note] Account Switching & Risk Advice**:
-            -   **Retry Notice**: If the Antigravity client shows continuous `retry`, please switch to another account.
+            -   **Retry Notice**: If the llm-proxy-Manager client shows continuous `retry`, please switch to another account.
             -   **Risk Control Info**: For proxy users, despite the enhancements in this update, using third-party tools may lead to suspension for violating terms of service. If necessary, it is recommended to use Free or Enterprise Free accounts.
 
         -   **[Recommended Project] Support our new member [Antigravity-Tools-LS](https://github.com/lbjlaq/Antigravity-Tools-LS)**: A Language Server designed for AI protocols, providing the ultimate developer assistance and debugging experience.
@@ -326,8 +326,8 @@ print(response.choices[0].message.content)
             -   **Cross-Protocol Alignment**: This fix has been applied to both the Gemini native handler and the Claude protocol mapper, ensuring consistency and robustness across different streaming output paths.
     *   **v4.1.29 (2026-03-12)**:
         -   **[IMPORTANT WARNING] Google Risk Control & Third-Party Tool Risks**:
-            -   Due to tightened Google risk control, third-party tools may be suspended for violating Terms of Service when used with Antigravity, Gemini CLI, or Gemini Code Assist.
-            -   Accessing Antigravity, Gemini CLI, or Gemini Code Assist using third-party software, tools, or services (e.g., using OpenClaw and Antigravity OAuth) violates applicable terms and policies. Such actions may lead to account suspension or termination. It is recommended to only use the switching feature.
+            -   Due to tightened Google risk control, third-party tools may be suspended for violating Terms of Service when used with llm-proxy-Manager, Gemini CLI, or Gemini Code Assist.
+            -   Accessing llm-proxy-Manager, Gemini CLI, or Gemini Code Assist using third-party software, tools, or services (e.g., using OpenClaw and llm-proxy-Manager OAuth) violates applicable terms and policies. Such actions may lead to account suspension or termination. It is recommended to only use the switching feature.
             -   **Appeal Link**: If you believe your account was suspended by mistake, please submit an appeal via [this link](https://forms.gle/hGzM9MEUv2azZsrb9).
             -   Stay tuned to our [Telegram Channel](https://t.me/AntigravityManager) for latest updates.
             -   ![Risk Warning](docs/images/CleanShot%202026-03-12%20at%2009.34.34@2x.png)
@@ -345,8 +345,8 @@ print(response.choices[0].message.content)
 
     *   **v4.1.28 (2026-03-03)**:
         -   **[IMPORTANT WARNING] Google Risk Control & Third-Party Tool Risks**:
-            -   Due to tightened Google risk control, third-party tools may be suspended for violating Terms of Service when used with Antigravity, Gemini CLI, or Gemini Code Assist.
-            -   Accessing Antigravity, Gemini CLI, or Gemini Code Assist using third-party software, tools, or services (e.g., using OpenClaw and Antigravity OAuth) violates applicable terms and policies. Such actions may lead to account suspension or termination.
+            -   Due to tightened Google risk control, third-party tools may be suspended for violating Terms of Service when used with llm-proxy-Manager, Gemini CLI, or Gemini Code Assist.
+            -   Accessing llm-proxy-Manager, Gemini CLI, or Gemini Code Assist using third-party software, tools, or services (e.g., using OpenClaw and llm-proxy-Manager OAuth) violates applicable terms and policies. Such actions may lead to account suspension or termination.
             -   **Appeal Link**: If you believe your account was suspended by mistake, please submit an appeal via [this link](https://forms.gle/hGzM9MEUv2azZsrb9).
             -   **Future Plan & Roadmaps**:
                 -   New versions will be pushed in the future (potentially separating account switching and proxy features into independent modules).
@@ -375,7 +375,7 @@ print(response.choices[0].message.content)
             -   **Exhaustive Pattern Matching**: Added a catch-all branch (`_ => {}`) in the `OpenAIContentBlock` enum matching, eliminating potential non-exhaustive match compilation errors.
             -   **Unconditional Image Preservation**: Removed the redundant `preserve_tool_result_images` switch. The image data structure in `tool_result` is now unconditionally retained and formatted as `inlineData` for downstream models, significantly simplifying the underlying logic.
         -   **[Feature Enhancement] Update docker-compose.yml namespace and default vars (PR #2185)**:
-            -   **Namespace Update**: Changed the default built image name from `antigravity-manager` to `lbjlaq/antigravity-manager`.
+            -   **Namespace Update**: Changed the default built image name from `llm-proxy-manager` to `lbjlaq/llm-proxy-manager`.
             -   **Env Vars Placeholder**: Added default value placeholders syntax for environment variables to allow overriding via host env vars or `.env` files.
         -   **[Core Fix] Full Compatibility for OpenCode Thinking Budget Parameters (Issue #2186)**:
             -   **Architecture Support**: Resolved the issue where Vercel AI SDK (`@ai-sdk/anthropic`) combined with OpenCode would fail to start and throw `AI_UnsupportedFunctionalityError: 'thinking requires a budget'` due to the native snake_case `budget_tokens` naming.
@@ -429,7 +429,7 @@ print(response.choices[0].message.content)
             -   **Input Validation (`Settings.tsx`)**: Updated the `max` attribute for `refresh_interval` and `sync_interval` inputs from `60` to `35791` (35791 min × 60000 < INT32_MAX), and added `NaN` fallback (defaults to 1) with range clamping `[1, 35791]` in `onChange` to block invalid values at the source.
         -   **[Core Optimization] OAuth Token Exchange Only: Remove JA3 Fingerprinting and Dynamic User-Agent Masking**:
             -   **Pure Requests**: Specifically for `exchange_code` (initial authorization) and `refresh_access_token` (silent renewal) requests, the Chrome JA3 fingerprint emulation has been removed to revert to standard pure TLS characteristics.
-            -   **Dynamic UA**: During token exchange, the system automatically extracts the compiled version (`CURRENT_VERSION`) to construct a dedicated `User-Agent` (e.g., `vscode/1.X.X (Antigravity/4.1.27)`), matching the pure TLS connection.
+            -   **Dynamic UA**: During token exchange, the system automatically extracts the compiled version (`CURRENT_VERSION`) to construct a dedicated `User-Agent` (e.g., `vscode/1.X.X (llm-proxy-Manager/4.1.27)`), matching the pure TLS connection.
         -   **[Feature Enhancement] API Proxy Page and Settings Model Lists Now Fully Dynamic**:
             -   **Root Cause**: The "API Proxy → Supported Models & Integration" list, the target model dropdown in "Model Router", and the "Settings → Pinned Quota Models" list all previously read only from the static `MODEL_CONFIG`, causing dynamically issued models (e.g., `GPT-OSS 120B`, `Gemini 3.1 Pro (High)`) to never appear in these lists.
             -   **Fix**:
@@ -486,7 +486,7 @@ print(response.choices[0].message.content)
             *   **ID Conflict Validation**: Introduced ID checking during stream aggregation to prevent multiple tool calls from being incorrectly merged due to index overlap.
             *   **Index Stability Optimization**: Enhanced index assignment in streaming output to ensure tool call indices remain monotonically increasing across multiple data chunks.
         *   **[Core Optimization] Ultimate Request Identity Camouflage**:
-            *   **Dynamic Version Spoofing**: Implemented an intelligent version detection mechanism. Antigravity now automatically reads the locally installed version to construct the User-Agent, saying goodbye to the hardcoded "1.0.0" era.
+            *   **Dynamic Version Spoofing**: Implemented an intelligent version detection mechanism. llm-proxy-Manager now automatically reads the locally installed version to construct the User-Agent, saying goodbye to the hardcoded "1.0.0" era.
             *   **Docker Fallback Strategy**: For headless environments (Docker/Linux Server), a "Known Stable Version" fingerprint library is built-in. When a local client cannot be detected, it automatically masquerades as the latest stable client (e.g., v1.16.5), ensuring the server always sees a legitimate official client.
             *   **Full-Dimensional Header Injection**: Completed the injection of critical fingerprint headers such as `X-Client-Name`, `X-Client-Version`, `X-Machine-Id`, and `X-VSCode-SessionId`, achieving pixel-level camouflage from the network layer to the application layer, further reducing the probability of 403 risk controls.
         *   **[Core Feature] Background Refresh Toggle & Settings Hot-Save**:
@@ -555,7 +555,7 @@ print(response.choices[0].message.content)
         -   **[Docs Update] Full Guide for Gemini 3 Pro (Imagen 3) Image Generation**:
             -   **Deep Dive**: Added [Gemini 3 Pro Image Generation Guide](docs/gemini-3-image-guide.md), providing detailed technical specs for aspect ratio mapping, quality levels, Image-to-Image API support, and magic suffix usage.
         -   **[Installation] Official Homebrew Cask Maintenance**:
-            -   **Version Sync**: Updated `antigravity-tools.rb` Cask to v4.1.16, ensuring macOS and Linux users get the latest stable build via `brew install`.
+            -   **Version Sync**: Updated `llm-proxy-manager.rb` Cask to v4.1.16, ensuring macOS and Linux users get the latest stable build via `brew install`.
             -   **Parameter Scrubbing**: Added specific filtering for image generation models at the proxy layer to ensure incompatible generation parameters are no longer injected into non-thinking models.
     *   **v4.1.15 (2026-02-11)**:
         -   **[Core Feature] Enable Native Auto-Update for macOS and Windows (PR #1850)**:
@@ -567,7 +567,7 @@ print(response.choices[0].message.content)
             -   **Self-Correction**: Detecting an empty `project_id` now triggers an automatic re-fetch process, effectively resolving the "Invalid project resource name projects/" error mentioned in Issue #1846 and #1851.
         -   **[Troubleshooting] Resolving HTTP 404 "Resource projects/... not found" Errors (Issue #1858)**:
             -   **Verify Project ID**: Log in to the [Google Cloud Console](https://console.cloud.google.com/) and search for the specific Project ID (e.g., `bold-spark-xxx`) mentioned in the error. If the project is missing, create a new one and enable the necessary Vertex AI APIs.
-            -   **Reset Account Session**: Try removing and re-adding your account within the Antigravity app to clear any stale session data.
+            -   **Reset Account Session**: Try removing and re-adding your account within the llm-proxy-Manager app to clear any stale session data.
             -   **CLI-Based Verification**: We recommend re-authenticating via the Gemini CLI (`gcloud auth login`) and ensuring that your project is correctly configured using `gcloud config set project`.
         -   **[Troubleshooting] Resolving HTTP 403 "Forbidden" Errors (Issue #1834)**:
             -   **Check Verification Link**: Look for a message in the API response like "To continue, verify your account at...". If present, follow the link to complete Google's verification process.
@@ -618,7 +618,7 @@ print(response.choices[0].message.content)
     *   **v4.1.12 (2026-02-10)**:
         -   **[Core Feature] OpenCode CLI Deep Integration (PR #1739)**:
             -   **Auto Detection**: Added automatic detection and configuration sync support for OpenCode CLI environment variables.
-            -   **One-Click Sync**: Supports seamless injection of Antigravity configurations into the OpenCode CLI environment via the "External Providers" card.
+            -   **One-Click Sync**: Supports seamless injection of llm-proxy-Manager configurations into the OpenCode CLI environment via the "External Providers" card.
         -   **[Core Fix] Claude Opus Thinking Budget Injection (PR #1747)**:
             -   **Budget Correction**: Fixed an issue where the default Thinking Budget was not correctly injected when Opus models automatically enabled thinking mode, preventing upstream errors due to missing budget.
         -   **[Core Optimization] Claude Opus 4.6 Thinking Upgrade (Issue #1741, #1742, #1743)**:
@@ -705,7 +705,7 @@ print(response.choices[0].message.content)
             -   **Custom Model Selection**: Added model selection dropdowns for single-model CLIs (Claude, Codex, Gemini) and drag-and-drop management for multi-model CLIs (OpenCode, Droid).
             -   **Logic Calibration**: Deeply adapted the preset logic for each CLI (e.g., root-level `model` field and mirror environment cleanup for Claude) to ensure post-sync compatibility.
             -   **Interaction Optimization**: Synced panel now supports default collapse with smooth animations and improved UI feedback.
-            -   **Backup & Security**: Automatically generates `.antigravity.bak` backups before syncing, with one-click restore support.
+            -   **Backup & Security**: Automatically generates `.llm_proxy_manager.bak` backups before syncing, with one-click restore support.
         -   **[Core Feature] Global System Prompt Support (PR #1669)**:
             -   **Unified Instruction Injection**: Added a new configuration in System Settings to inject custom system instructions into all OpenAI, Claude, and Gemini protocol requests.
             -   **Frontend UI**: Introduced the `GlobalSystemPrompt` component with one-click enable and multi-line content editing.
@@ -713,7 +713,7 @@ print(response.choices[0].message.content)
             -   **Precision Upgrade**: Upgraded `temperature` and `top_p` data types from `f32` to `f64` in the backend.
             -   **Accuracy Calibration**: Completely eliminated minor deviations (e.g., `0.95` becoming `0.949999...`) during proxy serialization, improving upstream compatibility.
         -   **[Core Refactoring] Implement App Name Internationalization (PR #1662)**:
-            -   **UI Upgrade**: Removed hardcoded "Antigravity Tools" from `NavLogo` and `Settings` pages, utilizing the `app_name` translation key for consistent UI language switching.
+            -   **UI Upgrade**: Removed hardcoded "llm-proxy-Manager" from `NavLogo` and `Settings` pages, utilizing the `app_name` translation key for consistent UI language switching.
         -   **[Core Fix] Correct Misidentification of gemini-3-pro-image as a Thinking Model (Issue #1675)**:
             -   **Root Cause**: `gemini-3-pro-image` and its 4k/2k variants were incorrectly identified as "Thinking Models" because they contain the `gemini-3-pro` keyword.
             -   **Conflict Resolved**: Fixed the conflict caused by the incorrect injection of `thinkingConfig` alongside `imageConfig`, which led to backend resolution downgrades (to 1k).
@@ -724,7 +724,7 @@ print(response.choices[0].message.content)
             -   **Structured Results**: Introduced `UpstreamCallResult` to unify upstream request management and optimize streaming/non-streaming response paths.
     *   **v4.1.8 (2026-02-07)**:
         -   **[Core Feature] Integrated Claude Opus 4.6 Thinking Model Support (PR #1641)**:
-            -   **Hybrid Architecture**: Implemented a "Static Config + Dynamic Fetch" dual-mode architecture. Model lists are dynamically fetched via Antigravity API, while advanced metadata like Thinking Mode is supplemented by the local registry, perfectly balancing flexibility and stability.
+            -   **Hybrid Architecture**: Implemented a "Static Config + Dynamic Fetch" dual-mode architecture. Model lists are dynamically fetched via llm-proxy-Manager API, while advanced metadata like Thinking Mode is supplemented by the local registry, perfectly balancing flexibility and stability.
             -   **Zero-Config Access**: `claude-opus-4-6` series models automatically enable Thinking Mode with preset Budgets, allowing users to enjoy the latest reasoning capabilities without manual intervention.
             -   **Cutting-edge Mapping**: Added support for `claude-opus-4-6-thinking` and its aliases (`claude-opus-4-6`, `20260201`), managing them under the `claude-sonnet-4.5` quota group.
         -   **[Core Optimization] Improve OpenCode CLI Detection Logic (PR #1649)**:
@@ -771,7 +771,7 @@ print(response.choices[0].message.content)
             -   **Rotation Stability**: Fixed premature returns during `QUOTA_EXHAUSTED` errors, ensuring the system correctly attempts to rotate to the next available account.
         -   **[Core Feature] OpenCode CLI Configuration Sync Integration (PR #1614)**:
             -   **One-click Sync**: Automatically generates `~/.config/opencode/opencode.json` with proper provider settings for Anthropic and Google.
-            -   **Account Export**: Optionally syncs accounts to `antigravity-accounts.json` for OpenCode plugin compatibility.
+            -   **Account Export**: Optionally syncs accounts to `llm-proxy-accounts.json` for OpenCode plugin compatibility.
             -   **Backup & Restore**: Automatically creates a backup before syncing, with the ability to restore previous configurations.
             -   **Cross-platform Support**: Consistent support across Windows, macOS, and Linux.
             -   **Experience Optimization**: Fixed RPC parameter wrapping, completed i18n translations, and optimized view state when the configuration file is missing.
@@ -784,7 +784,7 @@ print(response.choices[0].message.content)
             -   **Error Code Optimization**: Optimized error mapping for image generation services, ensuring 429/503 statuses correctly trigger client-side retries.
         -   **[Core Enhancement] Custom Mapping Supports Manual Input for Any Model ID**:
             -   **Flexible Input**: Added manual input functionality to the custom mapping target model selector. Users can now directly enter any model ID at the bottom of the dropdown menu.
-            -   **Unreleased Model Experience**: Supports experiencing models not yet officially released by Antigravity, such as `claude-opus-4-6`. Users can route requests to these experimental models through custom mappings.
+            -   **Unreleased Model Experience**: Supports experiencing models not yet officially released by llm-proxy-Manager, such as `claude-opus-4-6`. Users can route requests to these experimental models through custom mappings.
             -   **Important Notice**: Not all accounts support calling unreleased models. If your account lacks access to a specific model, requests may return errors. It is recommended to test with a small number of requests first to confirm account permissions before large-scale use.
             -   **Quick Operation**: Supports Enter key for quick submission of custom model IDs, improving input efficiency.
     *   **v4.1.6 (2026-02-06)**:
@@ -899,9 +899,9 @@ print(response.choices[0].message.content)
             -   **Proxy Support**: The update checker now fully respects the global upstream proxy configuration.
             -   **Multi-layer Fallback**: Implemented a 3-layer fallback strategy: `GitHub API -> GitHub Raw -> jsDelivr`, significantly improving update detection reliability.
             -   **Observability**: The update notification now displays the source of the detection.
-        -   **[Core Optimization] Antigravity Database Compatibility Improvement (>= 1.16.5)**:
-            -   **Smart Version Detection**: Added a cross-platform version detection module (macOS/Windows/Linux) to automatically identify the Antigravity client version.
-            -   **Format Adaptation**: Supported the new `antigravityUnifiedStateSync.oauthToken` format for v1.16.5+ while maintaining backward compatibility for legacy formats.
+        -   **[Core Optimization] llm-proxy-Manager Database Compatibility Improvement (>= 1.16.5)**:
+            -   **Smart Version Detection**: Added a cross-platform version detection module (macOS/Windows/Linux) to automatically identify the llm-proxy-Manager client version.
+            -   **Format Adaptation**: Supported the new `llmProxyUnifiedStateSync.oauthToken` format for v1.16.5+ while maintaining backward compatibility for legacy formats.
             -   **Smart Injection**: Implemented a version-aware injection strategy with a dual-format fallback mechanism to ensure seamless account switching.
         -   **[Core Fix] Resolve react-router SSR XSS Vulnerability (CVE-2026-21884) (PR #1500)**:
             -   **Security Fix**: Upgraded `react-router` dependency to a safe version, addressing a cross-site scripting (XSS) risk in the `ScrollRestoration` component during server-side rendering (SSR).
@@ -1204,7 +1204,7 @@ print(response.choices[0].message.content)
             - Completed OAuth callback handling for Web mode, supporting `ABV_PUBLIC_URL` customization, perfectly adapting to remote VPS or NAS deployment scenarios.
         -   **[Normalization] Structural Cleanup & Unitization**:
             - Cleaned up redundant `deploy` directories and legacy scripts, resulting in a more modern project structure.
-            - Standardized the Docker image name as `antigravity-manager` and integrated a dedicated `docker/` directory and manual.
+            - Standardized the Docker image name as `llm-proxy-manager` and integrated a dedicated `docker/` directory and manual.
         -   **[API Enhancement] Traffic Logs & Monitoring**:
             - Optimized the real-time monitoring experience for traffic logs, adding polling mechanisms and statistics endpoints for Web mode.
             - Refined management API route placeholder naming for improved calling precision.
@@ -1604,7 +1604,7 @@ print(response.choices[0].message.content)
             - **Migration**: All `gpt-4` family aliases (e.g., `gpt-4`, `gpt-4o`) have been remapped to `gemini-2.5-flash` to ensure service continuity.
             - **Impact**: Users previously accessing `gemini-2.5-pro` via aliases will be automatically routed to `gemini-2.5-flash`. The model is no longer selectable in the frontend.
         - **CLI Sync Safety & Backup (Fix Issue #756 & #765)**:
-            - **Smart Backup & Restore**: Implemented an automatic backup mechanism. Before syncing, the system now automatically backs up existing configurations to `.antigravity.bak`. The "Restore" feature intelligently detects these backups and offers to restore the original user configuration instead of just resetting to defaults.
+            - **Smart Backup & Restore**: Implemented an automatic backup mechanism. Before syncing, the system now automatically backs up existing configurations to `.llm_proxy_manager.bak`. The "Restore" feature intelligently detects these backups and offers to restore the original user configuration instead of just resetting to defaults.
             - **Safety Confirmation**: Added a confirmation dialog for the "Sync Config" action to prevent accidental overwrites of local configurations.
             - **Enhanced CLI Detection**: Improved the detection logic for CLIs (like Claude Code) on macOS to correctly identify and execute binaries even if they are not in the system `PATH` but exist in standard fallback locations.
         - **Windows Console Flashing Fix (PR #769, Thanks to @i-smile)**:
@@ -1792,7 +1792,7 @@ print(response.choices[0].message.content)
         - **Smart Warmup Strategy Optimization (PR #606 - 2.9x-5x Performance Boost)**:
             - **Separated Refresh and Warmup**: Removed automatic warmup trigger during quota refresh. Warmup now only triggers via scheduler (every 10 minutes) or manual button, avoiding accidental quota consumption when users refresh quotas.
             - **Extended Cooldown Period**: Cooldown period extended from 30 minutes to 4 hours (14400 seconds), matching Pro account 5-hour reset cycle, completely resolving repeated warmup within the same cycle.
-            - **Persistent History Records**: Warmup history saved to `~/.antigravity_tools/warmup_history.json`, cooldown period remains effective after program restart, resolving state loss issue.
+            - **Persistent History Records**: Warmup history saved to `~/.llm_proxy_manager/warmup_history.json`, cooldown period remains effective after program restart, resolving state loss issue.
             - **Concurrent Execution Optimization**: 
                 - Filtering phase: 5 accounts per batch concurrent quota fetching, 10 accounts from ~15s to ~3s (5x improvement)
                 - Warmup phase: 3 tasks per batch concurrent execution with 2s interval, 40 tasks from ~80s to ~28s (2.9x improvement)
@@ -1836,7 +1836,7 @@ print(response.choices[0].message.content)
             - **Deep cache_control Cleanup**: Implemented multi-layer `cache_control` field cleanup mechanism, completely resolving "Extra inputs are not permitted" errors caused by `cache_control` in thinking blocks when using tools like Chrome Dev Tools MCP.
                 - **Enhanced Log Tracking**: Added `[DEBUG-593]` log prefix, recording message and block indices for easy problem localization and debugging.
                 - **Recursive Deep Cleanup**: Added `deep_clean_cache_control()` function to recursively traverse all nested objects and arrays, removing `cache_control` fields from any location.
-                - **Final Safety Net**: Performs deep cleanup again after building Gemini request body and before sending, ensuring no `cache_control` fields are sent to Antigravity.
+                - **Final Safety Net**: Performs deep cleanup again after building Gemini request body and before sending, ensuring no `cache_control` fields are sent to llm-proxy-Manager.
             - **Smart Tool Output Compression**: Added `tool_result_compressor` module to handle oversized tool outputs, reducing 429 error probability caused by excessive prompt length.
                 - **Browser Snapshot Compression**: Automatically detects and compresses browser snapshots exceeding 20,000 characters, using head (70%) + tail (30%) retention strategy with middle omission.
                 - **Large File Notice Compression**: Intelligently identifies "exceeds maximum allowed tokens" pattern, extracts key information (file path, character count, format description), significantly reducing redundant content.
@@ -1851,7 +1851,7 @@ print(response.choices[0].message.content)
             - **Impact**: This fix ensures all API endpoints involving account calls correctly display account information in the monitoring panel instead of showing "-", improving the completeness and usability of the API monitoring system.
         - **Headless Server Deployment Support**:
             - **One-click Deployment Scripts**: Added `deploy/headless-xvfb/` directory, providing installation, sync, and upgrade scripts for headless Linux servers.
-            - **Xvfb Environment Adaptation**: Enables the GUI version of Antigravity Tools to run on remote servers without display hardware via virtual display technology, complete with resource consumption warnings and limitation documentation.
+            - **Xvfb Environment Adaptation**: Enables the GUI version of llm-proxy-Manager to run on remote servers without display hardware via virtual display technology, complete with resource consumption warnings and limitation documentation.
     *   **v3.3.25 (2026-01-13)**:
         - **Session-Based Signature Caching System - Improved Thinking Model Stability (Core Thanks to @Gok-tug PR #574)**:
             - **Three-Layer Signature Cache Architecture**: Implemented a complete three-layer caching system for Tool Signatures (Layer 1), Thinking Families (Layer 2), and Session Signatures (Layer 3).
@@ -1904,7 +1904,7 @@ print(response.choices[0].message.content)
             - **Resource Balancing**: Prevents long-quota accounts from being idle while short-quota accounts are exhausted prematurely due to random assignment.
         - **Non-Streaming Base64 Signature Fix (Core Thanks to @ThanhNguyxn PR #568)**:
             - **Full Mode Compatibility**: Applied the Base64 thinking signature decoding logic from streaming responses to non-streaming responses.
-            - **Eliminated Signature Errors**: Completely resolved 400 errors caused by inconsistent signature encoding formats when using Antigravity proxy with non-streaming clients (e.g., Python SDK).
+            - **Eliminated Signature Errors**: Completely resolved 400 errors caused by inconsistent signature encoding formats when using llm-proxy-Manager proxy with non-streaming clients (e.g., Python SDK).
         - **Internationalization (i18n)**:
             - **Japanese Support**: Added Japanese localization support (Thank you @Koshikai PR #526).
             - **Turkish Support**: Added Turkish localization support (Thank you @hakanyalitekin PR #515).
@@ -2021,11 +2021,11 @@ print(response.choices[0].message.content)
             - **Impact**: This fix significantly improves stability and availability in multi-account environments, ensuring all accounts are fully utilized and avoiding account rotation failures caused by rate-limit time parsing errors.
     *   **v3.3.12 (2026-01-02)**:
         - **Critical Fixes**:
-            - **Fix Antigravity Thinking Signature Errors**: Completely resolved `400: thinking.signature: Field required` errors when using the Antigravity (Google API) channel.
+            - **Fix llm-proxy-Manager Thinking Signature Errors**: Completely resolved `400: thinking.signature: Field required` errors when using the llm-proxy-Manager (Google API) channel.
                 - **Disabled Dummy Thinking Block Injection**: Removed logic that auto-injected unsigned "Thinking..." placeholder blocks for historical messages. Google API rejects any thinking blocks without valid signatures.
                 - **Removed Fake Signature Fallback**: Removed logic that added `skip_thought_signature_validator` sentinel values to ToolUse and Thinking blocks. Now only uses real signatures or omits the thoughtSignature field entirely.
                 - **Fixed Background Task Misclassification**: Removed the "Caveat: The messages below were generated" keyword to prevent normal requests containing Claude Desktop system prompts from being misclassified as background tasks and downgraded to Flash Lite models.
-                - **Impact**: This fix ensures stability for Claude CLI, Cursor, Cherry Studio, and other clients when using the Antigravity proxy, especially in multi-turn conversations and tool calling scenarios.
+                - **Impact**: This fix ensures stability for Claude CLI, Cursor, Cherry Studio, and other clients when using the llm-proxy-Manager proxy, especially in multi-turn conversations and tool calling scenarios.
     *   **v3.3.11 (2026-01-02)**:
         - **Critical Fixes**:
             - **Cherry Studio Compatibility Fix (Gemini 3)**:
@@ -2042,7 +2042,7 @@ print(response.choices[0].message.content)
         - **Critical Fix**:
             - **Fixed Gemini 3 Python Client Crash**: Removed the logic that forced `maxOutputTokens: 64000` for Gemini requests. This override caused standard Gemini 3 Flash/Pro models (limit 8192) to reject requests with empty responses, leading to `'NoneType' object has no attribute 'strip'` errors in Python clients. The proxy now defaults to model native limits or respects client parameters.
         - **Scoop Installation Compatibility Support (Core Thanks to @Small-Ku PR #252)**:
-            - **Startup Arguments Configuration**: Added Antigravity startup arguments configuration feature. Users can now customize startup parameters in the Settings page, perfectly compatible with portable installations via package managers like Scoop.
+            - **Startup Arguments Configuration**: Added llm-proxy-Manager startup arguments configuration feature. Users can now customize startup parameters in the Settings page, perfectly compatible with portable installations via package managers like Scoop.
             - **Smart Database Path Detection**: Optimized database path detection logic with priority-based checking:
                 - Command-line specified `--user-data-dir` path
                 - Portable mode `data/user-data` directory
@@ -2211,7 +2211,7 @@ print(response.choices[0].message.content)
             - **Full Vision Capability Enrichment**: The OpenAI protocol now supports automatic parsing of Base64 images and mapping them to upstream `inlineData`, providing the same image processing power as the Claude protocol.
     *   **v3.2.7 (2025-12-26)**:
         - **New Features**:
-            - **Launch at Startup**: Added auto-launch feature that allows users to enable/disable automatic startup of Antigravity Tools when the system boots, configurable from the "General" tab in Settings.
+            - **Launch at Startup**: Added auto-launch feature that allows users to enable/disable automatic startup of llm-proxy-Manager when the system boots, configurable from the "General" tab in Settings.
             - **Account List Page Size Selector**: Added a page size selector in the pagination bar of the Accounts page, allowing users to directly choose items per page (10/20/50/100) without entering Settings, improving batch operation efficiency.
         - **Bug Fixes**:
             - **Comprehensive JSON Schema Cleanup Enhancement (MCP Tool Compatibility Fix)**:
@@ -2256,7 +2256,7 @@ print(response.choices[0].message.content)
         - **Core Architecture Refactor**:
             - **Proxy Engine Rewrite**: Completely modularized `proxy` subsystem with decoupled `mappers`, `handlers`, and `middleware` for superior maintainability.
             - **Linux Process Management**: Implemented smart process identification to distinguish Main/Helper processes, ensuring graceful exit via `SIGTERM` with `SIGKILL` fallback.
-        - **Homebrew Support**: Official support for macOS one-click installation via `brew install --cask antigravity`.
+        - **Homebrew Support**: Official support for macOS one-click installation via `brew install --cask llm-proxy-manager`.
         - **GUI UX Revolution**: Revamped Dashboard with average quota monitoring and "Best Account Recommendation" algorithm.
         - **Protocol & Router Expansion**: Native support for OpenAI, Anthropic (Claude Code), and Gemini protocols with high-precision Model Router.
         - **Multimodal Optimization**: Deep adaptation for Imagen 3 with 100MB payload capacity and aspect ratio controls.
@@ -2307,5 +2307,5 @@ This project has referenced or learned from the ideas or code of the following e
 
 <div align="center">
   <p>If you find this tool helpful, please give it a ⭐️ on GitHub!</p>
-  <p>Copyright © 2025 Antigravity Team.</p>
+  <p>Copyright © 2025 llm-proxy-Manager Team.</p>
 </div>

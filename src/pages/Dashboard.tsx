@@ -143,7 +143,7 @@ function Dashboard() {
 
             const exportData = response.accounts;
             const content = JSON.stringify(exportData, null, 2);
-            const fileName = `antigravity_accounts_${new Date().toISOString().split('T')[0]}.json`;
+            const fileName = `llm-proxy-manager_accounts_${new Date().toISOString().split('T')[0]}.json`;
 
             if (isTauri()) {
                 const path = await save({

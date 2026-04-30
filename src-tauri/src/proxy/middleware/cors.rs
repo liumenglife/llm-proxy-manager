@@ -1,6 +1,6 @@
 // CORS 中间件
-use tower_http::cors::{CorsLayer, Any};
 use axum::http::Method;
+use tower_http::cors::{Any, CorsLayer};
 
 /// 创建 CORS layer
 pub fn cors_layer() -> CorsLayer {
@@ -27,7 +27,6 @@ mod tests {
     #[test]
     fn test_cors_layer_creation() {
         let _layer = cors_layer();
-        // Layer 创建成功
-        assert!(true);
+        // Layer 创建成功即可。
     }
 }

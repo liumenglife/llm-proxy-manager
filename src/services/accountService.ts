@@ -95,6 +95,48 @@ export async function cancelOAuthLogin(): Promise<void> {
     return await invoke('cancel_oauth_login');
 }
 
+// Codex OAuth
+export async function prepareCodexOAuthUrl(): Promise<string> {
+    ensureTauriEnvironment();
+    const res = await invoke<any>('prepare_codex_oauth_url');
+    return typeof res === 'string' ? res : res?.url || '';
+}
+
+export async function startCodexOAuthLogin(oauthClientKey?: string): Promise<Account> {
+    ensureTauriEnvironment();
+    try {
+        return await invoke('start_codex_oauth_login', oauthClientKey ? { oauthClientKey } : undefined);
+    } catch (error) {
+        if (typeof error === 'string') {
+            if (error.includes('Refresh Token') || error.includes('refresh_token')) {
+                throw error;
+            }
+            throw i18n.t('accounts.add.oauth_error', { error });
+        }
+        throw error;
+    }
+}
+
+export async function completeCodexOAuthLogin(): Promise<Account> {
+    ensureTauriEnvironment();
+    try {
+        return await invoke('complete_codex_oauth_login');
+    } catch (error) {
+        if (typeof error === 'string') {
+            if (error.includes('Refresh Token') || error.includes('refresh_token')) {
+                throw error;
+            }
+            throw i18n.t('accounts.add.oauth_error', { error });
+        }
+        throw error;
+    }
+}
+
+export async function cancelCodexOAuthLogin(): Promise<void> {
+    ensureTauriEnvironment();
+    return await invoke('cancel_codex_oauth_login');
+}
+
 export interface OAuthClientInfo {
     key: string;
     label: string;

@@ -1,7 +1,7 @@
-# Antigravity Tools 🚀
+# llm-proxy-Manager 🚀
 > 专业级 AI 账号管理与协议代理系统 (v4.1.32)
 <div align="center">
-  <img src="public/icon.png" alt="Antigravity Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+  <img src="public/icon.png" alt="llm-proxy-Manager Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
 
   <h3>您的个人高性能 AI 调度网关</h3>
   <p>不仅仅是账号管理，更是打破 API 调用壁垒的终极解决方案。</p>
@@ -32,7 +32,7 @@
 
 ---
 
-**Antigravity Tools** 是一个专为开发者和 AI 爱好者设计的全功能桌面应用。它将多账号管理、协议转换和智能请求调度完美结合，为您提供一个稳定、极速且成本低廉的 **本地 AI 中转站**。
+**llm-proxy-Manager** 是一个专为开发者和 AI 爱好者设计的全功能桌面应用。它将多账号管理、协议转换和智能请求调度完美结合，为您提供一个稳定、极速且成本低廉的 **本地 AI 中转站**。
 
 通过本应用，您可以将常见的 Web 端 Session (Google/Anthropic) 转化为标准化的 API 接口，消除不同厂商间的协议鸿沟。
 
@@ -41,7 +41,7 @@
 | 赞助商 (Sponsor) | 简介 (Description) |
 | :---: | :--- |
 | <img src="docs/images/packycode_logo.png" width="200" alt="PackyCode Logo"> | 感谢 **PackyCode** 对本项目的赞助！PackyCode 是一家可靠高效的 API 中转服务商，提供 Claude Code、Codex、Gemini 等多种服务的中转。PackyCode 为本项目的用户提供了特别优惠：使用[此链接](https://www.packyapi.com/register?aff=Ctrler)注册，并在充值时输入 **“Ctrler”** 优惠码即可享受 **九折优惠**。 |
-| <img src="docs/images/AICodeMirror.jpg" width="200" alt="AICodeMirror Logo"> | 感谢 AICodeMirror 赞助了本项目！AICodeMirror 提供 Claude Code / Codex / Gemini CLI 官方高稳定中转服务，支持企业级高并发、极速开票、7×24 专属技术支持。 Claude Code / Codex / Gemini 官方渠道低至 3.8 / 0.2 / 0.9 折，充值更有折上折！AICodeMirror 为 Antigravity-Manager 的用户提供了特别福利，通过[此链接](https://www.aicodemirror.com/register?invitecode=MV5XUM)注册的用户，可享受首充8折，企业客户最高可享 7.5 折！ |
+| <img src="docs/images/AICodeMirror.jpg" width="200" alt="AICodeMirror Logo"> | 感谢 AICodeMirror 赞助了本项目！AICodeMirror 提供 Claude Code / Codex / Gemini CLI 官方高稳定中转服务，支持企业级高并发、极速开票、7×24 专属技术支持。 Claude Code / Codex / Gemini 官方渠道低至 3.8 / 0.2 / 0.9 折，充值更有折上折！AICodeMirror 为 llm-proxy-Manager 的用户提供了特别福利，通过[此链接](https://www.aicodemirror.com/register?invitecode=MV5XUM)注册的用户，可享受首充8折，企业客户最高可享 7.5 折！ |
 | <img src="https://coder.visioncoder.cn/logo.png" width="200" alt="VisionCoder Logo"> | 感谢 VisionCoder 对本项目的支持。[VisionCoder 开发平台](https://coder.visioncoder.cn) 是一个可靠高效性 API 中继服务提供商，提供 Claude Code、Codex、Gemini 等主流 AI 模型，帮助开发者和团队更轻松地集成 AI 功能，提升工作效率。VisionCoder 为本站用户提供了专属福利：通过[此链接](https://coder.visioncoder.cn)注册并购买 [Token Plan](https://coder.visioncoder.cn) 限时活动，可享受“买 1 个月赠 1 个月”优惠。 |
 
 
@@ -96,7 +96,7 @@
 | | |
 | :---: | :---: |
 | ![仪表盘 - 全局配额监控与一键切换](docs/images/dashboard-light.png) <br> 仪表盘 | ![账号列表 - 高密度配额展示与 403 智能标注](docs/images/accounts-light.png) <br> 账号列表 |
-| ![关于页面 - 关于 Antigravity Tools](docs/images/about-dark.png) <br> 关于页面 | ![API 反代 - 服务控制](docs/images/v3/proxy-settings.png) <br> API 反代 |
+| ![关于页面 - 关于 llm-proxy-Manager](docs/images/about-dark.png) <br> 关于页面 | ![API 反代 - 服务控制](docs/images/v3/proxy-settings.png) <br> API 反代 |
 | ![系统设置 - 通用配置](docs/images/settings-dark.png) <br> 系统设置 | |
 
 ### 💡 使用案例 (Usage Examples)
@@ -110,7 +110,7 @@
 
 ```mermaid
 graph TD
-    Client([外部应用: Claude Code/NextChat]) -->|OpenAI/Anthropic| Gateway[Antigravity Axum Server]
+    Client([外部应用: Claude Code/NextChat]) -->|OpenAI/Anthropic| Gateway[llm-proxy-Manager Axum Server]
     Gateway --> Middleware[中间件: 鉴权/限流/日志]
     Middleware --> Router[Model Router: ID 映射]
     Router --> Dispatcher[账号分发器: 轮询/权重]
@@ -147,10 +147,10 @@ irm https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/install.ps
 
 ```bash
 # 1. 订阅本仓库的 Tap
-brew tap lbjlaq/antigravity-manager https://github.com/lbjlaq/Antigravity-Manager
+brew tap lbjlaq/llm-proxy-manager https://github.com/lbjlaq/Antigravity-Manager
 
 # 2. 安装应用
-brew install --cask antigravity-tools
+brew install --cask llm-proxy-manager
 ```
 > **提示**: 如果遇到权限问题，建议添加 `--no-quarantine` 参数。
 
@@ -164,8 +164,8 @@ curl -sSL https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/depl
 
 **方式 2：通过 Homebrew** (如果您已安装 [Linuxbrew](https://sh.brew.sh/))
 ```bash
-brew tap lbjlaq/antigravity-manager https://github.com/lbjlaq/Antigravity-Manager
-brew install --cask antigravity-tools
+brew tap lbjlaq/llm-proxy-manager https://github.com/lbjlaq/Antigravity-Manager
+brew install --cask llm-proxy-manager
 ```
 
 #### 其他 Linux 发行版
@@ -184,15 +184,15 @@ brew install --cask antigravity-tools
 # 方式 1: 直接运行 (推荐)
 # - API_KEY: 必填。用于所有协议的 AI 请求鉴定。
 # - WEB_PASSWORD: 可选。用于管理后台登录。若不设置则默认使用 API_KEY。
-docker run -d --name antigravity-manager \
+docker run -d --name llm-proxy-manager \
   -p 8045:8045 \
   -e API_KEY=sk-your-api-key \
   -e WEB_PASSWORD=your-login-password \
   -e ABV_MAX_BODY_SIZE=104857600 \
-  -v ~/.antigravity_tools:/root/.antigravity_tools \
-  lbjlaq/antigravity-manager:latest
+  -v ~/.llm_proxy_manager:/root/.llm_proxy_manager \
+  lbjlaq/llm-proxy-manager:latest
 
-# 忘记密钥？执行 docker logs antigravity-manager 或 grep -E '"api_key"|"admin_password"' ~/.antigravity_tools/gui_config.json
+# 忘记密钥？执行 docker logs llm-proxy-manager 或 grep -E '"api_key"|"admin_password"' ~/.llm_proxy_manager/gui_config.json
 
 #### 🔐 鉴权逻辑说明
 *   **场景 A：仅设置了 `API_KEY`**
@@ -206,7 +206,7 @@ docker run -d --name antigravity-manager \
 如果您是从 v4.0.1 及更早版本升级，系统默认未设置 `WEB_PASSWORD`。您可以通过以下任一方式设置：
 1.  **Web UI 界面 (推荐)**：使用原有 `API_KEY` 登录后，在 **API 反代设置** 页面手动设置并保存。新密码将持久化存储在 `gui_config.json` 中。
 2.  **环境变量 (Docker)**：在启动容器时增加 `-e WEB_PASSWORD=您的新密码`。**注意：环境变量具有最高优先级，将覆盖 UI 中的任何修改。**
-3.  **配置文件 (持久化)**：直接修改 `~/.antigravity_tools/gui_config.json`，在 `proxy` 对象中修改或添加 `"admin_password": "您的新密码"` 字段。
+3.  **配置文件 (持久化)**：直接修改 `~/.llm_proxy_manager/gui_config.json`，在 `proxy` 对象中修改或添加 `"admin_password": "您的新密码"` 字段。
     - *注：`WEB_PASSWORD` 是环境变量名，`admin_password` 是配置文件中的 JSON 键名。*
 
 > [!TIP]
@@ -224,7 +224,7 @@ docker compose up -d
 > **访问地址**: `http://localhost:8045` (管理后台) | `http://localhost:8045/v1` (API Base)
 > **系统要求**:
 > - **内存**: 建议 **1GB** (最小 256MB)。
-> - **持久化**: 需挂载 `/root/.antigravity_tools` 以保存数据。
+> - **持久化**: 需挂载 `/root/.llm_proxy_manager` 以保存数据。
 > - **架构**: 支持 x86_64 和 ARM64。
 > **详情见**: [Docker 部署指南 (docker)](./docker/README.md)
 
@@ -240,12 +240,12 @@ Copyright © 2024-2026 [lbjlaq](https://github.com/lbjlaq)
 1.  **命令行修复** (推荐):
     打开终端，执行以下命令：
     ```bash
-    sudo xattr -rd com.apple.quarantine "/Applications/Antigravity Tools.app"
+    sudo xattr -rd com.apple.quarantine "/Applications/llm-proxy-Manager.app"
     ```
 2.  **Homebrew 安装技巧**:
     如果您使用 brew 安装，可以添加 `--no-quarantine` 参数来规避此问题：
     ```bash
-    brew install --cask --no-quarantine antigravity-tools
+    brew install --cask --no-quarantine llm-proxy-manager
     ```
 
 ## 🔌 快速接入示例
@@ -259,10 +259,10 @@ Copyright © 2024-2026 [lbjlaq](https://github.com/lbjlaq)
 > 提示：授权链接包含一次性回调端口，请始终使用弹窗里生成的最新链接；如果授权时应用未运行或弹窗已关闭，浏览器可能会提示 `localhost refused connection`。
 
 ### 如何接入 Claude Code CLI?
-1.  启动 Antigravity，并在“API 反代”页面开启服务。
+1.  启动 llm-proxy-Manager，并在“API 反代”页面开启服务。
 2.  在终端执行：
 ```bash
-export ANTHROPIC_API_KEY="sk-antigravity"
+export ANTHROPIC_API_KEY="sk-llm-proxy"
 export ANTHROPIC_BASE_URL="http://127.0.0.1:8045"
 claude
 ```
@@ -270,33 +270,33 @@ claude
 ### 如何接入 OpenCode?
 1.  进入 **API 反代**页面 → **外部 Providers** → 点击 **OpenCode Sync** 卡片。
 2.  点击 **Sync** 按钮，将自动生成 `~/.config/opencode/opencode.json` 配置文件：
-    - 创建独立 provider `antigravity-manager`（不覆盖 google/anthropic 原生配置）
-    - 可选：勾选 **Sync accounts** 导出 `antigravity-accounts.json`（plugin-compatible v3 格式），供 OpenCode 插件直接导入
+    - 创建独立 provider `llm-proxy-manager`（不覆盖 google/anthropic 原生配置）
+    - 可选：勾选 **Sync accounts** 导出 `llm-proxy-accounts.json`（plugin-compatible v3 格式），供 OpenCode 插件直接导入
 3.  点击 **Clear Config** 可一键清除 Manager 配置并清理 legacy 残留；点击 **Restore** 可从备份恢复。
 4.  Windows 用户路径为 `C:\Users\<用户名>\.config\opencode\`（与 `~/.config/opencode` 规则一致）。
 
 **快速验证命令：**
 ```bash
-# 测试 antigravity-manager provider（支持 --variant）
-opencode run "test" --model antigravity-manager/claude-sonnet-4-5-thinking --variant high
+# 测试 llm-proxy-manager provider（支持 --variant）
+opencode run "test" --model llm-proxy-manager/claude-sonnet-4-5-thinking --variant high
 
-# 若已安装 opencode-antigravity-auth 插件，验证 google provider 仍可独立工作
-opencode run "test" --model google/antigravity-claude-sonnet-4-5-thinking --variant max
+# 若已安装 opencode-llm-proxy-auth 插件，验证 google provider 仍可独立工作
+opencode run "test" --model google/llm-proxy-claude-sonnet-4-5-thinking --variant max
 ```
 
 ### 如何接入 Kilo Code?
 1.  **协议选择**: 建议优先使用 **Gemini 协议**。
 2.  **Base URL**: 填写 `http://127.0.0.1:8045`。
 3.  **注意**: 
-    - **OpenAI 协议限制**: Kilo Code 在使用 OpenAI 模式时，其请求路径会叠加产生 `/v1/chat/completions/responses` 这种非标准路径，导致 Antigravity 返回 404。因此请务必填入 Base URL 后选择 Gemini 模式。
-    - **模型映射**: Kilo Code 中的模型名称可能与 Antigravity 默认设置不一致，如遇到无法连接，请在“模型映射”页面设置自定义映射，并查看**日志文件**进行调试。
+    - **OpenAI 协议限制**: Kilo Code 在使用 OpenAI 模式时，其请求路径会叠加产生 `/v1/chat/completions/responses` 这种非标准路径，导致 llm-proxy-Manager 返回 404。因此请务必填入 Base URL 后选择 Gemini 模式。
+    - **模型映射**: Kilo Code 中的模型名称可能与 llm-proxy-Manager 默认设置不一致，如遇到无法连接，请在“模型映射”页面设置自定义映射，并查看**日志文件**进行调试。
 
 ### 如何在 Python 中使用?
 ```python
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-antigravity",
+    api_key="sk-llm-proxy",
     base_url="http://127.0.0.1:8045/v1"
 )
 
@@ -314,7 +314,7 @@ print(response.choices[0].message.content)
 import openai
 
 client = openai.OpenAI(
-    api_key="sk-antigravity",
+    api_key="sk-llm-proxy",
     base_url="http://127.0.0.1:8045/v1"
 )
 
@@ -362,7 +362,7 @@ response = client.chat.completions.create(
 # Claude Messages API
 curl -X POST http://127.0.0.1:8045/v1/messages \
   -H "Content-Type: application/json" \
-  -H "x-api-key: sk-antigravity" \
+  -H "x-api-key: sk-llm-proxy" \
   -d '{
     "model": "gemini-3-pro-image",
     "size": "1280x720",
@@ -393,7 +393,7 @@ response = client.chat.completions.create(
 # Claude Messages API 也支持 imageSize
 curl -X POST http://127.0.0.1:8045/v1/messages \
   -H "Content-Type: application/json" \
-  -H "x-api-key: sk-antigravity" \
+  -H "x-api-key: sk-llm-proxy" \
   -d '{
     "model": "gemini-3-pro-image",
     "size": "1280x720",
@@ -453,7 +453,7 @@ response = client.chat.completions.create(
             -   **指纹同步**: 实现了 `serviceMachineId` 在磁盘配置与 `state.vscdb` 数据库间的同步注入，解决了切换账号后 VS Code 弹出“环境变更”并要求重新登录的顽疾。
             -   **校验降级**: 弱化了企业版账号的项目预检逻辑。当无法自动解析到 `project_id` 时，系统将改为记录警告而非抛错中断切换，确保权限受限账号依然可以完成切换并正常使用。
         -   **[重要提示] 账号切换与风险建议**:
-            -   **自动重试提示**: 如果在 Antigravity 客户端不停地出现 `retry`，请尝试切换账号使用即可。
+            -   **自动重试提示**: 如果在 llm-proxy-Manager 客户端不停地出现 `retry`，请尝试切换账号使用即可。
             -   **风险控制说明**: 对于反代用户，虽然本次更新了部分增强，但使用第三方工具仍可能因违反服务条款而被暂停使用。如有必要，建议使用 Free 账号或企业 Free 账号。
 
     *   **v4.1.31 (2026-03-25)**:
@@ -478,8 +478,8 @@ response = client.chat.completions.create(
             -   **多协议对齐**: 该修复同步应用到了 Gemini 原生处理器与 Claude 协议映射器，确保了跨协议流式输出的一致性和健壮性。
     *   **v4.1.29 (2026-03-12)**:
         -   **[重要提醒] 谷歌风控与第三方工具使用风险**:
-            -   由于谷歌加强风控，第三方工具会违反服务条款而被暂停使用 Antigravity、Gemini CLI 或 Gemini Code Assist。
-            -   使用第三方软件、工具或服务访问 Antigravity、Gemini CLI 或 Gemini Code Assist（例如，使用 OpenClaw 和 Antigravity OAuth）违反了适用的条款和政策。此类行为可能导致您的帐户被暂停或终止。建议只使用切换功能
+            -   由于谷歌加强风控，第三方工具会违反服务条款而被暂停使用 llm-proxy-Manager、Gemini CLI 或 Gemini Code Assist。
+            -   使用第三方软件、工具或服务访问 llm-proxy-Manager、Gemini CLI 或 Gemini Code Assist（例如，使用 OpenClaw 和 llm-proxy-Manager OAuth）违反了适用的条款和政策。此类行为可能导致您的帐户被暂停或终止。建议只使用切换功能
             -   **申诉链接**: 如果您认为帐户被误封，请通过 [此链接](https://forms.gle/hGzM9MEUv2azZsrb9) 进行申诉。
             -   如果你对新的反代功能感兴趣可以查看 [TG 频道](https://t.me/AntigravityManager) 获取最新动态。
             -   ![风险提示](docs/images/CleanShot%202026-03-12%20at%2009.34.34@2x.png)
@@ -496,8 +496,8 @@ response = client.chat.completions.create(
             -   **自动化质量控制**: 构建了基础的 CI 流水线，涵盖 Rust 代码格式化检查、静态分析以及跨平台编译测试，提升了代码合规性与交付稳定性。
     *   **v4.1.28 (2026-03-03)**:
         -   **[重要提醒] 谷歌风控与第三方工具使用风险**:
-            -   由于谷歌加强风控，第三方工具会违反服务条款而被暂停使用 Antigravity、Gemini CLI 或 Gemini Code Assist。
-            -   使用第三方软件、工具或服务访问 Antigravity、Gemini CLI 或 Gemini Code Assist（例如，使用 OpenClaw 和 Antigravity OAuth）违反了适用的条款和政策。此类行为可能导致您的帐户被暂停或终止。
+            -   由于谷歌加强风控，第三方工具会违反服务条款而被暂停使用 llm-proxy-Manager、Gemini CLI 或 Gemini Code Assist。
+            -   使用第三方软件、工具或服务访问 llm-proxy-Manager、Gemini CLI 或 Gemini Code Assist（例如，使用 OpenClaw 和 llm-proxy-Manager OAuth）违反了适用的条款和政策。此类行为可能导致您的帐户被暂停或终止。
             -   **申诉链接**: 如果您认为帐户被误封，请通过 [此链接](https://forms.gle/hGzM9MEUv2azZsrb9) 进行申诉。
             -   **[后续规划] 关于未来版本更迭**:
                 -   我们计划在后续推送新版本，届时可能会将“账号切换”与“反代代理”功能解耦为独立的模块或工具。
@@ -532,7 +532,7 @@ response = client.chat.completions.create(
             -   **模式匹配完善**: 补充了 `OpenAIContentBlock` 枚举匹配中的未知类型兜底分支 (`_ => {}`)，消除非穷尽匹配的编译警告/错误。
             -   **图片无条件保留**: 移除冗余的 `preserve_tool_result_images` 开关，现已强制保留 `tool_result` 中的图片数据结构，转为大模型支持的 `inlineData` 结构，大幅简化逻辑。
         -   **[功能增强] 修改 docker-compose.yml 的配置 (PR #2185)**:
-            -   **命名空间更新**: 将构建的默认镜像名称从 `antigravity-manager` 更新为 `lbjlaq/antigravity-manager`。
+            -   **命名空间更新**: 将构建的默认镜像名称从 `llm-proxy-manager` 更新为 `lbjlaq/llm-proxy-manager`。
             -   **环境变量占位符**: 为环境变量添加了带默认值的占位符语法，允许用户通过宿主机的环境变量或 `.env` 文件来灵活覆盖默认配置。
         -   **[核心修复] OpenCode thinking budget 参数全面兼容 (Issue #2186)**:
             -   **架构支持**：解决了 Vercel AI SDK (`@ai-sdk/anthropic`) 配合 OpenCode 使用时，因原生蛇形命名 `budget_tokens` 导致系统无法启动并抛出 `AI_UnsupportedFunctionalityError: 'thinking requires a budget'` 的问题。
@@ -598,7 +598,7 @@ response = client.chat.completions.create(
             -   **输入验证 (`Settings.tsx`)**: 将 `refresh_interval` 和 `sync_interval` 输入框的 `max` 属性从 `60` 更新为 `35791`（35791 min × 60000 < INT32_MAX），并在 `onChange` 中添加 `NaN` fallback（默认为 1）及范围夹紧 `[1, 35791]`，从源头阻断非法值输入。
         -   **[核心优化] OAuth 换票专属：剔除 JA3 指纹与动态 User-Agent 伪装**:
             -   **纯净请求**: 仅针对 `exchange_code`（首次授权）和 `refresh_access_token`（静默续期）的换票请求，移除了底层网络库的 Chrome JA3 指纹伪装，恢复标准纯净的 TLS特征。
-            -   **动态 UA**: 换票时自动提取编译时版本号 (`CURRENT_VERSION`) 构建专属的 `User-Agent`（如 `vscode/1.X.X (Antigravity/4.1.27)`），以匹配纯净 TLS 链路。
+            -   **动态 UA**: 换票时自动提取编译时版本号 (`CURRENT_VERSION`) 构建专属的 `User-Agent`（如 `vscode/1.X.X (llm-proxy-Manager/4.1.27)`），以匹配纯净 TLS 链路。
         -   **[功能增强] API 反代页面与设置页模型列表全面接入动态模型数据**:
             -   **问题根源**: "API 反代 → 支持模型与集成"列表与"模型路由中心"的目标模型选择下拉框，以及"设置 → 固定配额模型"列表，此前均仅从静态 `MODEL_CONFIG` 读取硬编码模型信息，导致账号实际下发的动态新模型（如 `GPT-OSS 120B`、`Gemini 3.1 Pro (High)` 等）无法出现在这些列表中。
             -   **修复方案**:
@@ -644,7 +644,7 @@ response = client.chat.completions.create(
         -   **UI 优化 (Fix #2008)**: 改进了冷却时间的显示颜色 (使用蓝色)，提高了在小字体下的可读性。
     *   **v4.1.20 (2026-02-16)**:
         *   **[✨ 新春祝福] 祝大家马年一马当先，万事如意！Code 运昌隆，上线无 Bug！🧧**
-        *   **[Critical]** 修复了 Claude Opus/Haiku 等模型在 Antigravity API 上的 `400 INVALID_ARGUMENT` 错误（通过恢复 v4.1.16 的核心协议格式）。
+        *   **[Critical]** 修复了 Claude Opus/Haiku 等模型在 llm-proxy-Manager API 上的 `400 INVALID_ARGUMENT` 错误（通过恢复 v4.1.16 的核心协议格式）。
         *   增强了流式响应的健壮性，优化了对心跳包和非从零开始的 Thinking Block 的处理。
         *   **[核心修复] 修复图像生成配额同步问题 (Issue #1995)**：
             *   **放宽模型过滤**：优化了配额抓取逻辑，增加了对 `image` / `imagen` 关键字的支持，确保图像模型的配额信息能正常同步。
@@ -653,7 +653,7 @@ response = client.chat.completions.create(
             *   **ID 冲突校验**：在聚合流式片段时引入 ID 校验，防止多个工具调用因索引重叠而导致参数被错误拼接。
             *   **索引稳定性优化**：优化了流式输出中的索引分配逻辑，确保多轮数据传输下工具调用索引始终单向递增。
         *   **[核心优化] 极致拟真请求伪装 (Request Identity Camouflage)**:
-            *   **动态版本伪装**: 实现了智能版本探测机制。Antigravity 现在会自动读取本地安装的真实版本号构建 User-Agent，彻底告别了硬编码的 "1.0.0" 时代。
+            *   **动态版本伪装**: 实现了智能版本探测机制。llm-proxy-Manager 现在会自动读取本地安装的真实版本号构建 User-Agent，彻底告别了硬编码的 "1.0.0" 时代。
             *   **Docker 环境兜底**: 针对无头模式（Docker/Linux Server），内置了“已知稳定版”指纹库。当无法检测到本地客户端时，自动伪装为最新稳定版客户端（如 v1.16.5），确保服务端看到的永远是合法的官方客户端。
             *   **全维度 Header 注入**: 补全了 `X-Client-Name`, `X-Client-Version`, `X-Machine-Id`, `X-VSCode-SessionId` 等关键指纹头，实现了从网络层到应用层的像素级伪装，进一步降低了 403 风控概率。
         *   **[核心功能] 后台自动刷新开关与设置热保存**:
@@ -722,7 +722,7 @@ response = client.chat.completions.create(
         -   **[文档更新] 发布 Gemini 3 Pro (Imagen 3) 图像生成全功能调用指南**:
             -   **深度指南**: 新增 [Gemini 3 Pro 图像模型调用指南](docs/gemini-3-image-guide.md)，详细说明了宽高比自动映射、画质等级对应关系图表，以及新增的图生图 (Image-to-Image) 与后缀魔法用法。
         -   **[安装优化] 官方 Homebrew Cask 维护与更新**:
-            -   **版本同步**: 更新 `antigravity-tools.rb` Cask 配置至 v4.1.16，确保 macOS 与 Linux 用户通过 `brew install` 始终获取最新稳定版本。
+            -   **版本同步**: 更新 `llm-proxy-manager.rb` Cask 配置至 v4.1.16，确保 macOS 与 Linux 用户通过 `brew install` 始终获取最新稳定版本。
             -   **参数清洗**: 在代理请求层增加了对图像生成模型的特殊过滤，确保不再为非思维链模型注入不兼容的生成参数。
     *   **v4.1.15 (2026-02-11)**:
         -   **[核心功能] 开启 macOS 与 Windows 原生自动更新支持 (PR #1850)**:
@@ -734,7 +734,7 @@ response = client.chat.completions.create(
             -   **自动纠错**: 当检测到账号数据中的 `project_id` 为空时，现在会触发自动重新获取流程，有效解决了 Issue #1846 和 #1851 中提到的 "Invalid project resource name projects/" 错误。
         -   **[故障排查] 针对 HTTP 404 "Resource projects/... not found" 的解决建议 (Issue #1858)**:
             -   **验证项目 ID**: 登录 [Google Cloud Console](https://console.cloud.google.com/)，在项目选择器中搜索报错提到的 ID（如 `bold-spark-xxx`）。若项目不存在，请创建新项目并启用所需的 Vertex AI API。
-            -   **重置账户会话**: 尝试在 Antigravity 应用中“删除账户”并“重新添加”，以清除旧的会话残留。
+            -   **重置账户会话**: 尝试在 llm-proxy-Manager 应用中“删除账户”并“重新添加”，以清除旧的会话残留。
             -   **CLI 辅助验证**: 建议使用 Gemini CLI (`gcloud auth login`) 重新进行身份验证，并确保 `gcloud config set project` 指向了正确的有效项目。
         -   **[故障排查] 针对 HTTP 403 "Forbidden" 错误的解决建议 (Issue #1834)**:
             -   **检查验证链接**: 请检查 API 响应中是否包含提示 "To continue, verify your account at..." 的链接。若有，请点击该链接并按照 Google 提示完成验证。
@@ -792,7 +792,7 @@ response = client.chat.completions.create(
     *   **v4.1.12 (2026-02-10)**:
         -   **[核心功能] OpenCode CLI 深度集成 (PR #1739)**:
             -   **自动探测**: 新增了对 OpenCode CLI 的自动检测与环境变量配置同步支持。
-            -   **一键同步**: 支持通过“外部 Providers”卡片将 Antigravity 的配置无缝注入到 OpenCode CLI 环境，实现零配置接入。
+            -   **一键同步**: 支持通过“外部 Providers”卡片将 llm-proxy-Manager 的配置无缝注入到 OpenCode CLI 环境，实现零配置接入。
         -   **[核心修复] Claude Opus 思考预算自动注入 (PR #1747)**:
             -   **预算修正**: 修复了 Opus 模型在自动启用思考模式时，未能正确注入默认思考预算 (Thinking Budget) 的问题，防止因预算缺失导致的上游错误。
         -   **[核心优化] Claude Opus 4.6 Thinking 全面升级 (Issue #1741, #1742, #1743)**:
@@ -874,7 +874,7 @@ response = client.chat.completions.create(
             -   **模型选择定制**: 为单模型 CLI (Claude, Codex, Gemini) 增加了模型选择下拉框，支持同步自定义模型 ID；为多模型 CLI (OpenCode, Droid) 实现了拖拽式模型列表管理。
             -   **逻辑校准**: 深度适配了各 CLI 的预设逻辑（如 Claude 根节点的 `model` 字段及镜像环境清理），确保同步后的兼容性。
             -   **交互优化**: 同步面板现支持默认折叠并适配平滑动画，同时优化了同步前后的 UI 状态反馈。
-            -   **备份安全性**: 同步前自动生成 `.antigravity.bak` 备份，支持一键还原。
+            -   **备份安全性**: 同步前自动生成 `.llm_proxy_manager.bak` 备份，支持一键还原。
         -   **[核心功能] 新增全局系统提示词 (Global System Prompt) 支持 (PR #1669)**:
             -   **统一指令注入**: 在“系统设置”中新增全局系统提示词配置，支持将自定义指令自动注入到所有 OpenAI、Claude 和 Gemini 协议请求中。
             -   **前端界面**: 新增 `GlobalSystemPrompt` 组件，支持一键启用及多行内容编辑。
@@ -882,7 +882,7 @@ response = client.chat.completions.create(
             -   **精度升级**: 将后端 `temperature` 和 `top_p` 的数据类型从 `f32` 升级为 `f64`。
             -   **逻辑校准**: 解决了请求参数在反代过程中因浮点转换导致的微小偏差（如 `0.95` 变成 `0.949999...`），显著提升了上游调用的稳定性。
         -   **[核心重构] 实现应用名称国际化 (PR #1662)**:
-            -   **UI 升级**: 移除了 `NavLogo` 和 `Settings` 页面中硬编码的 "Antigravity Tools"，全面采用 `app_name` 翻译键，确保 UI 语言切换的一致性。
+            -   **UI 升级**: 移除了 `NavLogo` 和 `Settings` 页面中硬编码的 "llm-proxy-Manager"，全面采用 `app_name` 翻译键，确保 UI 语言切换的一致性。
         -   **[核心修复] 修正 gemini-3-pro-image 因关键词匹配被误判定为思维模型的问题 (Issue #1675)**:
             -   **问题根源**: `gemini-3-pro-image` 及其 4k/2k 变体因包含 `gemini-3-pro` 关键词，被系统错误判定为“思维模型”（Thinking Model）。
             -   **冲突修复**: 修正了误注入 `thinkingConfig` 与图像生成 `imageConfig` 发生的冲突，解决了导致后端分辨率降级（降至 1k）的问题。
@@ -893,7 +893,7 @@ response = client.chat.completions.create(
             -   **结构化响应**: 引入 `UpstreamCallResult` 统一管理上游请求结果，优化了流式与非流式响应的处理路径。
     *   **v4.1.8 (2026-02-07)**:
         -   **[核心功能] 集成 Claude Opus 4.6 Thinking 模型支持 (PR #1641)**:
-            -   **混合模式架构**: 实现了“静态配置 + 动态获取”的双模架构。模型列表通过 Antigravity API 动态拉取，而 Thinking 模式等高级元数据则由本地注册表静态补充，完美平衡了灵活性与稳定性。
+            -   **混合模式架构**: 实现了“静态配置 + 动态获取”的双模架构。模型列表通过 llm-proxy-Manager API 动态拉取，而 Thinking 模式等高级元数据则由本地注册表静态补充，完美平衡了灵活性与稳定性。
             -   **零配置接入**: `claude-opus-4-6` 系列模型自动启用 Thinking 模式并预设 Budget，无需用户手动干预即可享受最新推理能力。
             -   **前沿模型映射**: 新增 `claude-opus-4-6-thinking` 及其别名 (`claude-opus-4-6`, `20260201`) 的支持，并将其归入 `claude-sonnet-4.5` 配额组进行统筹管理。
         -   **[核心优化] 优化 OpenCode CLI 检测逻辑 (PR #1649)**:
@@ -940,7 +940,7 @@ response = client.chat.completions.create(
             -   **轮换稳定性**: 修复了在账号额度耗尽 (QUOTA_EXHAUSTED) 时的过早返回问题，确保系统能正确尝试轮换到下一个可用账号。
         -   **[核心功能] OpenCode CLI 配置同步集成 (PR #1614)**:
             -   **一键同步**: 自动生成 `~/.config/opencode/opencode.json`，支持 Anthropic 和 Google 双 Provider 自动配置。
-            -   **账号导出**: 可选同步账号列表至 `antigravity-accounts.json`，供 OpenCode 插件直接导入。
+            -   **账号导出**: 可选同步账号列表至 `llm-proxy-accounts.json`，供 OpenCode 插件直接导入。
             -   **备份与还原**: 同步前自动备份原有配置，支持一键还原。
             -   **跨平台支持**: 统一适配 Windows、macOS 和 Linux 环境。
             -   **体验优化**: 修复了 RPC 参数包装问题，补全了多语言翻译，并优化了配置文件不存在时的视图状态。
@@ -954,7 +954,7 @@ response = client.chat.completions.create(
             -   **错误码优化**: 优化了图像生成服务的错误映射，确保 429/503 等状态码能正确触发客户端的重试机制。
         -   **[核心增强] 自定义映射支持手动输入任意模型 ID**:
             -   **灵活输入**: 在自定义映射的目标模型选择器中新增手动输入功能，用户现在可以在下拉菜单底部直接输入任意模型 ID。
-            -   **未发布模型体验**: 支持体验 Antigravity 尚未正式发布的模型，例如 `claude-opus-4-6`。用户可以通过自定义映射将请求路由到这些实验性模型。
+            -   **未发布模型体验**: 支持体验 llm-proxy-Manager 尚未正式发布的模型，例如 `claude-opus-4-6`。用户可以通过自定义映射将请求路由到这些实验性模型。
             -   **重要提示**: 并非所有账号都支持调用未发布的模型。如果您的账号无权访问某个模型，请求可能会返回错误。建议先在少量请求中测试，确认账号权限后再大规模使用。
             -   **快捷操作**: 支持 Enter 键快速提交自定义模型 ID，提升输入效率。
     *   **v4.1.6 (2026-02-06)**:
@@ -1076,9 +1076,9 @@ response = client.chat.completions.create(
             -   **代理支持**: 更新检查器现在完全遵循全局上游代理配置，解决了在受限网络环境下无法获取更新的问题。
             -   **多级降级策略**: 实现了 `GitHub API -> GitHub Raw -> jsDelivr` 的三层回退机制，极大提升了版本检测的成功率。
             -   **来源可观测**: 更新提示中现在会显示检测源信息，方便排查连接问题。
-        -   **[核心优化] Antigravity 数据库格式兼容性改进 (>= 1.16.5)**:
-            -   **智能版本检测**: 新增跨平台版本检测模块，支持自动识别 Antigravity 客户端版本（macOS/Windows/Linux）。
-            -   **新旧格式适配**: 适配了 1.16.5+ 版本的 `antigravityUnifiedStateSync.oauthToken` 新格式，并保持对旧版格式的向下兼容。
+        -   **[核心优化] llm-proxy-Manager 数据库格式兼容性改进 (>= 1.16.5)**:
+            -   **智能版本检测**: 新增跨平台版本检测模块，支持自动识别 llm-proxy-Manager 客户端版本（macOS/Windows/Linux）。
+            -   **新旧格式适配**: 适配了 1.16.5+ 版本的 `llmProxyUnifiedStateSync.oauthToken` 新格式，并保持对旧版格式的向下兼容。
             -   **注入策略增强**: 实现基于版本的智能注入策略，并在检测失败时提供双重格式注入的容错机制，确保账号切换成功。
         -   **[核心修复] 解决 react-router SSR XSS 漏洞 (CVE-2026-21884) (PR #1500)**:
             -   **安全修复**: 升级 `react-router` 依赖至安全版本，修复了 `ScrollRestoration` 组件在服务端渲染 (SSR) 时可能造成的跨站脚本攻击 (XSS) 风险。
@@ -1385,7 +1385,7 @@ response = client.chat.completions.create(
             - 补全了 Web 模式下的 OAuth 回调处理，支持 `ABV_PUBLIC_URL` 自定义，完美适配远程 VPS 或 NAS 部署场景。
         -   **[项目规范化] 结构清理与单元化 (Project Normalization)**:
             - 清理了冗余的 `deploy` 目录及其旧版脚本，项目结构更加现代。
-            - 规范化 Docker 镜像名称为 `antigravity-manager`，并整合专属的 `docker/` 目录与部署手册。
+            - 规范化 Docker 镜像名称为 `llm-proxy-manager`，并整合专属的 `docker/` 目录与部署手册。
         -   **[API 增强] 流量日志与监控优化**:
             - 优化了流量日志的实时监控体验，补全了 Web 模式下的轮询机制与统计接口。
             - 精确化管理 API 路由占位符命名，提升了 API 的调用精确度。
@@ -1798,7 +1798,7 @@ response = client.chat.completions.create(
             - **迁移**: 所有 `gpt-4` 系列别名（如 `gpt-4`, `gpt-4o`）已重新映射至 `gemini-2.5-flash`，确保服务连续性。
             - **影响**: 之前通过别名使用 `gemini-2.5-pro` 的用户将自动路由至 `gemini-2.5-flash`。前端不再显示该模型。
         - **CLI 同步安全与备份增强 (Fix Issue #756 & #765)**:
-            - **智能备份与还原**: 引入了自动备份机制。在执行同步覆盖前，系统会自动将用户现有的配置文件备份为 `.antigravity.bak`。“恢复”功能现已升级，能智能检测备份文件，并优先提供“恢复原有配置”选项，而非单一的重置默认。
+            - **智能备份与还原**: 引入了自动备份机制。在执行同步覆盖前，系统会自动将用户现有的配置文件备份为 `.llm_proxy_manager.bak`。“恢复”功能现已升级，能智能检测备份文件，并优先提供“恢复原有配置”选项，而非单一的重置默认。
             - **操作二次确认**: 为“立即同步配置”操作增加了二次确认弹窗，有效防止误触导致本地个性化配置（如登录态）丢失。
             - **CLI 检测增强**: 优化了 macOS 平台下的 CLI（如 Claude Code）检测逻辑。即使二进制文件不在系统 `PATH` 中，只要存在于标准安装路径，也能被正确识别并调用。
         - **Windows 控制台闪烁修复 (PR #769, 感谢 @i-smile)**:
@@ -1986,7 +1986,7 @@ response = client.chat.completions.create(
         - **智能预热策略优化 (PR #606 - 性能提升 2.9x-5x)**:
             - **分离刷新和预热**: 移除配额刷新时的自动预热触发,预热仅通过定时调度器(每10分钟)或手动按钮触发,避免用户刷新配额时意外消耗预热额度。
             - **延长冷却期**: 冷却期从30分钟延长至4小时(14400秒),匹配 Pro 账号5小时重置周期,解决同一周期内重复预热问题。
-            - **持久化历史记录**: 预热历史保存至 `~/.antigravity_tools/warmup_history.json`,程序重启后冷却期仍然有效,解决状态丢失问题。
+            - **持久化历史记录**: 预热历史保存至 `~/.llm_proxy_manager/warmup_history.json`,程序重启后冷却期仍然有效,解决状态丢失问题。
             - **并发执行优化**: 
                 - 筛选阶段: 每批5个账号并发获取配额,10个账号从~15秒降至~3秒 (5倍提升)
                 - 预热阶段: 每批3个任务并发执行,批次间隔2秒,40个任务从~80秒降至~28秒 (2.9倍提升)
@@ -2030,7 +2030,7 @@ response = client.chat.completions.create(
             - **深度 cache_control 清理**: 实现了多层次的 `cache_control` 字段清理机制,解决 Chrome Dev Tools MCP 等工具在 thinking block 中包含 `cache_control` 导致的 "Extra inputs are not permitted" 错误。
                 - **增强日志追踪**: 添加 `[DEBUG-593]` 日志前缀,记录消息索引和块索引,便于问题定位和调试。
                 - **递归深度清理**: 新增 `deep_clean_cache_control()` 函数,递归遍历所有嵌套对象和数组,移除任何位置的 `cache_control` 字段。
-                - **最后一道防线**: 在构建 Gemini 请求体后、发送前再次执行深度清理,确保发送给 Antigravity 的请求中不包含任何 `cache_control`。
+                - **最后一道防线**: 在构建 Gemini 请求体后、发送前再次执行深度清理,确保发送给 llm-proxy-Manager 的请求中不包含任何 `cache_control`。
             - **工具输出智能压缩**: 新增 `tool_result_compressor` 模块,处理超大工具输出,降低 prompt 超长导致的 429 错误概率。
                 - **浏览器快照压缩**: 自动检测并压缩超过 20,000 字符的浏览器快照,采用头部(70%) + 尾部(30%)保留策略,中间省略。
                 - **大文件提示压缩**: 智能识别 "exceeds maximum allowed tokens" 模式,提取关键信息(文件路径、字符数、格式说明),大幅减少冗余内容。
@@ -2045,7 +2045,7 @@ response = client.chat.completions.create(
             - **影响范围**: 此修复确保了所有涉及账号调用的 API 端点都能在监控面板中正确显示账号信息,不再显示为"-",提升了 API 监控系统的完整性和可用性。
         - **无头服务器部署支持 (Headless Server Support)**:
             - **一键部署脚本**: 新增 `deploy/headless-xvfb/` 目录,提供针对 Linux 无界面服务器的一键安装、同步、升级脚本。
-            - **Xvfb 环境适配**: 利用虚拟显示器技术,允许 GUI 版本的 Antigravity Tools 在无显卡的远程服务器上运行,并提供了详细的资源占用预警和局限性说明。
+            - **Xvfb 环境适配**: 利用虚拟显示器技术,允许 GUI 版本的 llm-proxy-Manager 在无显卡的远程服务器上运行,并提供了详细的资源占用预警和局限性说明。
     *   **v3.3.25 (2026-01-13)**:
         - **会话签名缓存系统 (Session-Based Signature Caching) - 提升 Thinking 模型稳定性 (核心致谢 @Gok-tug PR #574)**:
             - **三层签名缓存架构**: 实现了 Tool Signatures (Layer 1)、Thinking Families (Layer 2) 和 Session Signatures (Layer 3) 的完整三层缓存体系。
@@ -2098,7 +2098,7 @@ response = client.chat.completions.create(
             - **避免木桶效应**: 防止因随机分配导致某些长配额账号被闲置，而短配额账号过早耗尽。
         - **非流式响应 Base64 签名修复 (核心致谢 @ThanhNguyxn PR #568)**:
             - **全模式兼容**: 将流式响应中的 Base64 思考签名解码逻辑同步应用到非流式响应 (Non-streaming) 中。
-            - **消除签名错误**: 解决了在非流式客户端 (如 Python SDK) 中使用 Antigravity 代理时因签名编码格式不一致导致的 400 错误。
+            - **消除签名错误**: 解决了在非流式客户端 (如 Python SDK) 中使用 llm-proxy-Manager 代理时因签名编码格式不一致导致的 400 错误。
         - **国际化 (i18n)**:
             - **日语支持**: 新增日语 (Japanese) 本地化支持 (Thank you @Koshikai PR #526)。
             - **土耳其语支持**: 新增土耳其语 (Turkish) 本地化支持 (Thank you @hakanyalitekin PR #515)。
@@ -2344,9 +2344,9 @@ response = client.chat.completions.create(
             - **新增功能翻译**: 添加账户代理启用/禁用、主题切换、语言切换、Python 代码示例等功能的国际化支持。
             - **保持翻译同步**: 同步更新 `zh.json` 和 `en.json`,确保中英文翻译键的一致性。
             - **影响范围**: 更新了 `AccountGrid`、`AddAccountDialog`、`Navbar`、`Accounts`、`accountService` 等 7 个文件,提升多语言支持质量。
-        - **Antigravity 身份注入 (核心致谢 [wendavid](https://linux.do/u/wendavid))**:
-            - **智能身份管理**: 在三个协议(Claude、OpenAI、Gemini)中实现了 Antigravity 身份注入,确保模型正确识别自己的身份和使用规范。
-            - **避免重复注入**: 实现智能检查机制,检测用户是否已提供 Antigravity 身份,避免重复注入。
+        - **llm-proxy-Manager 身份注入 (核心致谢 [wendavid](https://linux.do/u/wendavid))**:
+            - **智能身份管理**: 在三个协议(Claude、OpenAI、Gemini)中实现了 llm-proxy-Manager 身份注入,确保模型正确识别自己的身份和使用规范。
+            - **避免重复注入**: 实现智能检查机制,检测用户是否已提供 llm-proxy-Manager 身份,避免重复注入。
             - **简洁专业版文本**: 采用简洁专业的身份描述,包含核心信息(Google Deepmind、agentic AI、pair programming)和关键提示(**Absolute paths only**、**Proactiveness**)。
             - **保留用户控制**: 如果用户自定义了系统提示词,系统会尊重用户的选择,不强制覆盖。
             - **影响范围**: 修改了 `claude/request.rs`、`openai/request.rs`、`gemini/wrapper.rs` 三个文件,提升了模型响应的一致性和准确性。
@@ -2397,7 +2397,7 @@ response = client.chat.completions.create(
             - **基础模型映射**: 添加 `gemini-3-pro` 基础模型的直接透传映射，支持不带后缀的调用。
             - **影响范围**: 此修复确保了 Gemini 3 Pro thinking 模型的正常使用，用户现在可以正常调用 `gemini-3-pro-high` 和 `gemini-3-pro-low` 并获得包含 thinking 内容的响应。
         - **联网功能降级优化**:
-            - **强制模型降级**: 修复了联网功能的模型降级逻辑。由于 Antigravity 提供的模型中**只有 `gemini-2.5-flash` 支持 googleSearch 工具**，现在所有模型（包括 Gemini 3 Pro、thinking 模型、Claude 别名）在启用联网时都会自动降级到 `gemini-2.5-flash`。
+            - **强制模型降级**: 修复了联网功能的模型降级逻辑。由于 llm-proxy-Manager 提供的模型中**只有 `gemini-2.5-flash` 支持 googleSearch 工具**，现在所有模型（包括 Gemini 3 Pro、thinking 模型、Claude 别名）在启用联网时都会自动降级到 `gemini-2.5-flash`。
             - **日志增强**: 添加了降级日志，方便用户了解模型切换情况。
             - **影响范围**: 此修复确保了 Cherry Studio、Claude CLI 等客户端的联网功能正常工作，避免了因模型不支持 googleSearch 而导致的"模拟搜索"问题。
         - **OpenAI 协议多候选支持 (核心致谢 @ThanhNguyxn PR #403)**:
@@ -2484,11 +2484,11 @@ response = client.chat.completions.create(
             - **影响范围**: 此修复显著提升了多账号环境下的稳定性和可用性，确保所有账号都能被充分利用，避免因限流时间解析错误导致的账号轮换失效。
     *   **v3.3.12 (2026-01-02)**:
         - **核心修复 (Critical Fixes)**:
-            - **修复 Antigravity Thinking Signature 错误**: 解决了使用 Antigravity (Google API) 渠道时的 `400: thinking.signature: Field required` 错误。
+            - **修复 llm-proxy-Manager Thinking Signature 错误**: 解决了使用 llm-proxy-Manager (Google API) 渠道时的 `400: thinking.signature: Field required` 错误。
                 - **禁用假 Thinking 块注入**: 移除了为历史消息自动注入无签名 "Thinking..." 占位块的逻辑，Google API 不接受任何无效签名的 thinking 块。
                 - **移除假签名 Fallback**: 移除了为 ToolUse 和 Thinking 块添加 `skip_thought_signature_validator` 哨兵值的逻辑，只使用真实签名或完全不添加 thoughtSignature 字段。
                 - **修复后台任务误判**: 移除了 "Caveat: The messages below were generated" 关键词，避免将包含 Claude Desktop 系统提示的正常请求误判为后台任务并降级到 Flash Lite 模型。
-                - **影响范围**: 此修复确保了 Claude CLI、Cursor、Cherry Studio 等客户端在使用 Antigravity 代理时的稳定性，特别是在多轮对话和工具调用场景下。
+                - **影响范围**: 此修复确保了 Claude CLI、Cursor、Cherry Studio 等客户端在使用 llm-proxy-Manager 代理时的稳定性，特别是在多轮对话和工具调用场景下。
     *   **v3.3.11 (2026-01-02)**:
         - **重要修复 (Critical Fixes)**:
             - **Cherry Studio 兼容性修复 (Gemini 3)**:
@@ -2505,7 +2505,7 @@ response = client.chat.completions.create(
         - **核心修复 (Critical Fix)**:
             - **修复 Gemini 3 Python 客户端崩溃问题**: 移除了对 Gemini 请求强制设置 `maxOutputTokens: 64000` 的逻辑。该强制设置导致标准 Gemini 3 Flash/Pro 模型(上限 8192)拒绝请求并返回空响应,进而引发 Python 客户端出现 `'NoneType' object has no attribute 'strip'` 错误。修复后,代理将默认使用模型原生上限或尊重客户端参数。
         - **Scoop 安装兼容性支持 (核心致谢 @Small-Ku PR #252)**:
-            - **启动参数配置**: 新增 Antigravity 启动参数配置功能,支持在设置页面自定义启动参数,完美兼容 Scoop 等包管理器的便携式安装。
+            - **启动参数配置**: 新增 llm-proxy-Manager 启动参数配置功能,支持在设置页面自定义启动参数,完美兼容 Scoop 等包管理器的便携式安装。
             - **智能数据库路径检测**: 优化数据库路径检测逻辑,按优先级依次检查:
                 - 命令行参数指定的 `--user-data-dir` 路径
                 - 便携模式下的 `data/user-data` 目录
@@ -2675,7 +2675,7 @@ response = client.chat.completions.create(
             - **视觉能力全面补齐**: 现在 OpenAI 协议支持自动解析 Base64 图片并映射为上游 `inlineData`,使其具备与 Claude 协议同等的图像处理能力。
     *   **v3.2.7 (2025-12-26)**:
         - **新功能 (New Features)**:
-            - **开机自动启动**: 新增开机自动启动功能,可在设置页面的"通用"标签中一键开启/关闭系统启动时自动运行 Antigravity Tools。
+            - **开机自动启动**: 新增开机自动启动功能,可在设置页面的"通用"标签中一键开启/关闭系统启动时自动运行 llm-proxy-Manager。
             - **账号列表分页大小选择器**: 在账号管理页面的分页栏中新增分页大小选择器,支持直接选择每页显示数量(10/20/50/100 条),无需进入设置页面,提升批量操作效率。
         - **Bug 修复 (Bug Fixes)**:
             - **JSON Schema 清理逻辑全面增强 (MCP 工具兼容性修复)**:
@@ -2704,7 +2704,7 @@ response = client.chat.completions.create(
         - **核心增强 (Core Enhancements)**:
             - **进程管理架构优化 (核心致谢 @Gaq152 PR #70)**: 
                 - **精确路径识别**: 引入了基于可执行文件绝对路径的进程匹配机制。在启动、关闭及枚举 PID 时，系统会通过规范化路径 (`canonicalize`) 进行比对。
-                - **管理进程自排除**: 在 Linux 等环境下，系统现能通过对比 `std::env::current_exe()` 路径，杜绝了 Antigravity-Manager 将自身误识别为核心进程而发生的“自杀”现象。
+                - **管理进程自排除**: 在 Linux 等环境下，系统现能通过对比 `std::env::current_exe()` 路径，杜绝了 llm-proxy-Manager 将自身误识别为核心进程而发生的“自杀”现象。
                 - **手动路径自定义**: 在“设置 -> 高级”页面新增了手动指定反重力程序路径的功能。支持 MacOS (.app 目录) 和各平台可执行文件。
                 - **自动探测回退**: 新增路径自动探测按钮，并建立了“手动路径优先 -> 自动搜索 -> 注册表/标准目录”的多级检索链。
         - **体验优化 (UX Improvements)**:
@@ -2754,7 +2754,7 @@ response = client.chat.completions.create(
         - **协议与路由扩展**: 原生支持 OpenAI, Anthropic (Claude Code) 协议；新增“模型路由中心”，实现高精度 ID 映射。
         - **多模态优化**: 深度适配 Imagen 3，支持 100MB 超大 Payload 与多种比例参数透传。
         - **安装体验优化**: 正式支持 Homebrew Cask 安装；内置 macOS “应用损坏”自动化排查指南。
-        - **提示**：目前 `antigravity` 与 Google 官方工具重名。为确保安装的是本项目，目前推荐使用上述原始文件安装。后续我们将推出官方 Tap。
+        - **提示**：目前 `llm-proxy` 与 Google 官方工具重名。为确保安装的是本项目，目前推荐使用上述原始文件安装。后续我们将推出官方 Tap。
         - **全局上游代理**: 统一管理内外网请求，支持 HTTP/SOCKS5 协议及热重载。
 
     </details>
@@ -2809,5 +2809,5 @@ response = client.chat.completions.create(
 
 <div align="center">
   <p>如果您觉得这个工具有所帮助，欢迎在 GitHub 上点一个 ⭐️</p>
-  <p>Copyright © 2025 Antigravity Team.</p>
+  <p>Copyright © 2025 llm-proxy-Manager Team.</p>
 </div>

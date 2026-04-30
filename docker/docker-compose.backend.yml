@@ -1,6 +1,6 @@
 services:
-  antigravity-manager:
+  llm-proxy-manager:
     build:
       dockerfile: docker/Dockerfile.backend
       args:
-        FRONTEND_IMAGE: antigravity-manager:latest
+        FRONTEND_IMAGE: llm-proxy-manager:latest

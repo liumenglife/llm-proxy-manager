@@ -48,11 +48,11 @@ pub fn sanitize_error_for_log(error_text: &str) -> String {
     // 抹除常见敏感 key 的值
     let re = regex::Regex::new(r#"(?i)(access_token|refresh_token|id_token|authorization|api_key|secret|password|proxy_url|http_proxy|https_proxy)\s*[:=]\s*[^"'\\\s,}\]]+"#).unwrap();
     let redacted = re.replace_all(error_text, "$1=<redacted>");
-    
+
     // 抹除 Bearer token
     let re_bearer = regex::Regex::new(r#"(?i)(bearer\s+)[^"'\\\s,}\]]+"#).unwrap();
     let redacted = re_bearer.replace_all(&redacted, "$1<redacted>");
-    
+
     // 限制长度防止日志炸弹
     if redacted.len() > 1000 {
         format!("{}... (truncated)", &redacted[..1000])
@@ -322,9 +322,9 @@ impl UpstreamClient {
         // 2. Device & Session Identity
         // Machine ID (Persistent)
         if let Ok(mid) = machine_uid::get() {
-             if let Ok(mid_val) = header::HeaderValue::from_str(&mid) {
-                 headers.insert("x-machine-id", mid_val);
-             }
+            if let Ok(mid_val) = header::HeaderValue::from_str(&mid) {
+                headers.insert("x-machine-id", mid_val);
+            }
         }
         // Session ID (Per App Launch)
         if let Ok(sess_val) = header::HeaderValue::from_str(&crate::constants::SESSION_ID) {
@@ -373,9 +373,9 @@ impl UpstreamClient {
                 .headers(headers.clone())
                 // [NEW] 强制分块传输仿真: 包装为流以触发 Transfer-Encoding: chunked
                 // 这对齐了官方 Go Worker 通过遮蔽 Content-Length 来模拟 IDE 流量的行为
-                .body(rquest::Body::wrap_stream(futures::stream::once(async move { 
-                    Ok::<_, std::io::Error>(body_bytes) 
-                })))
+                .body(rquest::Body::wrap_stream(futures::stream::once(
+                    async move { Ok::<_, std::io::Error>(body_bytes) },
+                )))
                 .send()
                 .await;
 
@@ -451,19 +451,6 @@ impl UpstreamClient {
         Err(last_err.unwrap_or_else(|| "All endpoints failed".to_string()))
     }
 
-    /// 调用 v1internal API（带 429 重试,支持闭包）
-    ///
-    /// 带容错和重试的核心请求逻辑
-    ///
-    /// # Arguments
-    /// * `method` - API method (e.g., "generateContent")
-    /// * `query_string` - Optional query string (e.g., "?alt=sse")
-    /// * `get_credentials` - 闭包，获取凭证（支持账号轮换）
-    /// * `build_body` - 闭包，接收 project_id 构建请求体
-    /// * `max_attempts` - 最大重试次数
-    ///
-    /// # Returns
-    /// HTTP Response
     // 已移除弃用的重试方法 (call_v1_internal_with_retry)
 
     // 已移除弃用的辅助方法 (parse_retry_delay)

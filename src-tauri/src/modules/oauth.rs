@@ -1,8 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-// Google OAuth configuration
-const CLIENT_ID: &str = "REMOVED_GOOGLE_OAUTH_CLIENT_ID";
-const CLIENT_SECRET: &str = "REMOVED_GOOGLE_OAUTH_CLIENT_SECRET";
 const TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const USERINFO_URL: &str = "https://www.googleapis.com/oauth2/v2/userinfo";
 const TOKEN_REFRESH_SKEW_SECONDS: i64 = 900;
@@ -39,7 +36,7 @@ impl UserInfo {
                 return Some(name.clone());
             }
         }
-        
+
         // If name is empty, combine given_name and family_name
         match (&self.given_name, &self.family_name) {
             (Some(given), Some(family)) => Some(format!("{} {}", given, family)),
@@ -76,6 +73,8 @@ pub struct OAuthClientDescriptor {
 
 const OAUTH_CLIENTS_ENV: &str = "ANTIGRAVITY_OAUTH_CLIENTS";
 const ACTIVE_OAUTH_CLIENT_ENV: &str = "ANTIGRAVITY_OAUTH_CLIENT_KEY";
+const BUILTIN_CLIENT_ID_ENV: &str = "ANTIGRAVITY_GOOGLE_OAUTH_CLIENT_ID";
+const BUILTIN_CLIENT_SECRET_ENV: &str = "ANTIGRAVITY_GOOGLE_OAUTH_CLIENT_SECRET";
 const DEFAULT_OAUTH_CLIENT_KEY: &str = "antigravity_enterprise";
 
 static OAUTH_CLIENT_REGISTRY: std::sync::OnceLock<std::sync::RwLock<OAuthClientRegistry>> =
@@ -86,13 +85,31 @@ fn normalize_client_key(key: &str) -> String {
 }
 
 fn build_registry() -> OAuthClientRegistry {
-    let mut clients: Vec<OAuthClientConfig> = vec![OAuthClientConfig {
-        key: normalize_client_key(DEFAULT_OAUTH_CLIENT_KEY),
-        label: "Antigravity Enterprise".to_string(),
-        client_id: CLIENT_ID.to_string(),
-        client_secret: CLIENT_SECRET.to_string(),
-        is_builtin: true,
-    }];
+    let mut clients: Vec<OAuthClientConfig> = Vec::new();
+
+    let builtin_client_id = std::env::var(BUILTIN_CLIENT_ID_ENV)
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty());
+    let builtin_client_secret = std::env::var(BUILTIN_CLIENT_SECRET_ENV)
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty());
+
+    match (builtin_client_id, builtin_client_secret) {
+        (Some(client_id), Some(client_secret)) => clients.push(OAuthClientConfig {
+            key: normalize_client_key(DEFAULT_OAUTH_CLIENT_KEY),
+            label: "Antigravity Enterprise".to_string(),
+            client_id,
+            client_secret,
+            is_builtin: true,
+        }),
+        (Some(_), None) | (None, Some(_)) => crate::modules::logger::log_warn(&format!(
+            "Ignored incomplete built-in OAuth client; set both {} and {}",
+            BUILTIN_CLIENT_ID_ENV, BUILTIN_CLIENT_SECRET_ENV
+        )),
+        (None, None) => {}
+    }
 
     if let Ok(raw_extra_clients) = std::env::var(OAUTH_CLIENTS_ENV) {
         for entry in raw_extra_clients.split(';') {
@@ -173,6 +190,13 @@ fn oauth_registry() -> &'static std::sync::RwLock<OAuthClientRegistry> {
     OAUTH_CLIENT_REGISTRY.get_or_init(|| std::sync::RwLock::new(build_registry()))
 }
 
+fn no_oauth_clients_configured_error() -> String {
+    format!(
+        "No OAuth clients configured. Set {} and {}, or provide clients via {}.",
+        BUILTIN_CLIENT_ID_ENV, BUILTIN_CLIENT_SECRET_ENV, OAUTH_CLIENTS_ENV
+    )
+}
+
 fn get_client_by_key<'a>(
     clients: &'a [OAuthClientConfig],
     client_key: &str,
@@ -193,7 +217,7 @@ fn select_auth_client(client_key: Option<&str>) -> Result<OAuthClientConfig, Str
     let registry = &*registry_guard;
 
     if registry.clients.is_empty() {
-        return Err("No OAuth clients configured".to_string());
+        return Err(no_oauth_clients_configured_error());
     }
 
     if let Some(key) = client_key {
@@ -203,7 +227,7 @@ fn select_auth_client(client_key: Option<&str>) -> Result<OAuthClientConfig, Str
         return Err(format!("Unknown OAuth client key: {}", key));
     }
 
-    active_or_first_client(registry).ok_or_else(|| "No OAuth clients configured".to_string())
+    active_or_first_client(registry).ok_or_else(no_oauth_clients_configured_error)
 }
 
 fn get_candidate_clients(preferred_client_key: Option<&str>) -> Vec<OAuthClientConfig> {
@@ -331,7 +355,7 @@ pub fn get_auth_url_with_client(
 ) -> Result<(String, String), String> {
     let client = select_auth_client(client_key)?;
 
-    let scopes = vec![
+    let scopes = [
         "https://www.googleapis.com/auth/cloud-platform",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
@@ -350,17 +374,15 @@ pub fn get_auth_url_with_client(
         ("include_granted_scopes", "true"),
         ("state", state),
     ];
-    
+
     let url = url::Url::parse_with_params(AUTH_URL, &params)
         .map_err(|e| format!("Invalid Auth URL: {}", e))?;
     Ok((url.to_string(), client.key))
 }
 
 /// Generate OAuth authorization URL using current active client.
-pub fn get_auth_url(redirect_uri: &str, state: &str) -> String {
-    get_auth_url_with_client(redirect_uri, state, None)
-        .map(|(url, _)| url)
-        .expect("Failed to build OAuth URL")
+pub fn get_auth_url(redirect_uri: &str, state: &str) -> Result<String, String> {
+    get_auth_url_with_client(redirect_uri, state, None).map(|(url, _)| url)
 }
 
 async fn exchange_code_once(
@@ -374,7 +396,7 @@ async fn exchange_code_once(
     } else {
         crate::utils::http::get_long_standard_client()
     };
-    
+
     let params = [
         ("client_id", client_cfg.client_id.as_str()),
         ("client_secret", client_cfg.client_secret.as_str()),
@@ -414,7 +436,7 @@ async fn exchange_code_once(
             .await
             .map_err(|e| (None, format!("Token parsing failed: {}", e)))?;
         token_res.oauth_client_key = Some(client_cfg.key.clone());
-        
+
         // Add detailed logs
         crate::modules::logger::log_info(&format!(
             "Token exchange successful via [{}]! access_token: {}..., refresh_token: {}",
@@ -426,7 +448,7 @@ async fn exchange_code_once(
                 "✗ Missing"
             }
         ));
-        
+
         // Log warning if refresh_token is missing
         if token_res.refresh_token.is_none() {
             crate::modules::logger::log_warn(
@@ -436,7 +458,7 @@ async fn exchange_code_once(
                  3. OAuth parameter configuration issue",
             );
         }
-        
+
         Ok(token_res)
     } else {
         let status = response.status();
@@ -457,7 +479,7 @@ pub async fn exchange_code_with_client(
 ) -> Result<TokenResponse, String> {
     let candidates = get_candidate_clients(preferred_client_key);
     if candidates.is_empty() {
-        return Err("No OAuth clients configured".to_string());
+        return Err(no_oauth_clients_configured_error());
     }
 
     let mut attempt_errors: Vec<String> = Vec::new();
@@ -518,7 +540,7 @@ async fn refresh_access_token_once(
     } else {
         crate::utils::http::get_long_standard_client()
     };
-    
+
     let params = [
         ("client_id", client_cfg.client_id.as_str()),
         ("client_secret", client_cfg.client_secret.as_str()),
@@ -532,7 +554,7 @@ async fn refresh_access_token_once(
     } else {
         crate::modules::logger::log_info("Refreshing Token for generic request (no account_id)...");
     }
-    
+
     tracing::debug!(
         "[OAuth] Sending refresh_access_token request with User-Agent: {}",
         crate::constants::NATIVE_OAUTH_USER_AGENT.as_str()
@@ -540,7 +562,10 @@ async fn refresh_access_token_once(
 
     let response = client
         .post(TOKEN_URL)
-        .header(rquest::header::USER_AGENT, crate::constants::NATIVE_OAUTH_USER_AGENT.as_str())
+        .header(
+            rquest::header::USER_AGENT,
+            crate::constants::NATIVE_OAUTH_USER_AGENT.as_str(),
+        )
         .form(&params)
         .send()
         .await
@@ -564,7 +589,7 @@ async fn refresh_access_token_once(
             .await
             .map_err(|e| (None, format!("Refresh data parsing failed: {}", e)))?;
         token_data.oauth_client_key = Some(client_cfg.key.clone());
-        
+
         crate::modules::logger::log_info(&format!(
             "Token refreshed successfully via [{}]! Expires in: {} seconds",
             client_cfg.key, token_data.expires_in
@@ -586,7 +611,7 @@ pub async fn refresh_access_token_with_client(
 ) -> Result<TokenResponse, String> {
     let candidates = get_candidate_clients(preferred_client_key);
     if candidates.is_empty() {
-        return Err("No OAuth clients configured".to_string());
+        return Err(no_oauth_clients_configured_error());
     }
 
     let mut attempt_errors: Vec<String> = Vec::new();
@@ -621,8 +646,8 @@ pub async fn refresh_access_token_with_client(
                     "Refresh failed for client [{}]: {}",
                     client_cfg.key, err_msg
                 ));
-    }
-}
+            }
+        }
     }
 
     Err(format!(
@@ -640,13 +665,16 @@ pub async fn refresh_access_token(
 }
 
 /// Get user info
-pub async fn get_user_info(access_token: &str, account_id: Option<&str>) -> Result<UserInfo, String> {
+pub async fn get_user_info(
+    access_token: &str,
+    account_id: Option<&str>,
+) -> Result<UserInfo, String> {
     let client = if let Some(pool) = crate::proxy::proxy_pool::get_global_proxy_pool() {
         pool.get_effective_client(account_id, 15).await
     } else {
         crate::utils::http::get_client()
     };
-    
+
     let response = client
         .get(USERINFO_URL)
         .bearer_auth(access_token)
@@ -655,7 +683,8 @@ pub async fn get_user_info(access_token: &str, account_id: Option<&str>) -> Resu
         .map_err(|e| format!("User info request failed: {}", e))?;
 
     if response.status().is_success() {
-        response.json::<UserInfo>()
+        response
+            .json::<UserInfo>()
             .await
             .map_err(|e| format!("User info parsing failed: {}", e))
     } else {
@@ -671,14 +700,17 @@ pub async fn ensure_fresh_token(
     account_id: Option<&str>,
 ) -> Result<crate::models::TokenData, String> {
     let now = chrono::Local::now().timestamp();
-    
+
     // Keep enough validity to avoid immediate post-switch refresh failure.
     if current_token.expiry_timestamp > now + TOKEN_REFRESH_SKEW_SECONDS {
         return Ok(current_token.clone());
     }
-    
+
     // Need to refresh
-    crate::modules::logger::log_info(&format!("Token expiring soon for account {:?}, refreshing...", account_id));
+    crate::modules::logger::log_info(&format!(
+        "Token expiring soon for account {:?}, refreshing...",
+        account_id
+    ));
     let response = refresh_access_token_with_client(
         &current_token.refresh_token,
         account_id,
@@ -688,7 +720,7 @@ pub async fn ensure_fresh_token(
 
     let oauth_client_key =
         normalize_refreshed_oauth_client_key(current_token, response.oauth_client_key.clone());
-    
+
     // Construct new TokenData
     Ok(crate::models::TokenData::new(
         response.access_token,
@@ -696,7 +728,7 @@ pub async fn ensure_fresh_token(
         response.expires_in,
         current_token.email.clone(),
         current_token.project_id.clone(), // Keep original project_id
-        None,  // session_id will be generated in token_manager
+        None,                             // session_id will be generated in token_manager
         current_token.is_gcp_tos,
     )
     .with_oauth_client_key(oauth_client_key))
@@ -706,15 +738,75 @@ pub async fn ensure_fresh_token(
 mod tests {
     use super::*;
 
+    static OAUTH_TEST_LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
+
+    fn lock_oauth_test_env() -> std::sync::MutexGuard<'static, ()> {
+        OAUTH_TEST_LOCK
+            .get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .expect("OAuth test env lock poisoned")
+    }
+
+    fn reload_registry_for_tests() {
+        let mut registry = oauth_registry()
+            .write()
+            .expect("OAuth registry lock poisoned");
+        *registry = build_registry();
+    }
+
+    #[test]
+    fn test_build_registry_has_no_builtin_client_without_env_credentials() {
+        let _guard = lock_oauth_test_env();
+
+        std::env::remove_var(BUILTIN_CLIENT_ID_ENV);
+        std::env::remove_var(BUILTIN_CLIENT_SECRET_ENV);
+        std::env::remove_var(OAUTH_CLIENTS_ENV);
+        std::env::remove_var(ACTIVE_OAUTH_CLIENT_ENV);
+
+        let registry = build_registry();
+
+        assert!(registry.clients.is_empty());
+    }
+
+    #[test]
+    fn test_get_auth_url_returns_clear_error_without_clients() {
+        let _guard = lock_oauth_test_env();
+
+        std::env::remove_var(BUILTIN_CLIENT_ID_ENV);
+        std::env::remove_var(BUILTIN_CLIENT_SECRET_ENV);
+        std::env::remove_var(OAUTH_CLIENTS_ENV);
+        std::env::remove_var(ACTIVE_OAUTH_CLIENT_ENV);
+        reload_registry_for_tests();
+
+        let err = get_auth_url_with_client("http://localhost:8080/callback", "state", None)
+            .expect_err("missing OAuth clients should return an error");
+
+        assert!(err.contains("No OAuth clients configured"));
+        assert!(err.contains(BUILTIN_CLIENT_ID_ENV));
+        assert!(err.contains(BUILTIN_CLIENT_SECRET_ENV));
+        assert!(err.contains(OAUTH_CLIENTS_ENV));
+    }
+
     #[test]
     fn test_get_auth_url_contains_state() {
+        let _guard = lock_oauth_test_env();
+
+        std::env::set_var(
+            BUILTIN_CLIENT_ID_ENV,
+            "test-client-id.apps.googleusercontent.com",
+        );
+        std::env::set_var(BUILTIN_CLIENT_SECRET_ENV, "test-client-secret");
+        std::env::remove_var(OAUTH_CLIENTS_ENV);
+        std::env::remove_var(ACTIVE_OAUTH_CLIENT_ENV);
+        reload_registry_for_tests();
+
         let redirect_uri = "http://localhost:8080/callback";
         let state = "test-state-123456";
-        let url = get_auth_url(redirect_uri, state);
-        
+        let url =
+            get_auth_url(redirect_uri, state).expect("test OAuth client should be configured");
+
         assert!(url.contains("state=test-state-123456"));
         assert!(url.contains("redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fcallback"));
         assert!(url.contains("response_type=code"));
     }
-
 }

@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
@@ -6,7 +7,6 @@ import Accounts from './pages/Accounts';
 import Settings from './pages/Settings';
 import ApiProxy from './pages/ApiProxy';
 import Monitor from './pages/Monitor';
-import TokenStats from './pages/TokenStats';
 import Security from './pages/Security';
 import ThemeManager from './components/common/ThemeManager';
 import UserToken from './pages/UserToken';
@@ -20,6 +20,8 @@ import { listen } from '@tauri-apps/api/event';
 import { isTauri } from './utils/env';
 import { request as invoke } from './utils/request';
 import { AdminAuthGuard } from './components/common/AdminAuthGuard';
+
+const TokenStats = lazy(() => import('./pages/TokenStats'));
 
 const router = createBrowserRouter([
   {
@@ -44,7 +46,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'token-stats',
-        element: <TokenStats />,
+        element: (
+          <Suspense fallback={<div className="h-full w-full p-5 text-gray-500 dark:text-gray-400">加载中...</div>}>
+            <TokenStats />
+          </Suspense>
+        ),
       },
       {
         path: 'user-token',

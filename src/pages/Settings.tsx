@@ -85,9 +85,9 @@ function Settings() {
     // Dialog state
     const [isClearLogsOpen, setIsClearLogsOpen] = useState(false);
     const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
-    const [dataDirPath, setDataDirPath] = useState<string>('~/.antigravity_tools/');
+    const [dataDirPath, setDataDirPath] = useState<string>('~/.llm-proxy-Manager/');
 
-    // Antigravity cache clearing state
+    // Cache clearing state
     const [isClearCacheOpen, setIsClearCacheOpen] = useState(false);
     const [cachePaths, setCachePaths] = useState<string[]>([]);
     const [isClearingCache, setIsClearingCache] = useState(false);
@@ -320,7 +320,7 @@ function Settings() {
         }
     };
 
-    // Handle clearing Antigravity cache
+    // Handle clearing cache
     const confirmClearAntigravityCache = async () => {
         setIsClearingCache(true);
         try {
@@ -975,7 +975,7 @@ function Settings() {
                                     </div>
                                 </div>
 
-                                {/* Antigravity 缓存清理 */}
+                                {/* 缓存清理 */}
                                 <div className="border-t border-gray-200 dark:border-base-200 pt-4">
                                     <h3 className="font-medium text-gray-900 dark:text-base-content mb-3">{t('settings.advanced.antigravity_cache_title')}</h3>
                                     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-lg p-3 mb-3">
@@ -1245,13 +1245,13 @@ function Settings() {
                                         <div className="absolute inset-0 bg-blue-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
                                         <img
                                             src="/icon.png"
-                                            alt="Antigravity Logo"
+                                            alt="llm-proxy-Manager Logo"
                                             className="relative w-24 h-24 rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-500 rotate-3 group-hover:rotate-6 object-cover bg-white dark:bg-black"
                                         />
                                     </div>
 
                                     <div>
-                                        <h3 className="text-3xl font-black text-gray-900 dark:text-base-content tracking-tight mb-2">{t('common.app_name', 'Antigravity Tools')}</h3>
+                                        <h3 className="text-3xl font-black text-gray-900 dark:text-base-content tracking-tight mb-2">{t('common.app_name', 'llm-proxy-Manager')}</h3>
                                         <div className="flex items-center justify-center gap-2 text-sm">
                                             v4.1.32
                                             <span className="text-gray-400 dark:text-gray-600">•</span>
@@ -1286,7 +1286,7 @@ function Settings() {
 
                                     {/* Telegram Card */}
                                     <a
-                                        href="https://t.me/AntigravityManager"
+                                        href="https://t.me/llm-proxy-Manager"
                                         target="_blank"
                                         rel="noreferrer"
                                         className="bg-white dark:bg-base-100 p-4 rounded-2xl border border-gray-100 dark:border-base-300 shadow-sm hover:shadow-md hover:border-sky-200 dark:hover:border-sky-800 transition-all group flex flex-col items-center text-center gap-3 cursor-pointer"
@@ -1302,7 +1302,7 @@ function Settings() {
 
                                     {/* GitHub Card */}
                                     <a
-                                        href="https://github.com/lbjlaq/Antigravity-Manager"
+                                        href="https://github.com/lbjlaq/llm-proxy-Manager"
                                         target="_blank"
                                         rel="noreferrer"
                                         className="bg-white dark:bg-base-100 p-4 rounded-2xl border border-gray-100 dark:border-base-300 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group flex flex-col items-center text-center gap-3 cursor-pointer"
@@ -1424,7 +1424,7 @@ function Settings() {
                     onCancel={() => setIsClearLogsOpen(false)}
                 />
 
-                {/* Antigravity Cache Clear Modal */}
+                {/* Cache Clear Modal */}
                 <ModalDialog
                     isOpen={isClearCacheOpen}
                     title={t('settings.advanced.clear_cache_confirm_title')}
@@ -1478,11 +1478,11 @@ function Settings() {
                         </p>
                         <div className="bg-gray-50 dark:bg-base-200 rounded-lg p-3">
                             <div className="flex items-center justify-between gap-2">
-                                <code className="text-xs text-gray-700 dark:text-gray-300 break-all">brew upgrade --cask antigravity-tools</code>
+                                <code className="text-xs text-gray-700 dark:text-gray-300 break-all">brew upgrade --cask llm-proxy-manager</code>
                                 <button
                                     className="shrink-0 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-200 dark:border-base-300 rounded hover:bg-gray-100 dark:hover:bg-base-300 transition-colors"
                                     onClick={() => {
-                                        navigator.clipboard.writeText('brew upgrade --cask antigravity-tools');
+                                        navigator.clipboard.writeText('brew upgrade --cask llm-proxy-manager');
                                         showToast(t('common.copied', 'Copied'), 'success');
                                     }}
                                 >
@@ -1493,11 +1493,11 @@ function Settings() {
                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-lg p-3">
                             <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">{t('settings.about.brew_quarantine_hint')}</p>
                             <div className="flex items-center justify-between gap-2">
-                                <code className="text-xs text-amber-800 dark:text-amber-300 break-all">sudo xattr -rd com.apple.quarantine "/Applications/Antigravity Tools.app"</code>
+                                <code className="text-xs text-amber-800 dark:text-amber-300 break-all">sudo xattr -rd com.apple.quarantine "/Applications/llm-proxy-Manager.app"</code>
                                 <button
                                     className="shrink-0 px-2 py-1 text-xs text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 border border-amber-200 dark:border-amber-700 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
                                     onClick={() => {
-                                        navigator.clipboard.writeText('sudo xattr -rd com.apple.quarantine "/Applications/Antigravity Tools.app"');
+                                        navigator.clipboard.writeText('sudo xattr -rd com.apple.quarantine "/Applications/llm-proxy-Manager.app"');
                                         showToast(t('common.copied', 'Copied'), 'success');
                                     }}
                                 >

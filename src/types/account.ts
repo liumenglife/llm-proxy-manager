@@ -18,6 +18,7 @@ export interface Account {
     validation_blocked_until?: number;
     validation_blocked_reason?: string;
     validation_url?: string;
+    provider: string;
     created_at: number;
     last_used: number;
 }

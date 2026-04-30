@@ -31,6 +31,7 @@ export function OpenCodeSyncModal({ proxyUrl, apiKey, onClose, onSyncDone }: Ope
     const [configLoaded, setConfigLoaded] = useState(false);
     const [hasAuthPlugin, setHasAuthPlugin] = useState(false);
     const [customBaseUrl, setCustomBaseUrl] = useState(proxyUrl);
+    const [syncCodex, setSyncCodex] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -133,7 +134,8 @@ export function OpenCodeSyncModal({ proxyUrl, apiKey, onClose, onSyncDone }: Ope
                 proxyUrl: customBaseUrl || proxyUrl,
                 apiKey,
                 syncAccounts: true,
-                models
+                models,
+                syncCodex
             });
             showToast(t('proxy.opencode_sync.toast.sync_success', { defaultValue: 'OpenCode 同步成功' }), 'success');
             onSyncDone();
@@ -186,7 +188,7 @@ export function OpenCodeSyncModal({ proxyUrl, apiKey, onClose, onSyncDone }: Ope
                                 type="text"
                                 value={customBaseUrl}
                                 onChange={(e) => setCustomBaseUrl(e.target.value)}
-                                placeholder="e.g. http://antigravity-manager:8045/v1"
+                                placeholder="e.g. http://llm-proxy-manager:8045/v1"
                                 className="w-full px-3 py-1.5 text-xs bg-white dark:bg-base-100 border border-gray-200 dark:border-base-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                             />
                             {customBaseUrl !== proxyUrl && (
@@ -247,12 +249,36 @@ export function OpenCodeSyncModal({ proxyUrl, apiKey, onClose, onSyncDone }: Ope
                 {hasAuthPlugin && (
                     <div className="px-5 py-2 shrink-0 bg-amber-50 dark:bg-amber-900/20 border-y border-amber-100 dark:border-amber-900/30">
                         <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                            {t('proxy.config.opencode_sync.auth_plugin_warning', {
-                                defaultValue: 'Sync chỉ tạo provider antigravity-manager và không ghi đè google provider/plugin.'
-                            })}
+{t('proxy.config.opencode_sync.auth_plugin_warning', {
+    defaultValue: 'Sync chỉ tạo provider llm-proxy-manager và không ghi đè google provider/plugin.'
+})}
                         </p>
                     </div>
                 )}
+
+                {/* Codex Provider Toggle */}
+                <div className="px-5 py-2 shrink-0 border-b border-gray-100 dark:border-base-200">
+                    <label className="flex items-center gap-2.5 cursor-pointer group">
+                        <div className="relative">
+                            <input
+                                type="checkbox"
+                                checked={syncCodex}
+                                onChange={(e) => setSyncCodex(e.target.checked)}
+                                className="sr-only peer"
+                            />
+                            <div className="w-8 h-4 bg-gray-200 dark:bg-base-300 rounded-full peer-checked:bg-blue-500 transition-colors" />
+                            <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                                {t('proxy.config.opencode_sync.sync_codex_label', { defaultValue: 'Sync Codex Provider (llm-proxy-codex)' })}
+                            </span>
+                            <span className="text-[9px] text-gray-400">
+                                {t('proxy.config.opencode_sync.sync_codex_desc', { defaultValue: 'Add @ai-sdk/openai provider with Codex model catalog' })}
+                            </span>
+                        </div>
+                    </label>
+                </div>
 
                 {/* Preview 主体区 */}
                 <div className="flex-1 min-h-0 flex flex-col">
