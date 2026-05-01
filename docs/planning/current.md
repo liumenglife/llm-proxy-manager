@@ -1,44 +1,48 @@
 # 当前任务状态 (Current Planning)
 
 ## 1. 主目标
-- [✓] 为当前 Tauri v2 + React/TypeScript 项目添加 GitHub Actions CI，并推送到当前 PR 分支。
+- [✓] 全量重写并清理所有 README 类文档，使其对齐当前 `llm-proxy-Manager` 项目状态。
 
 ## 2. 成功定义
-- [✓] 新增 `.github/workflows/ci.yml`，在 `pull_request` 和 `push` 时触发。
-- [✓] CI 拆为 `quality` 与 `package` 两个作业，`package` 依赖 `quality`。
-- [✓] CI 使用 `npm ci`，不使用 pnpm/yarn；无 lint 脚本时输出 `No lint script found, skipping frontend lint.`。
-- [✓] CI 包含 TypeScript、Vite build、Rust fmt/clippy/check/test、Tauri debug build 与三个 Dockerfile build 校验。
-- [✓] 本地等价命令最终复审通过后提交并推送到当前 PR 分支。
+- [✓] 重写根目录中文 `README.md`。
+- [✓] 重写根目录英文 `README_EN.md`，并与中文 README 信息对齐。
+- [✓] 重写 `docker/README.md`，清理旧镜像推送示例和繁体残留。
+- [✓] 重写 `docs/README.md` 为简体中文文档索引。
+- [✓] 删除赞助、捐赠、二维码、Buy Me a Coffee、个人推广、旧项目推荐和旧更新日志内容。
+- [✓] 旧品牌、旧仓库与旧推广内容扫描通过。
+- [✓] `npm run build` 验证通过。
+- [•] 推送 `feature/readme-rewrite` 并创建面向 `main` 的 PR。
 
 ## 3. 非目标
-- 不新增或伪造前端 lint 脚本。
-- 不通过无限增加 timeout 解决构建慢或本地验证失败。
-- 不合并 PR。
+- 不修改生产代码。
+- 不直接合并 PR。
+- 不恢复 Tauri updater signing 或 `TAURI_SIGNING_PRIVATE_KEY` 要求。
+- 不引入 GitHub OAuth。
 
 ## 4. 当前阶段
-- [ ] 需求分析与架构设计 (Spec & Plan)
-- [✓] CI 失败修复
-- [✓] PR CI 重新验证
+- [✓] 需求澄清与设计确认。
+- [✓] README 文档重写。
+- [✓] 子 Agent 规格审查与质量审查。
+- [✓] 本地验证。
+- [•] PR 创建与 CI 状态确认。
 
 ## 5. 编码阶段任务清单
-- [✓] 探索项目脚本、锁文件、Tauri/Rust/Docker 配置。
-- [✓] 确认采用双作业 CI 方案：`quality` 与 `package`。
-- [✓] 新增 CI 工作流与设计/计划文档。
-- [✓] 诊断 `npm run build` 超时：确认脚本为 `tsc && vite build`，不包含 Tauri；Tauri debug build 卡在 `beforeBuildCommand` 后续阶段。
-- [✓] 修复 Vite transform 慢点：移除 Lobe 图标依赖链、懒加载 `TokenStats`、调整 Vite 分包、补充 `tsconfig exclude`。
-- [✓] 修复严格 `npm ci` 风险：删除未使用 Lobe 依赖，移除对 `legacy-peer-deps` 的依赖。
-- [✓] 修复 `cargo clippy --all-targets --all-features -- -D warnings` 失败。
-- [✓] 整理并修复 Rust 全量测试失败项；修复前禁止提交 CI。
-- [✓] 重新验证 `cargo clippy --all-targets --all-features -- -D warnings` 与 `cargo test --all-targets --all-features`。
-- [✓] 移除非必要 native updater 签名链路，解决 `TAURI_SIGNING_PRIVATE_KEY` 构建要求。
-- [✓] 再验证 `npm run tauri build -- --debug`。
-- [✓] 修复 PR #1 GitHub Actions `Quality / Rust clippy` 在 Rust stable 1.95.0 下失败的 10 个 lint 错误。
-- [✓] 推送 clippy 修复后，PR #1 `Quality` job 已通过。
-- [✓] 修复 PR #1 `Package / Docker build backend image` 的 `FRONTEND_IMAGE` ARG 作用域问题。
-- [✓] 提交并推送 Dockerfile 修复后，PR #1 最新 `Quality` 与 `Package` checks 已通过。
+- [✓] 写入 README 全量重写设计文档。
+- [✓] 写入 README 全量重写实施计划。
+- [✓] 重写 `README.md`。
+- [✓] 重写 `README_EN.md`。
+- [✓] 重写 `docker/README.md`。
+- [✓] 重写 `docs/README.md`。
+- [✓] 运行旧内容扫描：旧品牌、旧仓库、赞助、捐赠、二维码、请喝咖啡、旧项目推荐均无残留。
+- [✓] 运行 API Key 示例扫描，确认未使用旧占位符。
+- [✓] 运行 `npm run build`，构建通过。
+- [ ] 提交文档重写改动。
+- [ ] 推送 `feature/readme-rewrite` 到 `origin`。
+- [ ] 创建 base 为 `main` 的 PR。
+- [ ] 返回 PR 链接、commit hash、CI 状态。
 
 ## 6. 子 Agent 执行协议
-- 遇到可以独立完成的编码任务，优先采用 Subagent-Driven Development。
+- 遇到可以独立完成的编码或文档任务，优先采用 Subagent-Driven Development。
 - 主 Agent 负责拆解、派发、回收结果和更新全局真相，子 Agent 只处理局部任务。
 - 子 Agent 返回后，主 Agent 再更新 `current.md` 和 `decisions.md`。
 
@@ -53,36 +57,24 @@
 - `[•]` 代表正在执行
 
 ## 9. 当前正在做
-- PR #1 最新 GitHub Actions checks 已通过，当前无正在执行的修复任务。
-- clippy 失败 run：`25153112782`，失败 job：`73728186352`。
-- Docker 失败 run：`25156233365`，失败 job：`73739837190`。
-- clippy 根因：GitHub Actions 使用 Rust stable `1.95.0`，本地先前验证环境为 Rust `1.94.0`，Clippy lint 集存在版本差异。
-- Docker 根因：`docker/Dockerfile.backend` 的 `ARG FRONTEND_IMAGE` 声明位置不满足 `FROM ${FRONTEND_IMAGE}` 解析作用域，且 Dockerfile 内仍有旧 `/app/antigravity-tools` 路径。
-- 本地复验：`cargo fmt --all -- --check`、`cargo +1.95.0 clippy --all-targets --all-features -- -D warnings`、`cargo +1.95.0 test --all-targets --all-features` 已通过。
-- Docker 复验：`docker build --check -f docker/Dockerfile.backend ...`、`docker build --check -f docker/Dockerfile.backend.localdist ...`、backend/localdist 镜像构建与入口路径检查已通过。
+- 正在提交并推送 `feature/readme-rewrite` 分支。
+- 即将创建面向 `main` 的 PR，标题为 `docs: 重写项目 README`。
 
 ## 10. 已完成里程碑
-- [✓] 初始化 planning 文件体系（current.md / history.md / decisions.md）
-- [✓] 批次 1：项目改名 Antigravity → llm-proxy-Manager
-- [✓] 批次 2：Account 模型加 provider 字段
-- [✓] 批次 3：Codex OAuth 授权（oauth_codex.rs + 回调服务器扩展 + 前端双按钮）
-- [✓] 批次 4：Codex 代理 Handler（Provider trait + OpenAIProvider + Codex Handler + Token Manager 分流 + 模型映射）
-- [✓] 批次 5：OpenCode 同步扩展（新增 llm-proxy-codex provider）
-- [✓] 已创建 GitHub Actions CI 初版，包含 `quality` 与 `package` 作业。
-- [✓] 已完成构建性能诊断与前端构建慢点修复：`npx vite build` 从超时改善为可完成。
-- [✓] 已完成严格 npm 依赖修复：`npm ci --legacy-peer-deps=false` 已通过。
-- [✓] 已完成 Rust clippy 修复：`cargo clippy --all-targets --all-features -- -D warnings` 已通过。
-- [✓] 已完成 Rust 全量测试修复：`cargo test --all-targets --all-features` 为 `336 passed; 0 failed`。
-- [✓] 已移除非必要 Tauri native updater 签名链路，`npm run tauri build -- --debug` 已通过。
+- [✓] 初始化 planning 文件体系（current.md / history.md / decisions.md）。
+- [✓] Codex OAuth 与多 Provider 接入已合并到 `main`。
+- [✓] GitHub Actions CI 已合并到 `main`。
+- [✓] PR #1 已合并，主干已迁移并同步为 `main`。
+- [✓] README 全量重写任务已完成本地验证。
 
 ## 11. 当前阻塞
 - 无。
 
 ## 12. 活跃支线
-- 无。
+- `feature/readme-rewrite`：README 全量重写，等待 PR 创建与 CI 状态确认。
 
 ## 13. 下一步唯一动作
-- 等待用户决定是否合并 PR、继续新功能或进行发布收尾。
+- 提交当前文档改动，推送 `feature/readme-rewrite`，创建 base 为 `main` 的 PR。
 
 ## 14. 恢复提示
-- Session 恢复时，请检查此文件的状态，并沿着“当前阶段”与“下一步唯一动作”继续推进。
+- Session 恢复时，请在 `.worktrees/feature-readme-rewrite` 继续，检查 PR 是否已创建以及 CI 是否开始运行。
