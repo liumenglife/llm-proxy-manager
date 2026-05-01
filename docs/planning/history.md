@@ -30,3 +30,10 @@
 - [✓] PR CI 修复 1：修复 Rust stable `1.95.0` 下新增 clippy lint，PR #1 `Quality` job 通过。
 - [✓] PR CI 修复 2：修复 `Dockerfile.backend` 的 `FRONTEND_IMAGE` ARG 作用域、Tauri 编译期 `dist` 可见性和旧 `/app/antigravity-tools` 路径残留。
 - [✓] PR #1 最新 GitHub Actions checks 通过：`Quality` 与 `Package` 均为 pass。
+
+### [2026-04-30] PR #1 合并与主干收尾
+- [✓] 将默认主干迁移为 `main`，并确认 `origin/HEAD` 指向 `main`。
+- [✓] 合并 PR #1 到 `main`，merge commit 为 `7e691f7a304263a04efe996434b6d9980e8ea285`。
+- [✓] 清理本地与远程 `feature/multi-provider` 分支。
+- [✓] 清理旧 `master` 分支与多余 worktree。
+- [✓] 检查并删除不需要恢复的 stash，确认工作区干净且本地 `main` 与 `origin/main` 同步。
