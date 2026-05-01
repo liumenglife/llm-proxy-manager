@@ -11,7 +11,8 @@
 - [✓] 删除赞助、捐赠、二维码、Buy Me a Coffee、个人推广、旧项目推荐和旧更新日志内容。
 - [✓] 旧品牌、旧仓库与旧推广内容扫描通过。
 - [✓] `npm run build` 验证通过。
-- [•] 推送 `feature/readme-rewrite` 并创建面向 `main` 的 PR。
+- [✓] 推送 `feature/readme-rewrite` 并创建面向 `main` 的 PR。
+- [•] 等待 PR #2 GitHub Actions CI 完成。
 
 ## 3. 非目标
 - 不修改生产代码。
@@ -24,7 +25,8 @@
 - [✓] README 文档重写。
 - [✓] 子 Agent 规格审查与质量审查。
 - [✓] 本地验证。
-- [•] PR 创建与 CI 状态确认。
+- [✓] PR 创建。
+- [•] CI 状态确认。
 
 ## 5. 编码阶段任务清单
 - [✓] 写入 README 全量重写设计文档。
@@ -36,10 +38,10 @@
 - [✓] 运行旧内容扫描：旧品牌、旧仓库、赞助、捐赠、二维码、请喝咖啡、旧项目推荐均无残留。
 - [✓] 运行 API Key 示例扫描，确认未使用旧占位符。
 - [✓] 运行 `npm run build`，构建通过。
-- [ ] 提交文档重写改动。
-- [ ] 推送 `feature/readme-rewrite` 到 `origin`。
-- [ ] 创建 base 为 `main` 的 PR。
-- [ ] 返回 PR 链接、commit hash、CI 状态。
+- [✓] 提交文档重写改动。
+- [✓] 推送 `feature/readme-rewrite` 到 `origin`。
+- [✓] 创建 base 为 `main` 的 PR：`https://github.com/liumenglife/llm-proxy-manager/pull/2`。
+- [•] 返回 PR 链接、commit hash、CI 状态。
 
 ## 6. 子 Agent 执行协议
 - 遇到可以独立完成的编码或文档任务，优先采用 Subagent-Driven Development。
@@ -57,8 +59,8 @@
 - `[•]` 代表正在执行
 
 ## 9. 当前正在做
-- 正在提交并推送 `feature/readme-rewrite` 分支。
-- 即将创建面向 `main` 的 PR，标题为 `docs: 重写项目 README`。
+- PR #2 已创建：`https://github.com/liumenglife/llm-proxy-manager/pull/2`。
+- GitHub Actions CI 当前为 `pending` / `IN_PROGRESS`。
 
 ## 10. 已完成里程碑
 - [✓] 初始化 planning 文件体系（current.md / history.md / decisions.md）。
@@ -71,10 +73,10 @@
 - 无。
 
 ## 12. 活跃支线
-- `feature/readme-rewrite`：README 全量重写，等待 PR 创建与 CI 状态确认。
+- `feature/readme-rewrite`：README 全量重写，PR #2 已创建，等待 CI 完成。
 
 ## 13. 下一步唯一动作
-- 提交当前文档改动，推送 `feature/readme-rewrite`，创建 base 为 `main` 的 PR。
+- 等待 PR #2 CI 完成；当前已返回 PR 链接、commit hash 与 CI 状态。
 
 ## 14. 恢复提示
-- Session 恢复时，请在 `.worktrees/feature-readme-rewrite` 继续，检查 PR 是否已创建以及 CI 是否开始运行。
+- Session 恢复时，请检查 PR #2 的 GitHub Actions CI 是否完成。
