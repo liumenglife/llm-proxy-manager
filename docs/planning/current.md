@@ -9,7 +9,7 @@
 - [✓] 确认未启用 `tauri-plugin-updater`；旧仓库 release endpoint 与旧 updater 服务已从活动范围清理。
 - [✓] 当前项目暂不发布自动更新时，禁用自动更新检查并移除启动时 updater 调用。
 - [✓] 启动更新提示链路由源码扫描与回归测试覆盖，Tauri debug 运行受首次 dev 编译耗时限制未完成可视确认。
-- [✓] 修复通过测试与独立 QA，等待提交并推送 `feature/fix-updater-config`。
+- [✓] 修复通过测试与独立 QA，已提交并推送 `feature/fix-updater-config`。
 
 ## 3. 非目标
 - 不恢复 Tauri native updater 自动下载、签名链路或 `TAURI_SIGNING_PRIVATE_KEY` 要求。
@@ -23,7 +23,7 @@
 - [✓] 基线验证与根因排查。
 - [✓] TDD 修复。
 - [✓] 独立 QA。
-- [•] 提交与推送。
+- [✓] 提交与推送。
 
 ## 5. 编码阶段任务清单
 - [✓] 建立 `feature/fix-updater-config` worktree 并验证基线。
@@ -31,7 +31,7 @@
 - [✓] 子 Agent 按 TDD 添加回归保护并实施最小修复。
 - [✓] 子 Agent 执行 QA，验证无旧 updater 提示、无旧仓库 endpoint、无 native updater 残留。
 - [✓] 主 Agent 收口 QA 结果，归档真相并提交。
-- [•] 推送分支并返回修改文件、验证结果和 commit hash。
+- [✓] 推送分支并返回修改文件、验证结果和 commit hash。
 
 ## 6. 子 Agent 执行协议
 - 遇到可以独立完成的编码或文档任务，优先采用 Subagent-Driven Development。
@@ -50,7 +50,7 @@
 - `[•]` 代表正在执行
 
 ## 9. 当前正在做
-- 在 `/Users/agent/llm-proxy-Manager/.worktrees/feature-fix-updater-config` 提交并推送 updater 修复。
+- 已推送 `feature/fix-updater-config`，最新提交为 `d50c3ec`。
 - 当前分支 `feature/fix-updater-config` 从最新 `main` 的 `5ec2b64166eee3e1dff267dbc44a40ab3ccf193c` 创建。
 
 ## 10. 已完成里程碑
@@ -65,10 +65,10 @@
 - 无。
 
 ## 12. 活跃支线
-- `feature/fix-updater-config`：已通过 QA，等待提交和推送。
+- `feature/fix-updater-config`：已通过 QA 并推送，等待后续 PR 或合并决策。
 
 ## 13. 下一步唯一动作
-- 提交并推送 `feature/fix-updater-config`。
+- 向用户返回修改文件、验证结果和 commit hash。
 
 ## 14. 恢复提示
-- Session 恢复时，请在 `feature/fix-updater-config` worktree 中检查提交和推送状态。
+- Session 恢复时，请检查是否需要为 `feature/fix-updater-config` 创建 PR 或合并。
