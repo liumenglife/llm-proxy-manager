@@ -115,7 +115,7 @@
             "export_error": "エクスポートに失敗しました"
         },
         "branding": {
-            "title": "Antigravity Tools",
+            "title": "llm-proxy-Manager",
             "subtitle": "プロフェッショナルなアカウント管理"
         }
     },
@@ -335,7 +335,7 @@
             "auto_launch": "起動時に実行",
             "auto_launch_enabled": "有効",
             "auto_launch_disabled": "無効",
-            "auto_launch_desc": "システム起動時にAntigravity Toolsを自動的に起動する",
+            "auto_launch_desc": "システム起動時にllm-proxy-Managerを自動的に起動する",
             "auto_check_update": "更新を自動確認",
             "auto_check_update_desc": "起動時に新しいバージョンを自動的に確認します",
             "auto_check_update_disabled": "自動確認は無効です",
@@ -495,7 +495,7 @@
             "wechat": "WeChat",
             "github": "GitHub",
             "view_code": "コードを表示",
-            "copyright": "Copyright © 2025-2026 Antigravity. All rights reserved.",
+            "copyright": "Copyright © 2025-2026 llm-proxy-Manager. All rights reserved.",
             "check_update": "アップデートを確認",
             "checking_update": "確認中...",
             "latest_version": "最新バージョンです",
@@ -560,7 +560,7 @@
             "title": "スマートウォームアップ"
         },
         "branding": {
-            "title": "Antigravity Tools",
+            "title": "llm-proxy-Manager",
             "subtitle": "プロフェッショナルなアカウント管理"
         }
     },
@@ -1160,8 +1160,8 @@
         "error_invalid_key": "パスワードまたは API キーが無効です。再試行してください",
         "error_network": "ネットワーク接続に失敗しました。サービスが実行中か確認してください",
         "note": "注意：独立した管理パスワードが設定されている場合は管理パスワードを入力してください。そうでない場合は API_KEY を入力してください。",
-        "lookup_hint": "お忘れの場合は、docker logs antigravity-manager を実行して Current API Key または Web UI Password を探してください",
-        "config_hint": "または grep -E '\"api_key\"|\"admin_password\"' ~/.antigravity_tools/gui_config.json を実行して確認してください。"
+        "lookup_hint": "お忘れの場合は、docker logs llm-proxy-manager を実行して Current API Key または Web UI Password を探してください",
+        "config_hint": "または grep -E '\"api_key\"|\"admin_password\"' ~/.llm-proxy-manager/gui_config.json を実行して確認してください。"
     },
     "token_stats": {
         "title": "トークン統計",

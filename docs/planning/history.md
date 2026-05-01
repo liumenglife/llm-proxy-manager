@@ -37,3 +37,37 @@
 - [✓] 清理本地与远程 `feature/multi-provider` 分支。
 - [✓] 清理旧 `master` 分支与多余 worktree。
 - [✓] 检查并删除不需要恢复的 stash，确认工作区干净且本地 `main` 与 `origin/main` 同步。
+
+### [2026-04-30] README 全量重写与 PR #2 合并
+- [✓] 写入 README 全量重写设计文档。
+- [✓] 写入 README 全量重写实施计划。
+- [✓] 重写 `README.md`。
+- [✓] 重写 `README_EN.md`。
+- [✓] 重写 `docker/README.md`。
+- [✓] 重写 `docs/README.md`。
+- [✓] 运行旧内容扫描：旧品牌、旧仓库、赞助、捐赠、二维码、请喝咖啡、旧项目推荐均无残留。
+- [✓] 运行 API Key 示例扫描，确认未使用旧占位符。
+- [✓] 运行 `npm run build`，构建通过。
+- [✓] 提交文档重写改动。
+- [✓] 推送 `feature/readme-rewrite` 到 `origin`。
+- [✓] 创建 base 为 `main` 的 PR：`https://github.com/liumenglife/llm-proxy-manager/pull/2`。
+- [✓] PR #2 GitHub Actions `Quality` 与 `Package` checks 全部通过。
+- [✓] 合并 PR #2 到 `main`，merge commit 为 `5ec2b64166eee3e1dff267dbc44a40ab3ccf193c`。
+- [✓] 同步本地 `main` 到 `origin/main`。
+- [✓] 清理本地与远程 `feature/readme-rewrite` 分支及对应 worktree。
+
+### [2026-05-01] 禁用旧 updater 自动检查与旧发布入口清理
+- [✓] 从最新 `main` 创建 `feature/fix-updater-config` 隔离 worktree。
+- [✓] 全仓排查 updater、update、latest、release、endpoint、antigravity、github、owner、repo、download、signature、pubkey 等关键词。
+- [✓] 确认 Tauri native updater 未启用：无 `tauri-plugin-updater`、无 `@tauri-apps/plugin-updater`、无 updater `pubkey` / `signature` 配置。
+- [✓] 定位根因：自研 GitHub release 检查链路仍在启动后自动触发，且旧发布 endpoint 残留。
+- [✓] 移除前端启动时自动更新检查与 `UpdateNotification` 渲染链路。
+- [✓] 将后端更新设置默认值与异常兜底改为 `auto_check=false`。
+- [✓] 将 `check_for_updates()` 改为当前阶段直接返回无更新且不访问网络。
+- [✓] 移除自动检查 command、前端 request 映射和管理 API 自动检查入口。
+- [✓] 移除旧 updater 服务、旧仓库 release endpoint、旧下载地址和活动发布入口旧应用名。
+- [✓] 更新安装脚本、Cask、Arch 发布模板、官网静态页和运行时标题为当前仓库与当前项目名。
+- [✓] 删除旧仓库 PR 关闭历史说明脚本文档。
+- [✓] 子 Agent 按 TDD 添加并通过 updater、constants、server fallback 回归测试。
+- [✓] 独立 QA 通过：专项测试、`cargo test --lib`、`cargo check --all-targets --all-features`、`npm run build`、旧词静态扫描全部通过。
+- [✓] 本地 Tauri debug 启动验证已尝试，受首次 dev 编译耗时影响未在工具超时内进入运行阶段；启动链路由源码扫描和回归测试覆盖。

@@ -323,7 +323,7 @@
             "auto_launch": "開機自動啟動",
             "auto_launch_enabled": "啟用",
             "auto_launch_disabled": "停用",
-            "auto_launch_desc": "系統啟動時自動執行 Antigravity Tools",
+            "auto_launch_desc": "系統啟動時自動執行 llm-proxy-Manager",
             "auto_check_update": "自動檢查更新",
             "auto_check_update_desc": "啟動時自動檢查新版本",
             "auto_check_update_enabled": "已啟用自動檢查更新",
@@ -480,7 +480,7 @@
             "wechat": "微信服務賬號",
             "github": "開源地址",
             "view_code": "檢視程式碼",
-            "copyright": "Copyright © 2025-2026 Antigravity. All rights reserved.",
+            "copyright": "Copyright © 2025-2026 llm-proxy-Manager. All rights reserved.",
             "check_update": "檢查更新",
             "checking_update": "檢查中...",
             "latest_version": "已是最新版本",
@@ -1042,8 +1042,8 @@
         "error_invalid_key": "密碼或 API Key 錯誤，請重試",
         "error_network": "網路連線失敗，請檢查服務是否正常運行",
         "note": "注意：如果設置了獨立的管理密碼，請輸入管理密碼；否則請輸入 API_KEY。",
-        "lookup_hint": "如果您忘記了，請運行 docker logs antigravity-manager 尋找 Current API Key 或 Web UI Password",
-        "config_hint": "或執行 grep -E '\"api_key\"|\"admin_password\"' ~/.antigravity_tools/gui_config.json 查看。"
+        "lookup_hint": "如果您忘記了，請運行 docker logs llm-proxy-manager 尋找 Current API Key 或 Web UI Password",
+        "config_hint": "或執行 grep -E '\"api_key\"|\"admin_password\"' ~/.llm-proxy-manager/gui_config.json 查看。"
     },
     "token_stats": {
         "title": "Token 消費統計",

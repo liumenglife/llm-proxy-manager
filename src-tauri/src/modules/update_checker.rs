@@ -1,13 +1,7 @@
+#[cfg(target_os = "macos")]
 use crate::modules::logger;
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
 
-const GITHUB_API_URL: &str =
-    "https://api.github.com/repos/lbjlaq/llm-proxy-Manager/releases/latest";
-const GITHUB_RAW_URL: &str =
-    "https://raw.githubusercontent.com/lbjlaq/llm-proxy-Manager/main/package.json";
-const JSDELIVR_URL: &str = "https://cdn.jsdelivr.net/gh/lbjlaq/llm-proxy-Manager@main/package.json";
 const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_CHECK_INTERVAL_HOURS: u64 = 24;
 
@@ -38,290 +32,25 @@ fn default_check_interval() -> u64 {
 impl Default for UpdateSettings {
     fn default() -> Self {
         Self {
-            auto_check: true,
+            auto_check: false,
             last_check_time: 0,
             check_interval_hours: DEFAULT_CHECK_INTERVAL_HOURS,
         }
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct GitHubRelease {
-    tag_name: String,
-    html_url: String,
-    body: String,
-    published_at: String,
-}
-
-const UPDATER_JSON_URL: &str =
-    "https://github.com/lbjlaq/llm-proxy-Manager/releases/latest/download/updater.json";
-
-/// Check for updates with improved strategy:
-/// 1. Check updater.json (Source of Truth for Auto-Update)
-/// 2. Fallback to GitHub API (Informational)
+/// 当前项目暂不发布自动更新，因此更新检查默认返回无更新且不访问网络。
 pub async fn check_for_updates() -> Result<UpdateInfo, String> {
-    // 1. Try updater.json first (Critical for functional Auto-Update)
-    match check_updater_json().await {
-        Ok(info) => return Ok(info),
-        Err(e) => {
-            logger::log_warn(&format!(
-                "updater.json check failed: {}. This might mean artifacts are not ready yet.",
-                e
-            ));
-            // Don't return error immediately, try fallbacks for at least informational update
-        }
-    }
-
-    // 2. Try GitHub API
-    match check_github_api().await {
-        Ok(info) => {
-            // If we found an update via API but updater.json failed, we should probably warn or
-            // implies that auto-update won't work yet.
-            // However, the user wants "auto-update to work". If we show "Update Available" based on API
-            // but updater.json is missing, the "Auto Update" button will fail.
-            // So, ideally, if we are in this block, we should perhaps mark it as "Manual Download Only" or similar?
-            // For now, we return it, but maybe the frontend handles "not ready".
-            // Actually, based on User Request, "Update Available" shouldn't show if it's not ready.
-            // But if we return Ok(info) here, the frontend SHOWS it.
-            // If updater.json failed, it likely means the asset isn't uploaded.
-            // So we should maybe return Ok(info) with has_update=false if checking updater.json failed?
-            // Or just log it.
-            // Let's stick to the plan: Prioritize updater.json. If that fails, we fallback.
-            // Use the fallback but maybe the user will see "Auto update failed" and use manual.
-            return Ok(info);
-        }
-        Err(e) => {
-            logger::log_warn(&format!(
-                "GitHub API check failed: {}. Trying fallbacks...",
-                e
-            ));
-        }
-    }
-
-    // 3. Try GitHub Raw
-    match check_static_url(GITHUB_RAW_URL, "GitHub Raw").await {
-        Ok(info) => return Ok(info),
-        Err(e) => {
-            logger::log_warn(&format!(
-                "GitHub Raw check failed: {}. Trying next fallback...",
-                e
-            ));
-        }
-    }
-
-    // 4. Try jsDelivr
-    match check_static_url(JSDELIVR_URL, "jsDelivr").await {
-        Ok(info) => Ok(info),
-        Err(e) => {
-            logger::log_error(&format!("All update checks failed. Last error: {}", e));
-            Err(e)
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct UpdaterJson {
-    version: String,
-    notes: Option<String>,
-    pub_date: Option<String>,
-}
-
-async fn check_updater_json() -> Result<UpdateInfo, String> {
-    let client = create_client().await?;
-    logger::log_info("Checking for updates via updater.json...");
-
-    let response = client
-        .get(UPDATER_JSON_URL)
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {}", e))?;
-
-    if !response.status().is_success() {
-        return Err(format!(
-            "updater.json returned status: {}",
-            response.status()
-        ));
-    }
-
-    let updater_info: UpdaterJson = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse updater.json: {}", e))?;
-
-    let latest_version = updater_info.version.trim_start_matches('v').to_string();
     let current_version = CURRENT_VERSION.to_string();
-    let has_update = compare_versions(&latest_version, &current_version);
-
-    if has_update {
-        logger::log_info(&format!(
-            "New version found (updater.json): {} (Current: {})",
-            latest_version, current_version
-        ));
-    } else {
-        logger::log_info(&format!(
-            "Up to date (updater.json): {} (Matches {})",
-            current_version, latest_version
-        ));
-    }
-
-    let download_url = format!(
-        "https://github.com/lbjlaq/llm-proxy-Manager/releases/tag/v{}",
-        latest_version
-    );
 
     Ok(UpdateInfo {
+        latest_version: current_version.clone(),
         current_version,
-        latest_version,
-        has_update,
-        download_url,
-        release_notes: updater_info
-            .notes
-            .unwrap_or_else(|| "Release notes available on GitHub.".to_string()),
-        published_at: updater_info
-            .pub_date
-            .unwrap_or_else(|| Utc::now().to_rfc3339()),
-        source: Some("updater.json".to_string()),
-    })
-}
-
-async fn create_client() -> Result<reqwest::Client, String> {
-    let mut builder = reqwest::Client::builder()
-        .user_agent("llm-proxy-Manager")
-        .timeout(std::time::Duration::from_secs(10));
-
-    // Load config to check for upstream proxy
-    if let Ok(config) = crate::modules::config::load_app_config() {
-        if config.proxy.upstream_proxy.enabled && !config.proxy.upstream_proxy.url.is_empty() {
-            logger::log_info(&format!(
-                "Update checker using upstream proxy: {}",
-                config.proxy.upstream_proxy.url
-            ));
-            match reqwest::Proxy::all(&config.proxy.upstream_proxy.url) {
-                Ok(proxy) => {
-                    builder = builder.proxy(proxy);
-                }
-                Err(e) => {
-                    logger::log_warn(&format!(
-                        "Failed to parse proxy URL '{}': {}",
-                        config.proxy.upstream_proxy.url, e
-                    ));
-                }
-            }
-        }
-    }
-
-    builder
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))
-}
-
-async fn check_github_api() -> Result<UpdateInfo, String> {
-    let client = create_client().await?;
-
-    logger::log_info("Checking for updates via GitHub API...");
-
-    let response = client
-        .get(GITHUB_API_URL)
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {}", e))?;
-
-    if !response.status().is_success() {
-        return Err(format!("GitHub API returned status: {}", response.status()));
-    }
-
-    let release: GitHubRelease = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse release info: {}", e))?;
-
-    let latest_version = release.tag_name.trim_start_matches('v').to_string();
-    let current_version = CURRENT_VERSION.to_string();
-    let has_update = compare_versions(&latest_version, &current_version);
-
-    if has_update {
-        logger::log_info(&format!(
-            "New version found (API): {} (Current: {})",
-            latest_version, current_version
-        ));
-    } else {
-        logger::log_info(&format!(
-            "Up to date (API): {} (Matches {})",
-            current_version, latest_version
-        ));
-    }
-
-    Ok(UpdateInfo {
-        current_version,
-        latest_version,
-        has_update,
-        download_url: release.html_url,
-        release_notes: release.body,
-        published_at: release.published_at,
-        source: Some("GitHub API".to_string()),
-    })
-}
-
-#[derive(Deserialize)]
-struct PackageJson {
-    version: String,
-}
-
-async fn check_static_url(url: &str, source_name: &str) -> Result<UpdateInfo, String> {
-    let client = create_client().await?;
-
-    logger::log_info(&format!("Checking for updates via {}...", source_name));
-
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {}", e))?;
-
-    if !response.status().is_success() {
-        return Err(format!(
-            "{} returned status: {}",
-            source_name,
-            response.status()
-        ));
-    }
-
-    let package_json: PackageJson = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse package.json: {}", e))?;
-
-    let latest_version = package_json.version;
-    let current_version = CURRENT_VERSION.to_string();
-    let has_update = compare_versions(&latest_version, &current_version);
-
-    if has_update {
-        logger::log_info(&format!(
-            "New version found ({}): {} (Current: {})",
-            source_name, latest_version, current_version
-        ));
-    } else {
-        logger::log_info(&format!(
-            "Up to date ({}): {} (Matches {})",
-            source_name, current_version, latest_version
-        ));
-    }
-
-    // fallback sources generally don't provide release notes or download specific URL, construct generic
-    let download_url = "https://github.com/lbjlaq/llm-proxy-Manager/releases/latest".to_string();
-    let release_notes = format!(
-        "New version detected via {}. Please check release page for details.",
-        source_name
-    );
-
-    Ok(UpdateInfo {
-        current_version,
-        latest_version,
-        has_update,
-        download_url,
-        release_notes,
-        published_at: Utc::now().to_rfc3339(), // Approximate time
-        source: Some(source_name.to_string()),
+        has_update: false,
+        download_url: String::new(),
+        release_notes: "自动更新检查已禁用。".to_string(),
+        published_at: String::new(),
+        source: Some("disabled".to_string()),
     })
 }
 
@@ -345,26 +74,6 @@ fn compare_versions(latest: &str, current: &str) -> bool {
     }
 
     false
-}
-
-/// Check if enough time has passed since last check
-pub fn should_check_for_updates(settings: &UpdateSettings) -> bool {
-    if !settings.auto_check {
-        return false;
-    }
-
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
-    let elapsed_hours = (now - settings.last_check_time) / 3600;
-    let interval = if settings.check_interval_hours > 0 {
-        settings.check_interval_hours
-    } else {
-        DEFAULT_CHECK_INTERVAL_HOURS
-    };
-    elapsed_hours >= interval
 }
 
 /// Load update settings from config file
@@ -394,16 +103,6 @@ pub fn save_update_settings(settings: &UpdateSettings) -> Result<(), String> {
 
     std::fs::write(&settings_path, content)
         .map_err(|e| format!("Failed to write settings file: {}", e))
-}
-
-/// Update last check time
-pub fn update_last_check_time() -> Result<(), String> {
-    let mut settings = load_update_settings()?;
-    settings.last_check_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    save_update_settings(&settings)
 }
 
 /// Detect if the app was installed via Homebrew Cask (macOS only)
@@ -499,18 +198,49 @@ mod tests {
         assert!(!compare_versions("3.3.35", "3.3.35"));
     }
 
+    #[tokio::test]
+    async fn check_for_updates_returns_no_update_without_network() {
+        let info = tokio::time::timeout(std::time::Duration::from_millis(100), check_for_updates())
+            .await
+            .expect("check_for_updates should return without network access")
+            .expect("disabled updater should return a normal no-update response");
+
+        assert!(!info.has_update);
+        assert_eq!(info.current_version, CURRENT_VERSION);
+        assert_eq!(info.latest_version, CURRENT_VERSION);
+        assert!(info.download_url.is_empty());
+        let legacy_manifest = concat!("updater", ".json");
+        assert_ne!(info.source.as_deref(), Some(legacy_manifest));
+
+        let serialized = serde_json::to_string(&info).unwrap();
+        assert!(!serialized.contains("github.com/"));
+        assert!(!serialized.contains(legacy_manifest));
+    }
+
     #[test]
-    fn test_should_check_for_updates() {
-        let mut settings = UpdateSettings::default();
-        assert!(should_check_for_updates(&settings));
+    fn app_startup_does_not_trigger_update_notification() {
+        let app_source = include_str!("../../../src/App.tsx");
+        let commands_source = include_str!("../commands/mod.rs");
+        let lib_source = include_str!("../lib.rs");
+        let request_source = include_str!("../../../src/utils/request.ts");
+        let server_source = include_str!("../proxy/server.rs");
+        let should_command = concat!("should_check", "_updates");
+        let touch_command = concat!("update_last", "_check_time");
+        let status_route = concat!("/system/updates/", "check", "-status");
+        let touch_route = concat!("/system/updates/", "touch");
 
-        settings.last_check_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert!(!should_check_for_updates(&settings));
-
-        settings.auto_check = false;
-        assert!(!should_check_for_updates(&settings));
+        assert!(!app_source.contains(should_command));
+        assert!(!app_source.contains(touch_command));
+        assert!(!app_source.contains("UpdateNotification"));
+        assert!(!commands_source.contains(should_command));
+        assert!(!commands_source.contains(touch_command));
+        assert!(!lib_source.contains(should_command));
+        assert!(!lib_source.contains(touch_command));
+        assert!(!request_source.contains(should_command));
+        assert!(!request_source.contains(touch_command));
+        assert!(!request_source.contains(status_route));
+        assert!(!request_source.contains(touch_route));
+        assert!(!server_source.contains(status_route));
+        assert!(!server_source.contains(touch_route));
     }
 }

@@ -1,5 +1,5 @@
 # llm-proxy-Manager Install Script for Windows
-# Usage: irm https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/install.ps1 | iex
+# Usage: irm https://raw.githubusercontent.com/liumenglife/llm-proxy-manager/main/install.ps1 | iex
 #
 # Parameters (set before running):
 #   $Version = "4.1.32"  # Install specific version
@@ -10,7 +10,7 @@ if (-not $DryRun) { $DryRun = $false }
 
 $ErrorActionPreference = "Continue"
 
-$Repo = "lbjlaq/Antigravity-Manager"
+$Repo = "liumenglife/llm-proxy-manager"
 $AppName = "llm-proxy-Manager"
 $GithubApi = "https://api.github.com/repos/$Repo/releases"
 $script:ReleaseVersion = ""
@@ -62,17 +62,7 @@ function Get-ReleaseVersion {
         Warn "GitHub API failed (rate limit?), trying fallback..."
     }
 
-    # Method 2: Fallback - parse updater.json from releases (no API rate limit)
-    try {
-        $updaterJson = Invoke-RestMethod -Uri "https://github.com/$Repo/releases/latest/download/updater.json" -TimeoutSec 10
-        $script:ReleaseVersion = $updaterJson.version -replace "^v", ""
-        Info "Latest version (from updater.json): v$($script:ReleaseVersion)"
-        return $true
-    } catch {
-        Warn "Fallback failed, trying redirect method..."
-    }
-
-    # Method 3: Last resort - follow redirect from /releases/latest
+    # Method 2: Last resort - follow redirect from /releases/latest
     try {
         Invoke-WebRequest -Uri "https://github.com/$Repo/releases/latest" -MaximumRedirection 0 -ErrorAction SilentlyContinue -UseBasicParsing
     } catch {
@@ -85,7 +75,7 @@ function Get-ReleaseVersion {
     }
 
     Script-Error "Failed to determine latest version. Try specifying version manually:"
-    Write-Host '  $Version = "4.1.32"; irm https://raw.githubusercontent.com/lbjlaq/Antigravity-Manager/main/install.ps1 | iex' -ForegroundColor Yellow
+    Write-Host '  $Version = "4.1.32"; irm https://raw.githubusercontent.com/liumenglife/llm-proxy-manager/main/install.ps1 | iex' -ForegroundColor Yellow
     return $false
 }
 

@@ -355,7 +355,7 @@
             "auto_launch": "Launch at Startup",
             "auto_launch_enabled": "Enabled",
             "auto_launch_disabled": "Disabled",
-            "auto_launch_desc": "Automatically launch Antigravity Tools when system starts",
+            "auto_launch_desc": "Automatically launch llm-proxy-Manager when system starts",
             "auto_check_update": "Auto Check for Updates",
             "auto_check_update_desc": "Automatically check for new versions on startup",
             "auto_check_update_enabled": "Auto check enabled",
@@ -533,7 +533,7 @@
             "telegram": "Telegram Channel",
             "github": "GitHub",
             "view_code": "View Code",
-            "copyright": "Copyright © 2025-2026 Antigravity. All rights reserved.",
+            "copyright": "Copyright © 2025-2026 llm-proxy-Manager. All rights reserved.",
             "check_update": "Check for Updates",
             "checking_update": "Checking...",
             "latest_version": "You're up to date",
@@ -549,10 +549,10 @@
             "brew_upgrade_success": "Homebrew upgrade succeeded. Please restart the app to load the new version.",
             "brew_restart_btn": "Restart Now",
             "brew_restart_failed": "Auto restart failed. Please close and reopen the app manually",
-            "brew_upgrade_failed": "Homebrew upgrade failed. Try running manually: brew upgrade --cask antigravity-tools",
+            "brew_upgrade_failed": "Homebrew upgrade failed. Try running manually: brew upgrade --cask llm-proxy-manager",
             "brew_error_brew_not_found": "Homebrew not found. Please ensure brew is installed",
             "brew_error_brew_exec_failed": "Failed to execute brew command. Try running manually in terminal",
-            "brew_error_brew_timeout": "Homebrew upgrade timed out (3min). Try running manually: brew upgrade --cask antigravity-tools",
+            "brew_error_brew_timeout": "Homebrew upgrade timed out (3min). Try running manually: brew upgrade --cask llm-proxy-manager",
             "brew_error_brew_already_latest": "Already up to date, no upgrade needed",
             "brew_error_brew_not_supported": "Homebrew update is not supported on this platform",
             "update_check_failed": "Update check failed",
@@ -607,7 +607,7 @@
             "long_prompt_warning": "Prompt is quite long (over 2000 chars) and may consume significant context space."
         },
         "branding": {
-            "title": "Antigravity Tools",
+            "title": "llm-proxy-Manager",
             "subtitle": "Professional Account Management"
         }
     },
@@ -1217,8 +1217,8 @@
         "error_invalid_key": "Invalid password or API Key, please try again",
         "error_network": "Network connection failed, please check if the service is running",
         "note": "Note: If a separate management password is set, please enter it; otherwise, enter API_KEY.",
-        "lookup_hint": "If forgotten, run docker logs antigravity-manager to find Current API Key or Web UI Password",
-        "config_hint": "Or run grep -E '\"api_key\"|\"admin_password\"' ~/.antigravity_tools/gui_config.json to view."
+        "lookup_hint": "If forgotten, run docker logs llm-proxy-manager to find Current API Key or Web UI Password",
+        "config_hint": "Or run grep -E '\"api_key\"|\"admin_password\"' ~/.llm-proxy-manager/gui_config.json to view."
     },
     "token_stats": {
         "title": "Token Consumption Stats",

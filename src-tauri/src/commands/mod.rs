@@ -795,19 +795,6 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     crate::modules::update_checker::check_for_updates().await
 }
 
-#[tauri::command]
-pub async fn should_check_updates() -> Result<bool, String> {
-    let settings = crate::modules::update_checker::load_update_settings()?;
-    Ok(crate::modules::update_checker::should_check_for_updates(
-        &settings,
-    ))
-}
-
-#[tauri::command]
-pub async fn update_last_check_time() -> Result<(), String> {
-    crate::modules::update_checker::update_last_check_time()
-}
-
 /// 检测是否通过 Homebrew Cask 安装
 #[tauri::command]
 pub async fn check_homebrew_installation() -> Result<bool, String> {

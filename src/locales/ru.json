@@ -322,7 +322,7 @@
             "auto_launch": "Запуск при старте системы",
             "auto_launch_enabled": "Включено",
             "auto_launch_disabled": "Отключено",
-            "auto_launch_desc": "Автоматически запускать Antigravity Tools при старте системы",
+            "auto_launch_desc": "Автоматически запускать llm-proxy-Manager при старте системы",
             "auto_check_update": "Автоматическая проверка обновлений",
             "auto_check_update_desc": "Автоматически проверять наличие новой версии при запуске",
             "auto_check_update_enabled": "Автопроверка включена",
@@ -475,7 +475,7 @@
             "wechat": "WeChat",
             "github": "GitHub",
             "view_code": "Просмотреть код",
-            "copyright": "Copyright © 2025-2026 Antigravity. Все права защищены.",
+            "copyright": "Copyright © 2025-2026 llm-proxy-Manager. Все права защищены.",
             "check_update": "Проверить обновления",
             "checking_update": "Проверка...",
             "latest_version": "У вас актуальная версия",
@@ -1009,8 +1009,8 @@
         "placeholder": "Введите пароль администратора или ключ API",
         "btn_login": "Проверить и войти",
         "note": "Примечание: если установлен отдельный пароль управления, введите его; в противном случае введите API_KEY.",
-        "lookup_hint": "Если вы забыли, запустите docker logs antigravity-manager, чтобы найти текущий ключ API или пароль Web UI.",
-        "config_hint": "Или выполните grep -E '\"api_key\"|\"admin_password\"' ~/.antigravity_tools/gui_config.json для просмотра."
+        "lookup_hint": "Если вы забыли, запустите docker logs llm-proxy-manager, чтобы найти текущий ключ API или пароль Web UI.",
+        "config_hint": "Или выполните grep -E '\"api_key\"|\"admin_password\"' ~/.llm-proxy-manager/gui_config.json для просмотра."
     },
     "token_stats": {
         "title": "Статистика токенов",
