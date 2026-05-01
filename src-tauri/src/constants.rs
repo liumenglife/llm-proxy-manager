@@ -252,7 +252,10 @@ mod tests {
     #[test]
     fn constants_do_not_access_legacy_updater_service() {
         let source = include_str!("constants.rs");
-        let legacy_endpoint = concat!("antigravity", "-auto-updater-974169037036.us-central1.run.app");
+        let legacy_endpoint = concat!(
+            "antigravity",
+            "-auto-updater-974169037036.us-central1.run.app"
+        );
         let legacy_fetcher = concat!("try_fetch", "_remote_version");
         let blocking_client = concat!("reqwest::", "blocking");
 
