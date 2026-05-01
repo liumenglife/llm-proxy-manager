@@ -326,7 +326,7 @@
             "auto_launch": "시작 시 실행",
             "auto_launch_enabled": "활성화됨",
             "auto_launch_disabled": "비활성화됨",
-            "auto_launch_desc": "시스템 시작 시 Antigravity Tools 자동 실행",
+            "auto_launch_desc": "시스템 시작 시 llm-proxy-Manager 자동 실행",
             "auto_check_update": "자동 업데이트 확인",
             "auto_check_update_desc": "시작 시 새 버전을 자동으로 확인",
             "auto_check_update_enabled": "자동 확인 활성화됨",
@@ -489,7 +489,7 @@
             "wechat": "WeChat",
             "github": "GitHub",
             "view_code": "코드 보기",
-            "copyright": "Copyright © 2025-2026 Antigravity. All rights reserved.",
+            "copyright": "Copyright © 2025-2026 llm-proxy-Manager. All rights reserved.",
             "check_update": "업데이트 확인",
             "checking_update": "확인 중...",
             "latest_version": "최신 버전입니다",
@@ -1042,8 +1042,8 @@
         "error_invalid_key": "비밀번호 또는 API 키가 잘못되었습니다. 다시 시도하십시오",
         "error_network": "네트워크 연결에 실패했습니다. 서비스가 실행 중인지 확인하십시오",
         "note": "참고: 별도의 관리 비밀번호가 설정된 경우 관리 비밀번호를 입력하십시오. 그렇지 않으면 API_KEY를 입력하십시오.",
-        "lookup_hint": "잊으신 경우 docker logs antigravity-manager를 실행하여 Current API Key 또는 Web UI Password를 찾으십시오.",
-        "config_hint": "또는 grep -E '\"api_key\"|\"admin_password\"' ~/.antigravity_tools/gui_config.json을 실행하여 확인하십시오."
+        "lookup_hint": "잊으신 경우 docker logs llm-proxy-manager를 실행하여 Current API Key 또는 Web UI Password를 찾으십시오.",
+        "config_hint": "또는 grep -E '\"api_key\"|\"admin_password\"' ~/.llm-proxy-manager/gui_config.json을 실행하여 확인하십시오."
     },
     "token_stats": {
         "title": "토큰 사용 통계",

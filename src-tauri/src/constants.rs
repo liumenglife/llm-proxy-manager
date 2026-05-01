@@ -1,12 +1,6 @@
 use regex::Regex;
 use std::sync::LazyLock;
 
-/// URL to fetch the latest Antigravity version
-const VERSION_URL: &str = "https://antigravity-auto-updater-974169037036.us-central1.run.app";
-
-/// Second fallback: Official Changelog page
-const CHANGELOG_URL: &str = "https://antigravity.google/changelog";
-
 /// Known stable configuration (for Docker/Headless fallback)
 /// Antigravity 4.1.32 uses Electron 39.2.3 which corresponds to Chrome 132.0.6834.160
 const KNOWN_STABLE_VERSION: &str = "4.1.32";
@@ -45,7 +39,6 @@ fn compare_semver(v1: &str, v2: &str) -> std::cmp::Ordering {
 enum VersionSource {
     LocalInstallation,
     KnownStableFallback,
-    RemoteAPI,
     #[allow(dead_code)]
     ChangelogWeb,
     #[allow(dead_code)]
@@ -59,56 +52,8 @@ struct VersionConfig {
     chrome: String,
 }
 
-/// Try to fetch the latest Antigravity version from the remote update server.
-/// Runs in a dedicated OS thread to avoid blocking Tokio's async runtime.
-/// Returns None on any network/parse failure — always non-fatal, 5s timeout.
-fn try_fetch_remote_version() -> Option<String> {
-    // Spawn a dedicated OS thread so that `reqwest::blocking` never touches
-    // the Tokio thread-pool and cannot trigger the "Cannot block the current
-    // thread from within an asynchronous execution context" panic.
-    let (tx, rx) = std::sync::mpsc::channel::<Option<String>>();
-
-    std::thread::spawn(move || {
-        let result = (|| -> Option<String> {
-            let client = reqwest::blocking::Client::builder()
-                .timeout(std::time::Duration::from_secs(5))
-                .build()
-                .ok()?;
-
-            // 1. Try primary update URL
-            if let Ok(resp) = client.get(VERSION_URL).send() {
-                if let Ok(text) = resp.text() {
-                    if let Some(ver) = parse_version(&text) {
-                        tracing::debug!(remote_version = %ver, "Fetched remote version from VERSION_URL");
-                        return Some(ver);
-                    }
-                }
-            }
-
-            // 2. Try changelog page as secondary fallback
-            if let Ok(resp) = client.get(CHANGELOG_URL).send() {
-                if let Ok(text) = resp.text() {
-                    if let Some(ver) = parse_version(&text) {
-                        tracing::debug!(remote_version = %ver, "Fetched remote version from CHANGELOG_URL");
-                        return Some(ver);
-                    }
-                }
-            }
-
-            tracing::debug!("Unable to fetch remote version; will rely on local/stable floor");
-            None
-        })();
-
-        let _ = tx.send(result);
-    });
-
-    // Wait up to 6 seconds (slightly over the client timeout) for the thread
-    rx.recv_timeout(std::time::Duration::from_secs(6))
-        .unwrap_or(None)
-}
-
 /// Smart version resolution strategy:
-///   best = max(Local Installation, Remote Latest, Known Stable Fallback)
+///   best = max(Local Installation, Known Stable Fallback)
 ///
 /// This guarantees that even when:
 ///   - The local Antigravity install is outdated, OR
@@ -146,19 +91,6 @@ fn resolve_version_config() -> (VersionConfig, VersionSource) {
         }
     }
 
-    // 2. Try Remote Version (best-effort; failure is silently ignored)
-    if let Some(remote_v) = try_fetch_remote_version() {
-        if compare_semver(&remote_v, &best_version) > std::cmp::Ordering::Equal {
-            tracing::info!(
-                remote_version = %remote_v,
-                previous_best = %best_version,
-                "Remote version is newer than current best; upgrading fingerprint version"
-            );
-            best_version = remote_v;
-            source = VersionSource::RemoteAPI;
-        }
-    }
-
     (
         VersionConfig {
             version: best_version,
@@ -170,7 +102,7 @@ fn resolve_version_config() -> (VersionConfig, VersionSource) {
 }
 
 /// Current resolved Antigravity version (e.g., "4.1.32")
-/// Always >= KNOWN_STABLE_VERSION, and >= remote latest when reachable.
+/// Always >= KNOWN_STABLE_VERSION.
 pub static CURRENT_VERSION: LazyLock<String> = LazyLock::new(|| {
     let (config, _) = resolve_version_config();
     config.version
@@ -201,8 +133,8 @@ pub fn get_default_user_agent() -> String {
 /// Global Session ID (generated once per app launch)
 pub static SESSION_ID: LazyLock<String> = LazyLock::new(|| uuid::Uuid::new_v4().to_string());
 
-/// Returns the best version choice between local and remote
-/// Version selection: max(local installation, remote latest, known stable 4.1.32)
+/// Returns the best version choice between local installation and static fallback.
+/// Version selection: max(local installation, known stable 4.1.32)
 /// This prevents model rejection due to outdated client version headers.
 pub static USER_AGENT: LazyLock<String> = LazyLock::new(|| {
     let (config, source) = resolve_version_config();
@@ -315,5 +247,17 @@ mod tests {
             floor
         };
         assert_eq!(best, "4.1.32");
+    }
+
+    #[test]
+    fn constants_do_not_access_legacy_updater_service() {
+        let source = include_str!("constants.rs");
+        let legacy_endpoint = concat!("antigravity", "-auto-updater-974169037036.us-central1.run.app");
+        let legacy_fetcher = concat!("try_fetch", "_remote_version");
+        let blocking_client = concat!("reqwest::", "blocking");
+
+        assert!(!source.contains(legacy_endpoint));
+        assert!(!source.contains(legacy_fetcher));
+        assert!(!source.contains(blocking_client));
     }
 }

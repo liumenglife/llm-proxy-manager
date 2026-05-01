@@ -105,9 +105,7 @@ const COMMAND_MAPPING: Record<string, { url: string; method: 'GET' | 'POST' | 'D
   'cloudflared_get_status': { url: '/api/proxy/cloudflared/status', method: 'GET' },
 
   // Updates
-  'should_check_updates': { url: '/api/system/updates/check-status', method: 'GET' },
   'check_for_updates': { url: '/api/system/updates/check', method: 'POST' },
-  'update_last_check_time': { url: '/api/system/updates/touch', method: 'POST' },
 
   // OAuth
   'prepare_oauth_url': { url: '/api/auth/url', method: 'GET' },
