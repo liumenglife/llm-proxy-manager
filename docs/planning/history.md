@@ -91,3 +91,9 @@
 - [✓] 代理账号池刷新失败不再静默吞掉。
 - [✓] 独立 QA 通过。
 - [✓] 提交修复：`42c1ad793676bd238629534ae825121b9053d712`。
+- [✓] PR #5 已创建，进入 CI 收口。
+- [✓] PR #5 `Quality / Rust clippy` 红灯根因：`account_service.rs` 测试中 `std::sync::MutexGuard` 跨 `.await`，触发 `clippy::await_holding_lock`。
+- [✓] PR #5 红灯修复：测试互斥锁改为 `tokio::sync::Mutex`，避免同步锁跨 await。
+- [✓] PR #5 红灯修复验证：`cargo clippy --all-targets --all-features -- -D warnings`、专项测试、`cargo fmt --check` 均通过。
+- [✓] PR #5 红灯修复独立 QA 结论：通过。
+- [•] 下一步：提交并推送红灯修复提交，等待 PR CI。

@@ -274,9 +274,9 @@ mod tests {
     use super::*;
     use std::fs;
     use std::path::PathBuf;
-    use std::sync::Mutex;
+    use tokio::sync::Mutex;
 
-    static TEST_MUTEX: Mutex<()> = Mutex::new(());
+    static TEST_MUTEX: Mutex<()> = Mutex::const_new(());
 
     struct TestDataDir {
         path: PathBuf,
@@ -302,7 +302,7 @@ mod tests {
 
     #[tokio::test]
     async fn process_codex_oauth_token_saves_codex_account() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = TEST_MUTEX.lock().await;
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", &dir.path);
 

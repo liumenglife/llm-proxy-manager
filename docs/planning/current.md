@@ -1,7 +1,7 @@
 # 当前任务状态
 
 ## 1. 主目标
-- [✓] 修复 Codex 网页授权完成后应用仍停留在“正在等待授权...”的问题，并完成分支提交收口。
+- [•] 收口 PR #5 的 Codex OAuth 回调修复分支，并完成 CI 红灯修复提交推送。
 
 ## 2. 成功定义
 - [✓] 前端添加账号弹窗不会同时预生成 Gemini 和 Codex 真实 OAuth flow，异步结果不会写入错误 provider 的 URL 状态。
@@ -10,8 +10,10 @@
 - [✓] OAuth flow 测试覆盖 `ensure_oauth_flow_prepared` 真实状态替换行为；限制是 `app_handle=None`，不触发真实浏览器打开。
 - [✓] 所有修复都有先失败后通过的回归测试证据。
 - [✓] 通过相关专项测试、`cargo fmt --check`、`cargo check --all-targets --all-features`，改前端后通过 `npm run build`。
+- [✓] PR #5 `Quality / Rust clippy` 红灯根因已定位：`account_service.rs` 测试中 `std::sync::MutexGuard` 跨 `.await`，触发 `clippy::await_holding_lock`。
+- [✓] 红灯修复已完成：测试互斥锁改为 `tokio::sync::Mutex`，避免同步锁跨 await。
 - [✓] 独立 QA 结论为通过。
-- [✓] 全绿后自动提交。
+- [✓] 验证命令已通过：`cargo clippy --all-targets --all-features -- -D warnings`、专项测试、`cargo fmt --check`。
 
 ## 3. 非目标
 - 不引入 GitHub OAuth。
@@ -27,7 +29,9 @@
 - [✓] 独立 QA 通过。
 - [✓] 提交前最终验证与自动 commit。
 - [✓] planning 归档收口。
-- [•] 推送分支并创建面向 `main` 的 PR。
+- [✓] PR #5 已创建并进入 CI 收口。
+- [✓] PR #5 `Quality / Rust clippy` 红灯修复已通过独立 QA。
+- [•] 提交并推送红灯修复提交，等待 PR CI。
 
 ## 5. 编码阶段任务清单
 - [✓] 前端 `AddAccountDialog` OAuth URL 准备改为当前 provider 定向，补红灯测试后实现。
@@ -38,7 +42,9 @@
 - [✓] 独立 QA 复核通过。
 - [✓] 更新 planning 真相并自动 commit。
 - [✓] 归档当前批次并提交 planning 收口。
-- [•] 推送 `fix/codex-oauth-callback` 并创建 PR。
+- [✓] 推送 `fix/codex-oauth-callback` 并创建 PR #5。
+- [✓] 修复 PR #5 `Quality / Rust clippy` 红灯：测试互斥锁改为 `tokio::sync::Mutex`。
+- [•] 提交并推送红灯修复提交，等待 PR CI。
 
 ## 6. 子 Agent 执行协议
 - 遇到可以独立完成的编码或文档任务，优先采用 Subagent-Driven Development。
@@ -63,6 +69,9 @@
 - 红灯证据：旧 Gemini 空/缺失 provider upsert 测试失败；静态回归测试捕捉前端无条件 URL 写入；OAuth 真实状态测试补充覆盖但当前实现已通过。
 - 绿灯证据：新增专项测试、`cargo fmt --check`、`cargo check --all-targets --all-features`、`npm run build` 已通过；最终独立 QA 结论为通过。
 - 修复提交：`42c1ad793676bd238629534ae825121b9053d712`。
+- PR #5 CI 红灯根因：`account_service.rs` 测试中 `std::sync::MutexGuard` 跨 `.await`，触发 `clippy::await_holding_lock`。
+- PR #5 CI 红灯修复：测试互斥锁改为 `tokio::sync::Mutex`，避免同步锁跨 await。
+- PR #5 CI 红灯修复验证：`cargo clippy --all-targets --all-features -- -D warnings`、专项测试、`cargo fmt --check` 均通过；独立 QA 结论为通过。
 
 ## 10. 已完成里程碑
 - [✓] 初始化 planning 文件体系（current.md / history.md / decisions.md）。
@@ -77,10 +86,10 @@
 - 无。
 
 ## 12. 活跃支线
-- `fix/codex-oauth-callback`：已通过独立 QA，修复提交已创建，正在推送并创建 PR。
+- `fix/codex-oauth-callback`：PR #5 已创建；`Quality / Rust clippy` 红灯修复已通过独立 QA，等待提交并推送修复提交后观察 PR CI。
 
 ## 13. 下一步唯一动作
-- 推送当前分支到 `origin` 并创建面向 `main` 的 PR。
+- 提交并推送 PR #5 红灯修复提交，等待 PR CI。
 
 ## 14. 恢复提示
-- Session 恢复时，请进入 `.worktrees/fix-codex-oauth-callback`，继续按“根因排查 → 失败测试 → 最小修复 → 测试 → QA”推进。
+- Session 恢复时，请进入 `.worktrees/fix-codex-oauth-callback`，不要进入下一功能点；继续收口 PR #5 红灯修复提交与 PR CI。
