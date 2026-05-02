@@ -16,6 +16,11 @@ interface AddAccountDialogProps {
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
+type OAuthUrlGeneratedPayload = {
+    url: string;
+    provider: 'gemini' | 'codex';
+};
+
 function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
     const { t } = useTranslation();
     const fetchAccounts = useAccountStore(state => state.fetchAccounts);
@@ -65,7 +70,14 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
 
         const setupListener = async () => {
             unlisten = await listen('oauth-url-generated', (event) => {
-                setOauthUrl(event.payload as string);
+                const { url, provider } = event.payload as OAuthUrlGeneratedPayload;
+                if (!url) return;
+
+                if (provider === 'codex') {
+                    setOauthCodexUrl(url);
+                } else if (provider === 'gemini') {
+                    setOauthUrl(url);
+                }
                 // 自动复制到剪贴板? 可选，这里只设置状态让用户手动复制
             });
         };
@@ -129,37 +141,39 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
         };
     }, [completeOAuthLogin, completeCodexOAuthLogin, t]);
 
-    // Pre-generate Gemini OAuth URL when dialog opens on OAuth tab
+    const prepareOAuthUrlForProvider = async (provider: 'gemini' | 'codex') => {
+        if (provider === 'codex') {
+            if (oauthProviderRef.current !== 'codex') return;
+            const res = await invoke<any>('prepare_codex_oauth_url');
+            const url = typeof res === 'string' ? res : res?.url;
+            if (url && oauthProviderRef.current === 'codex') setOauthCodexUrl(url);
+            return;
+        }
+
+        if (oauthProviderRef.current !== 'gemini') return;
+        const res = await invoke<any>('prepare_oauth_url');
+        const url = typeof res === 'string' ? res : res?.url;
+        if (url && oauthProviderRef.current === 'gemini') setOauthUrl(url);
+    };
+
+    // Pre-generate only the currently selected provider URL.
     useEffect(() => {
         if (!isOpen) return;
         if (activeTab !== 'oauth') return;
+        if (status !== 'idle') return;
+        if (oauthProvider !== 'gemini') return;
         if (oauthUrl) return;
 
-        invoke<any>('prepare_oauth_url')
-            .then((res) => {
-                const url = typeof res === 'string' ? res : res?.url;
-                if (url && url.length > 0) setOauthUrl(url);
-            })
+        let ignore = false;
+        prepareOAuthUrlForProvider('gemini')
             .catch((e) => {
-                console.error('Failed to prepare OAuth URL:', e);
+                if (!ignore) console.error('Failed to prepare OAuth URL:', e);
             });
-    }, [isOpen, activeTab, oauthUrl]);
 
-    // Pre-generate Codex OAuth URL when dialog opens on OAuth tab
-    useEffect(() => {
-        if (!isOpen) return;
-        if (activeTab !== 'oauth') return;
-        if (oauthCodexUrl) return;
-
-        invoke<any>('prepare_codex_oauth_url')
-            .then((res) => {
-                const url = typeof res === 'string' ? res : res?.url;
-                if (url && url.length > 0) setOauthCodexUrl(url);
-            })
-            .catch((e) => {
-                console.error('Failed to prepare Codex OAuth URL:', e);
-            });
-    }, [isOpen, activeTab, oauthCodexUrl]);
+        return () => {
+            ignore = true;
+        };
+    }, [isOpen, activeTab, status, oauthProvider, oauthUrl]);
 
     // If user navigates away from OAuth tab, cancel all prepared flows to release ports.
     useEffect(() => {
@@ -380,9 +394,14 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
             handleOAuthWeb();
             return;
         }
+        setOauthProvider('gemini');
+        oauthProviderRef.current = 'gemini';
         // Default flow: opens the default browser and completes automatically.
         // (If user opened the URL manually, completion is also triggered by oauth-callback-received.)
-        handleAction(t('accounts.add.tabs.oauth'), startOAuthLogin, { clearOauthUrl: false });
+        handleAction(t('accounts.add.tabs.oauth'), async () => {
+            await prepareOAuthUrlForProvider('gemini');
+            await startOAuthLogin();
+        }, { clearOauthUrl: false });
     };
 
     const handleCompleteOAuth = () => {
@@ -406,7 +425,11 @@ function AddAccountDialog({ onAdd, showText = true }: AddAccountDialogProps) {
             return;
         }
         setOauthProvider('codex');
-        handleAction('Codex ' + t('accounts.add.tabs.oauth'), startCodexOAuthLogin, { clearOauthUrl: false });
+        oauthProviderRef.current = 'codex';
+        handleAction('Codex ' + t('accounts.add.tabs.oauth'), async () => {
+            await prepareOAuthUrlForProvider('codex');
+            await startCodexOAuthLogin();
+        }, { clearOauthUrl: false });
     };
 
     const handleCompleteCodexOAuth = () => {

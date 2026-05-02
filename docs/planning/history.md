@@ -71,3 +71,29 @@
 - [✓] 子 Agent 按 TDD 添加并通过 updater、constants、server fallback 回归测试。
 - [✓] 独立 QA 通过：专项测试、`cargo test --lib`、`cargo check --all-targets --all-features`、`npm run build`、旧词静态扫描全部通过。
 - [✓] 本地 Tauri debug 启动验证已尝试，受首次 dev 编译耗时影响未在工具超时内进入运行阶段；启动链路由源码扫描和回归测试覆盖。
+
+### [2026-05-01] PR #4 合并与 CI 触发修复收口
+- [✓] 用户确认检查 PR #4 diff 无异常后允许合并。
+- [✓] 确认 PR #4 `Quality` 与 `Package` 检查通过。
+- [✓] 合并 PR #4 到 `main`，merge commit 为 `382b3d61d9d60b00365ab7556e49cdc43a65f903`。
+- [✓] 同步本地 `main` 到 `origin/main`。
+- [✓] 清理本地 `fix/pr3-ci-workflow` 分支、远程分支和 `.worktrees/fix-pr3-ci`。
+- [✓] 当前保留主工作区 `main` 与 `.worktrees/feature-fix-updater-config`。
+
+### [2026-05-01] 修复 Codex OAuth 授权等待
+- [✓] 从最新 `main` 创建 `fix/codex-oauth-callback` 隔离 worktree。
+- [✓] 根因排查确认：Gemini 与 Codex 共用活动 OAuth flow，且 Codex 授权成功后未进入账号保存闭环。
+- [✓] 按 TDD 修复 OAuth flow provider 隔离。
+- [✓] Codex 授权成功后保存 `provider=codex` 账号并刷新代理账号池。
+- [✓] 前端不再同时预生成两个真实 OAuth flow。
+- [✓] `oauth-url-generated` 事件携带 provider，前端按事件 provider 写入对应 URL 状态。
+- [✓] 兼容旧 Gemini 账号 provider 缺失或空字符串，避免重复创建。
+- [✓] 代理账号池刷新失败不再静默吞掉。
+- [✓] 独立 QA 通过。
+- [✓] 提交修复：`42c1ad793676bd238629534ae825121b9053d712`。
+- [✓] PR #5 已创建，进入 CI 收口。
+- [✓] PR #5 `Quality / Rust clippy` 红灯根因：`account_service.rs` 测试中 `std::sync::MutexGuard` 跨 `.await`，触发 `clippy::await_holding_lock`。
+- [✓] PR #5 红灯修复：测试互斥锁改为 `tokio::sync::Mutex`，避免同步锁跨 await。
+- [✓] PR #5 红灯修复验证：`cargo clippy --all-targets --all-features -- -D warnings`、专项测试、`cargo fmt --check` 均通过。
+- [✓] PR #5 红灯修复独立 QA 结论：通过。
+- [•] 下一步：提交并推送红灯修复提交，等待 PR CI。

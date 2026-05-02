@@ -68,3 +68,13 @@
 - **决策内容**：移除 Tauri native updater 自动下载/安装能力、updater pubkey、updater 权限、updater 前后端依赖和 `createUpdaterArtifacts`；保留普通后端版本检查与手动下载入口。
 - **决策原因**：当前 updater 仍指向旧仓库且要求 `TAURI_SIGNING_PRIVATE_KEY`，该签名链路不是当前 CI 与核心代理业务的必要能力，会制造非必要密钥配置和构建失败。
 - **影响范围**：`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-tauri/Cargo.lock`、`src-tauri/src/lib.rs`、`src-tauri/capabilities/default.json`、`src/components/UpdateNotification.tsx`、`package.json`、`package-lock.json`、`.github/workflows/ci.yml`。
+
+### [2026-05-01] 14. OAuth 活动 flow 必须按 provider 隔离
+- **决策内容**：Gemini 与 Codex 不共享同一个活动 OAuth flow；复用旧 flow 前必须同时匹配 `provider` 与 OAuth client key。Codex OAuth 授权完成后必须保存为 `provider=codex` 的账号，并刷新账号池。
+- **决策原因**：添加账号弹窗会同时预生成 Gemini 与 Codex 授权 URL；单一全局 flow 若只按 `code_rx` 判断可复用，会导致 Codex 回调被 Gemini flow 吞掉，前端停留在“正在等待授权...”。
+- **影响范围**：`src-tauri/src/modules/oauth_server.rs`、`src-tauri/src/modules/account.rs`、`src-tauri/src/modules/account_service.rs`、`src-tauri/src/commands/mod.rs`。
+
+### [2026-05-01] 15. OAuth URL 事件必须携带 provider
+- **决策内容**：`oauth-url-generated` 事件 payload 必须包含 `url` 与 `provider`，前端按事件来源 provider 写入 Gemini 或 Codex URL 状态。
+- **决策原因**：只按当前选中 provider 写入状态会产生异步竞态，导致较晚返回的 Gemini URL 被写入 Codex 状态或反向错写。
+- **影响范围**：`src-tauri/src/modules/oauth_server.rs`、`src/components/accounts/AddAccountDialog.tsx`、`scripts/tests/oauth-review-regressions.test.mjs`。
