@@ -79,3 +79,15 @@
 - [✓] 同步本地 `main` 到 `origin/main`。
 - [✓] 清理本地 `fix/pr3-ci-workflow` 分支、远程分支和 `.worktrees/fix-pr3-ci`。
 - [✓] 当前保留主工作区 `main` 与 `.worktrees/feature-fix-updater-config`。
+
+### [2026-05-01] 修复 Codex OAuth 授权等待
+- [✓] 从最新 `main` 创建 `fix/codex-oauth-callback` 隔离 worktree。
+- [✓] 根因排查确认：Gemini 与 Codex 共用活动 OAuth flow，且 Codex 授权成功后未进入账号保存闭环。
+- [✓] 按 TDD 修复 OAuth flow provider 隔离。
+- [✓] Codex 授权成功后保存 `provider=codex` 账号并刷新代理账号池。
+- [✓] 前端不再同时预生成两个真实 OAuth flow。
+- [✓] `oauth-url-generated` 事件携带 provider，前端按事件 provider 写入对应 URL 状态。
+- [✓] 兼容旧 Gemini 账号 provider 缺失或空字符串，避免重复创建。
+- [✓] 代理账号池刷新失败不再静默吞掉。
+- [✓] 独立 QA 通过。
+- [✓] 提交修复：`42c1ad793676bd238629534ae825121b9053d712`。
