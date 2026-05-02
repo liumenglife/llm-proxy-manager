@@ -274,9 +274,8 @@ mod tests {
     use super::*;
     use std::fs;
     use std::path::PathBuf;
-    use tokio::sync::Mutex;
-
-    static TEST_MUTEX: Mutex<()> = Mutex::const_new(());
+    // 引用 lib.rs 中的全局测试互斥锁，确保与 account.rs 测试互斥
+    use crate::ABV_DATA_DIR_TEST_MUTEX;
 
     struct TestDataDir {
         path: PathBuf,
@@ -300,11 +299,22 @@ mod tests {
         }
     }
 
+    struct AbvDataDirGuard;
+    impl Drop for AbvDataDirGuard {
+        fn drop(&mut self) {
+            std::env::remove_var("ABV_DATA_DIR");
+        }
+    }
+
     #[tokio::test]
     async fn process_codex_oauth_token_saves_codex_account() {
-        let _guard = TEST_MUTEX.lock().await;
-        let dir = TestDataDir::new();
-        std::env::set_var("ABV_DATA_DIR", &dir.path);
+        // 阶段 1：持有共享锁，设置环境变量后立即释放锁
+        let _dir = {
+            let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
+            let dir = TestDataDir::new();
+            std::env::set_var("ABV_DATA_DIR", &dir.path);
+            dir
+        };
 
         let service = AccountService::new(modules::integration::SystemManager::Headless);
         let token = modules::oauth::TokenResponse {
@@ -319,6 +329,7 @@ mod tests {
             name: Some("Codex User".to_string()),
         };
 
+        // .await 期间不持有锁
         let account = service
             .process_codex_oauth_token_with_user_info(token, user_info)
             .await
@@ -327,6 +338,12 @@ mod tests {
         assert_eq!(account.provider, "codex");
         assert_eq!(account.email, "codex-user@example.com");
 
-        std::env::remove_var("ABV_DATA_DIR");
+        // 阶段 3：重新获取锁，AbvDataDirGuard 在锁保护的作用域内 Drop 清理环境变量
+        {
+            let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
+            let _cleanup = AbvDataDirGuard;
+            // _cleanup 先 Drop -> 移除 ABV_DATA_DIR
+            // _guard 后 Drop -> 释放共享锁
+        }
     }
 }

@@ -13,6 +13,10 @@ use std::sync::Arc;
 use tauri::Manager;
 use tracing::{error, info, warn};
 
+#[cfg(test)]
+pub static ABV_DATA_DIR_TEST_MUTEX: once_cell::sync::Lazy<std::sync::Mutex<()>> =
+    once_cell::sync::Lazy::new(|| std::sync::Mutex::new(()));
+
 #[derive(Clone, Copy)]
 struct AppRuntimeFlags {
     tray_enabled: bool,

@@ -17,10 +17,8 @@ use std::sync::Mutex;
 mod tests {
     use super::*;
     use std::collections::HashSet;
-    use std::sync::Mutex as StdMutex;
-
-    // Global mutex to prevent concurrent test execution
-    static TEST_MUTEX: Lazy<StdMutex<()>> = Lazy::new(|| StdMutex::new(()));
+    // 引用 lib.rs 中的全局测试互斥锁，确保与 account_service.rs 测试互斥
+    use crate::ABV_DATA_DIR_TEST_MUTEX;
 
     struct TestDataDir {
         path: PathBuf,
@@ -93,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_load_account_index_with_bom_prefix() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // UTF-8 BOM followed by valid JSON
@@ -120,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_load_account_index_with_nul_prefix() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // NUL byte prefix followed by valid JSON
@@ -147,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_load_account_index_with_garbage_content() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // Non-JSON garbage content - should trigger recovery
@@ -171,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_load_account_index_with_empty_file() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // Empty file
@@ -187,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_load_account_index_with_whitespace_only() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // Whitespace-only file
@@ -203,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_missing_index_with_existing_accounts() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // Create accounts directory with account files but NO accounts.json index
@@ -250,7 +248,7 @@ mod tests {
 
     #[test]
     fn test_save_account_index_roundtrip() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // Build an AccountIndex with 2 accounts
@@ -328,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_backup_created_on_parse_failure() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
 
         // Create a valid account file
@@ -379,7 +377,7 @@ mod tests {
 
     #[test]
     fn test_upsert_account_with_provider_saves_codex_provider() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         std::env::remove_var("ABV_DATA_DIR");
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", dir.path());
@@ -414,7 +412,7 @@ mod tests {
 
     #[test]
     fn test_upsert_gemini_reuses_legacy_empty_provider_account() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         std::env::remove_var("ABV_DATA_DIR");
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", dir.path());
@@ -493,7 +491,7 @@ mod tests {
 
     #[test]
     fn test_upsert_gemini_reuses_legacy_missing_provider_account() {
-        let _guard = TEST_MUTEX.lock().unwrap();
+        let _guard = ABV_DATA_DIR_TEST_MUTEX.lock().unwrap();
         std::env::remove_var("ABV_DATA_DIR");
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", dir.path());
