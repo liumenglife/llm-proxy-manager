@@ -2,6 +2,10 @@ use super::{quota::QuotaData, token::TokenData};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+fn default_account_provider() -> String {
+    "gemini".to_string()
+}
+
 /// 账号数据结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Account {
@@ -61,7 +65,7 @@ pub struct Account {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub custom_label: Option<String>,
     /// Account provider type: "gemini" or "codex"
-    #[serde(default)]
+    #[serde(default = "default_account_provider")]
     pub provider: String,
 }
 
@@ -128,6 +132,7 @@ pub struct AccountSummary {
     pub protected_models: HashSet<String>,
     pub created_at: i64,
     pub last_used: i64,
+    #[serde(default = "default_account_provider")]
     pub provider: String,
 }
 

@@ -39,10 +39,10 @@ pub async fn add_account(
     let _ = internal_refresh_account_quota(&app, &mut account).await;
 
     // 重载账号池
-    let _ = crate::commands::proxy::reload_proxy_accounts(
+    crate::commands::proxy::reload_proxy_accounts(
         app.state::<crate::commands::proxy::ProxyServiceState>(),
     )
-    .await;
+    .await?;
 
     Ok(account)
 }
@@ -61,7 +61,7 @@ pub async fn delete_account(
     service.delete_account(&account_id)?;
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
 
     Ok(())
 }
@@ -86,7 +86,7 @@ pub async fn delete_accounts(
     crate::modules::tray::update_tray_menus(&app);
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
 
     Ok(())
 }
@@ -108,7 +108,7 @@ pub async fn reorder_accounts(
     })?;
 
     // Reload pool to reflect new order if running
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
     Ok(())
 }
 
@@ -129,7 +129,7 @@ pub async fn switch_account(
     crate::modules::tray::update_tray_menus(&app);
 
     // [FIX #820] Notify proxy to clear stale session bindings and reload accounts
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
 
     Ok(())
 }
@@ -410,10 +410,10 @@ pub async fn start_oauth_login(
     let _ = internal_refresh_account_quota(&app_handle, &mut account).await;
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(
+    crate::commands::proxy::reload_proxy_accounts(
         app_handle.state::<crate::commands::proxy::ProxyServiceState>(),
     )
-    .await;
+    .await?;
 
     Ok(account)
 }
@@ -432,10 +432,10 @@ pub async fn complete_oauth_login(app_handle: tauri::AppHandle) -> Result<Accoun
     let _ = internal_refresh_account_quota(&app_handle, &mut account).await;
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(
+    crate::commands::proxy::reload_proxy_accounts(
         app_handle.state::<crate::commands::proxy::ProxyServiceState>(),
     )
-    .await;
+    .await?;
 
     Ok(account)
 }
@@ -463,35 +463,47 @@ pub async fn cancel_oauth_login() -> Result<(), String> {
 #[tauri::command]
 pub async fn prepare_codex_oauth_url(
     app_handle: tauri::AppHandle,
-    oauth_client_key: Option<String>,
+    _oauth_client_key: Option<String>,
 ) -> Result<String, String> {
-    crate::modules::oauth_server::prepare_oauth_url(
-        Some(app_handle),
-        oauth_client_key,
-        Some("codex".to_string()),
-    )
-    .await
+    let service = modules::account_service::AccountService::new(
+        crate::modules::integration::SystemManager::Desktop(app_handle),
+    );
+    service.prepare_codex_oauth_url().await
 }
 
 #[tauri::command]
 pub async fn start_codex_oauth_login(
     app_handle: tauri::AppHandle,
-    oauth_client_key: Option<String>,
-) -> Result<crate::modules::oauth::TokenResponse, String> {
-    crate::modules::oauth_server::start_oauth_flow(
-        Some(app_handle),
-        oauth_client_key,
-        Some("codex".to_string()),
+    _oauth_client_key: Option<String>,
+) -> Result<Account, String> {
+    let service = modules::account_service::AccountService::new(
+        crate::modules::integration::SystemManager::Desktop(app_handle.clone()),
+    );
+
+    let account = service.start_codex_oauth_login().await?;
+
+    crate::commands::proxy::reload_proxy_accounts(
+        app_handle.state::<crate::commands::proxy::ProxyServiceState>(),
     )
-    .await
+    .await?;
+
+    Ok(account)
 }
 
 #[tauri::command]
-pub async fn complete_codex_oauth_login(
-    app_handle: tauri::AppHandle,
-) -> Result<crate::modules::oauth::TokenResponse, String> {
-    crate::modules::oauth_server::complete_oauth_flow(Some(app_handle), Some("codex".to_string()))
-        .await
+pub async fn complete_codex_oauth_login(app_handle: tauri::AppHandle) -> Result<Account, String> {
+    let service = modules::account_service::AccountService::new(
+        crate::modules::integration::SystemManager::Desktop(app_handle.clone()),
+    );
+
+    let account = service.complete_codex_oauth_login().await?;
+
+    crate::commands::proxy::reload_proxy_accounts(
+        app_handle.state::<crate::commands::proxy::ProxyServiceState>(),
+    )
+    .await?;
+
+    Ok(account)
 }
 
 #[tauri::command]
@@ -538,7 +550,7 @@ pub async fn import_v1_accounts(
     }
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
 
     Ok(accounts)
 }
@@ -562,7 +574,7 @@ pub async fn import_from_db(
     crate::modules::tray::update_tray_menus(&app);
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
 
     Ok(account)
 }
@@ -588,7 +600,7 @@ pub async fn import_custom_db(
     crate::modules::tray::update_tray_menus(&app);
 
     // Reload token pool
-    let _ = crate::commands::proxy::reload_proxy_accounts(proxy_state).await;
+    crate::commands::proxy::reload_proxy_accounts(proxy_state).await?;
 
     Ok(account)
 }

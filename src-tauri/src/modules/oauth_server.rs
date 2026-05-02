@@ -1,5 +1,6 @@
 use crate::modules::oauth;
 use crate::modules::oauth_codex;
+use serde::Serialize;
 use std::sync::{Mutex, OnceLock};
 use tauri::Url;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -18,6 +19,12 @@ struct OAuthFlowState {
     cancel_tx: watch::Sender<bool>,
     code_tx: mpsc::Sender<Result<String, String>>,
     code_rx: Option<mpsc::Receiver<Result<String, String>>>,
+}
+
+#[derive(Clone, Serialize)]
+struct OAuthUrlGeneratedPayload {
+    url: String,
+    provider: String,
 }
 
 static OAUTH_FLOW_STATE: OnceLock<Mutex<Option<OAuthFlowState>>> = OnceLock::new();
@@ -47,6 +54,32 @@ fn oauth_fail_html() -> &'static str {
     </html>"
 }
 
+fn existing_flow_matches_request(
+    flow: &OAuthFlowState,
+    requested_client_key: Option<&String>,
+    provider: Option<&str>,
+) -> bool {
+    if flow.provider.as_deref() != provider {
+        return false;
+    }
+
+    if let Some(requested_key) = requested_client_key {
+        return flow.client_key == requested_key.to_ascii_lowercase();
+    }
+
+    true
+}
+
+fn oauth_url_generated_payload(
+    auth_url: String,
+    provider: Option<&str>,
+) -> OAuthUrlGeneratedPayload {
+    OAuthUrlGeneratedPayload {
+        url: auth_url,
+        provider: provider.unwrap_or("gemini").to_string(),
+    }
+}
+
 async fn ensure_oauth_flow_prepared(
     app_handle: Option<tauri::AppHandle>,
     requested_client_key: Option<String>,
@@ -54,11 +87,9 @@ async fn ensure_oauth_flow_prepared(
 ) -> Result<String, String> {
     if let Ok(mut state) = get_oauth_flow_state().lock() {
         if let Some(s) = state.as_mut() {
-            if let Some(requested_key) = requested_client_key.as_ref() {
-                if s.client_key != requested_key.to_ascii_lowercase() {
-                    let _ = s.cancel_tx.send(true);
-                    *state = None;
-                }
+            if !existing_flow_matches_request(s, requested_client_key.as_ref(), provider) {
+                let _ = s.cancel_tx.send(true);
+                *state = None;
             }
         }
     }
@@ -383,7 +414,8 @@ async fn ensure_oauth_flow_prepared(
     // Send event to frontend (for display/copying link)
     if let Some(h) = app_handle {
         use tauri::Emitter;
-        let _ = h.emit("oauth-url-generated", &auth_url);
+        let payload = oauth_url_generated_payload(auth_url.clone(), provider);
+        let _ = h.emit("oauth-url-generated", payload);
     }
 
     Ok(auth_url)
@@ -630,4 +662,102 @@ pub fn prepare_oauth_flow_manually(
     }
 
     Ok((auth_url, code_rx))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fake_flow(provider: Option<&str>, client_key: &str) -> OAuthFlowState {
+        let (cancel_tx, _) = watch::channel(false);
+        let (code_tx, code_rx) = mpsc::channel(1);
+        OAuthFlowState {
+            auth_url: "https://example.test/auth".to_string(),
+            redirect_uri: "http://localhost/oauth-callback".to_string(),
+            state: "state".to_string(),
+            client_key: client_key.to_string(),
+            provider: provider.map(|value| value.to_string()),
+            pkce_verifier: None,
+            cancel_tx,
+            code_tx,
+            code_rx: Some(code_rx),
+        }
+    }
+
+    #[test]
+    fn existing_gemini_flow_does_not_match_codex_request() {
+        let flow = fake_flow(None, "gemini-client");
+
+        assert!(!existing_flow_matches_request(&flow, None, Some("codex")));
+    }
+
+    #[test]
+    fn existing_codex_flow_does_not_match_gemini_request() {
+        let requested_key = "gemini-client".to_string();
+        let flow = fake_flow(Some("codex"), "codex");
+
+        assert!(!existing_flow_matches_request(
+            &flow,
+            Some(&requested_key),
+            None
+        ));
+    }
+
+    #[test]
+    fn existing_flow_matches_same_provider_and_client_key() {
+        let requested_key = "gemini-client".to_string();
+        let flow = fake_flow(None, "gemini-client");
+
+        assert!(existing_flow_matches_request(
+            &flow,
+            Some(&requested_key),
+            None
+        ));
+    }
+
+    #[test]
+    fn oauth_url_generated_payload_defaults_to_gemini_provider() {
+        let payload = oauth_url_generated_payload("https://example.test/gemini".to_string(), None);
+
+        assert_eq!(payload.url, "https://example.test/gemini");
+        assert_eq!(payload.provider, "gemini");
+    }
+
+    #[test]
+    fn oauth_url_generated_payload_preserves_codex_provider() {
+        let payload =
+            oauth_url_generated_payload("https://example.test/codex".to_string(), Some("codex"));
+
+        assert_eq!(payload.url, "https://example.test/codex");
+        assert_eq!(payload.provider, "codex");
+    }
+
+    #[tokio::test]
+    async fn ensure_oauth_flow_prepared_replaces_existing_provider_flow() {
+        cancel_oauth_flow();
+        std::env::set_var(
+            "ANTIGRAVITY_OAUTH_CLIENTS",
+            "test|client-id|client-secret|Test",
+        );
+
+        let gemini_url = ensure_oauth_flow_prepared(None, None, None)
+            .await
+            .expect("Gemini flow should be prepared");
+        assert!(gemini_url.contains("state="));
+
+        let codex_url = ensure_oauth_flow_prepared(None, None, Some("codex"))
+            .await
+            .expect("Codex flow should replace Gemini flow");
+        assert_ne!(gemini_url, codex_url);
+
+        let lock = get_oauth_flow_state()
+            .lock()
+            .expect("OAuth flow state should lock");
+        let state = lock.as_ref().expect("OAuth flow state should exist");
+        assert_eq!(state.provider.as_deref(), Some("codex"));
+        assert!(state.code_rx.is_some());
+        drop(lock);
+
+        cancel_oauth_flow();
+    }
 }

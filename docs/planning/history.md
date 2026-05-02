@@ -71,3 +71,11 @@
 - [✓] 子 Agent 按 TDD 添加并通过 updater、constants、server fallback 回归测试。
 - [✓] 独立 QA 通过：专项测试、`cargo test --lib`、`cargo check --all-targets --all-features`、`npm run build`、旧词静态扫描全部通过。
 - [✓] 本地 Tauri debug 启动验证已尝试，受首次 dev 编译耗时影响未在工具超时内进入运行阶段；启动链路由源码扫描和回归测试覆盖。
+
+### [2026-05-01] PR #4 合并与 CI 触发修复收口
+- [✓] 用户确认检查 PR #4 diff 无异常后允许合并。
+- [✓] 确认 PR #4 `Quality` 与 `Package` 检查通过。
+- [✓] 合并 PR #4 到 `main`，merge commit 为 `382b3d61d9d60b00365ab7556e49cdc43a65f903`。
+- [✓] 同步本地 `main` 到 `origin/main`。
+- [✓] 清理本地 `fix/pr3-ci-workflow` 分支、远程分支和 `.worktrees/fix-pr3-ci`。
+- [✓] 当前保留主工作区 `main` 与 `.worktrees/feature-fix-updater-config`。

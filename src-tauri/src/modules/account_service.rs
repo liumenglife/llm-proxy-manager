@@ -139,6 +139,35 @@ impl AccountService {
         self.process_oauth_token(token_res).await
     }
 
+    pub async fn prepare_codex_oauth_url(&self) -> Result<String, String> {
+        let handle = match &self.integration {
+            modules::integration::SystemManager::Desktop(h) => Some(h.clone()),
+            modules::integration::SystemManager::Headless => None,
+        };
+        modules::oauth_server::prepare_oauth_url(handle, None, Some("codex".to_string())).await
+    }
+
+    pub async fn start_codex_oauth_login(&self) -> Result<Account, String> {
+        let handle = match &self.integration {
+            modules::integration::SystemManager::Desktop(h) => Some(h.clone()),
+            modules::integration::SystemManager::Headless => None,
+        };
+        let token_res =
+            modules::oauth_server::start_oauth_flow(handle, None, Some("codex".to_string()))
+                .await?;
+        self.process_codex_oauth_token(token_res).await
+    }
+
+    pub async fn complete_codex_oauth_login(&self) -> Result<Account, String> {
+        let handle = match &self.integration {
+            modules::integration::SystemManager::Desktop(h) => Some(h.clone()),
+            modules::integration::SystemManager::Headless => None,
+        };
+        let token_res =
+            modules::oauth_server::complete_oauth_flow(handle, Some("codex".to_string())).await?;
+        self.process_codex_oauth_token(token_res).await
+    }
+
     pub fn cancel_oauth_login(&self) {
         modules::oauth_server::cancel_oauth_flow();
     }
@@ -189,5 +218,115 @@ impl AccountService {
         self.integration.update_tray();
 
         Ok(account)
+    }
+
+    async fn process_codex_oauth_token(
+        &self,
+        token_res: modules::oauth::TokenResponse,
+    ) -> Result<Account, String> {
+        let user_info = modules::oauth_codex::get_codex_user_info(&token_res.access_token).await?;
+        self.process_codex_oauth_token_with_user_info(token_res, user_info)
+            .await
+    }
+
+    async fn process_codex_oauth_token_with_user_info(
+        &self,
+        token_res: modules::oauth::TokenResponse,
+        user_info: modules::oauth_codex::CodexUserInfo,
+    ) -> Result<Account, String> {
+        let refresh_token = token_res
+            .refresh_token
+            .ok_or_else(|| "未获取到 Codex Refresh Token。请撤销权限后重试。".to_string())?;
+        let email = user_info
+            .email
+            .ok_or_else(|| "未获取到 Codex 账号邮箱。请重新授权。".to_string())?;
+
+        let token_data = crate::models::TokenData::new(
+            token_res.access_token,
+            refresh_token,
+            token_res.expires_in,
+            Some(email.clone()),
+            None,
+            None,
+            true,
+        )
+        .with_oauth_client_key(
+            token_res
+                .oauth_client_key
+                .or_else(|| Some("codex".to_string())),
+        );
+
+        let account = modules::account::upsert_account_with_provider(
+            email,
+            user_info.name,
+            token_data,
+            "codex".to_string(),
+        )?;
+
+        self.integration.update_tray();
+
+        Ok(account)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::sync::Mutex;
+
+    static TEST_MUTEX: Mutex<()> = Mutex::new(());
+
+    struct TestDataDir {
+        path: PathBuf,
+    }
+
+    impl TestDataDir {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "llm_proxy_manager_account_service_test_{}_{}",
+                std::process::id(),
+                chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+            ));
+            fs::create_dir_all(&path).expect("test data dir should be created");
+            Self { path }
+        }
+    }
+
+    impl Drop for TestDataDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    #[tokio::test]
+    async fn process_codex_oauth_token_saves_codex_account() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let dir = TestDataDir::new();
+        std::env::set_var("ABV_DATA_DIR", &dir.path);
+
+        let service = AccountService::new(modules::integration::SystemManager::Headless);
+        let token = modules::oauth::TokenResponse {
+            access_token: "codex_access_token".to_string(),
+            expires_in: 3600,
+            token_type: "Bearer".to_string(),
+            refresh_token: Some("codex_refresh_token".to_string()),
+            oauth_client_key: Some("codex".to_string()),
+        };
+        let user_info = modules::oauth_codex::CodexUserInfo {
+            email: Some("codex-user@example.com".to_string()),
+            name: Some("Codex User".to_string()),
+        };
+
+        let account = service
+            .process_codex_oauth_token_with_user_info(token, user_info)
+            .await
+            .expect("Codex OAuth token should save an account");
+
+        assert_eq!(account.provider, "codex");
+        assert_eq!(account.email, "codex-user@example.com");
+
+        std::env::remove_var("ABV_DATA_DIR");
     }
 }

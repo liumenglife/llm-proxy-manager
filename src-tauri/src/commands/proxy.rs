@@ -485,7 +485,7 @@ pub async fn reload_proxy_accounts(state: State<'_, ProxyServiceState>) -> Resul
             .map_err(|e| format!("重新加载账号失败: {}", e))?;
         Ok(count)
     } else {
-        Err("服务未运行".to_string())
+        Ok(0)
     }
 }
 

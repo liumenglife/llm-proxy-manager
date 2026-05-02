@@ -368,6 +368,194 @@ mod tests {
 
         println!("Backup creation on parse failure: successfully created backup");
     }
+
+    #[test]
+    fn test_upsert_account_with_provider_saves_codex_provider() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let dir = TestDataDir::new();
+        std::env::set_var("ABV_DATA_DIR", dir.path());
+
+        let token = TokenData::new(
+            "codex_access_token".to_string(),
+            "codex_refresh_token".to_string(),
+            3600,
+            Some("codex-user@example.com".to_string()),
+            None,
+            None,
+            true,
+        );
+
+        let account = upsert_account_with_provider(
+            "codex-user@example.com".to_string(),
+            Some("Codex User".to_string()),
+            token,
+            "codex".to_string(),
+        )
+        .expect("Codex account should be saved");
+
+        assert_eq!(account.provider, "codex");
+        let index = load_account_index().expect("account index should be saved");
+        assert_eq!(index.accounts.len(), 1);
+        assert_eq!(index.accounts[0].provider, "codex");
+
+        let loaded = load_account(&account.id).expect("account file should be saved");
+        assert_eq!(loaded.provider, "codex");
+
+        std::env::remove_var("ABV_DATA_DIR");
+    }
+
+    #[test]
+    fn test_upsert_gemini_reuses_legacy_empty_provider_account() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let dir = TestDataDir::new();
+        std::env::set_var("ABV_DATA_DIR", dir.path());
+
+        let old_token = TokenData::new(
+            "old_access_token".to_string(),
+            "old_refresh_token".to_string(),
+            3600,
+            Some("legacy-gemini@example.com".to_string()),
+            None,
+            None,
+            true,
+        );
+        let mut legacy_account = Account::new(
+            "legacy-empty-provider".to_string(),
+            "legacy-gemini@example.com".to_string(),
+            old_token,
+            "".to_string(),
+        );
+        legacy_account.name = Some("Legacy Gemini".to_string());
+
+        fs::create_dir_all(dir.path().join("accounts")).expect("accounts dir should be created");
+        fs::write(
+            dir.path().join("accounts/legacy-empty-provider.json"),
+            serde_json::to_string_pretty(&legacy_account).expect("account should serialize"),
+        )
+        .expect("legacy account should be written");
+        let index = AccountIndex {
+            version: "2.0".to_string(),
+            accounts: vec![AccountSummary {
+                id: "legacy-empty-provider".to_string(),
+                email: "legacy-gemini@example.com".to_string(),
+                name: Some("Legacy Gemini".to_string()),
+                disabled: false,
+                proxy_disabled: false,
+                protected_models: HashSet::new(),
+                created_at: legacy_account.created_at,
+                last_used: legacy_account.last_used,
+                provider: "".to_string(),
+            }],
+            current_account_id: Some("legacy-empty-provider".to_string()),
+        };
+        fs::write(
+            dir.path().join("accounts.json"),
+            serde_json::to_string_pretty(&index).expect("index should serialize"),
+        )
+        .expect("legacy index should be written");
+
+        let new_token = TokenData::new(
+            "new_access_token".to_string(),
+            "new_refresh_token".to_string(),
+            3600,
+            Some("legacy-gemini@example.com".to_string()),
+            None,
+            None,
+            true,
+        );
+
+        let account = upsert_account_with_provider(
+            "legacy-gemini@example.com".to_string(),
+            Some("Updated Gemini".to_string()),
+            new_token,
+            "gemini".to_string(),
+        )
+        .expect("legacy Gemini account should be updated instead of duplicated");
+
+        assert_eq!(account.id, "legacy-empty-provider");
+        assert_eq!(account.provider, "gemini");
+        assert_eq!(account.token.refresh_token, "new_refresh_token");
+
+        let saved_index = load_account_index().expect("index should be readable");
+        assert_eq!(saved_index.accounts.len(), 1);
+        assert_eq!(saved_index.accounts[0].provider, "gemini");
+
+        std::env::remove_var("ABV_DATA_DIR");
+    }
+
+    #[test]
+    fn test_upsert_gemini_reuses_legacy_missing_provider_account() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let dir = TestDataDir::new();
+        std::env::set_var("ABV_DATA_DIR", dir.path());
+
+        fs::create_dir_all(dir.path().join("accounts")).expect("accounts dir should be created");
+        fs::write(
+            dir.path().join("accounts/legacy-missing-provider.json"),
+            r#"{
+  "id": "legacy-missing-provider",
+  "email": "missing-provider@example.com",
+  "name": "Missing Provider Gemini",
+  "token": {
+    "access_token": "old_access_token",
+    "refresh_token": "old_refresh_token",
+    "expires_at": 4102444800,
+    "scope": null,
+    "token_type": "Bearer"
+  },
+  "quota": null,
+  "created_at": 1700000000,
+  "last_used": 1700000000
+}"#,
+        )
+        .expect("legacy account should be written");
+        fs::write(
+            dir.path().join("accounts.json"),
+            r#"{
+  "version": "2.0",
+  "accounts": [
+    {
+      "id": "legacy-missing-provider",
+      "email": "missing-provider@example.com",
+      "name": "Missing Provider Gemini",
+      "disabled": false,
+      "proxy_disabled": false,
+      "protected_models": [],
+      "created_at": 1700000000,
+      "last_used": 1700000000
+    }
+  ],
+  "current_account_id": "legacy-missing-provider"
+}"#,
+        )
+        .expect("legacy index should be written");
+
+        let new_token = TokenData::new(
+            "new_access_token".to_string(),
+            "new_refresh_token".to_string(),
+            3600,
+            Some("missing-provider@example.com".to_string()),
+            None,
+            None,
+            true,
+        );
+
+        let account = upsert_account_with_provider(
+            "missing-provider@example.com".to_string(),
+            Some("Updated Gemini".to_string()),
+            new_token,
+            "gemini".to_string(),
+        )
+        .expect("missing provider legacy Gemini account should be updated");
+
+        assert_eq!(account.id, "legacy-missing-provider");
+        assert_eq!(account.provider, "gemini");
+        let saved_index = load_account_index().expect("index should be readable");
+        assert_eq!(saved_index.accounts.len(), 1);
+        assert_eq!(saved_index.accounts[0].provider, "gemini");
+
+        std::env::remove_var("ABV_DATA_DIR");
+    }
 }
 
 /// Global account write lock to prevent corruption during concurrent operations
@@ -760,24 +948,32 @@ pub fn add_account(
     name: Option<String>,
     token: TokenData,
 ) -> Result<Account, String> {
+    add_account_with_provider(email, name, token, "gemini".to_string())
+}
+
+pub fn add_account_with_provider(
+    email: String,
+    name: Option<String>,
+    token: TokenData,
+    provider: String,
+) -> Result<Account, String> {
     let _lock = ACCOUNT_INDEX_LOCK
         .lock()
         .map_err(|e| format!("failed_to_acquire_lock: {}", e))?;
     let mut index = load_account_index()?;
 
     // Check if account already exists
-    if index.accounts.iter().any(|s| s.email == email) {
+    if index
+        .accounts
+        .iter()
+        .any(|s| s.email == email && s.provider == provider)
+    {
         return Err(format!("Account already exists: {}", email));
     }
 
     // Create new account
     let account_id = Uuid::new_v4().to_string();
-    let mut account = Account::new(
-        account_id.clone(),
-        email.clone(),
-        token,
-        "gemini".to_string(),
-    );
+    let mut account = Account::new(account_id.clone(), email.clone(), token, provider.clone());
     account.name = name.clone();
 
     // Save account data
@@ -785,7 +981,7 @@ pub fn add_account(
 
     // Update index
     index.accounts.push(AccountSummary {
-        provider: "gemini".to_string(),
+        provider,
         id: account.id.clone(),
         email: account.email.clone(),
         name: account.name.clone(),
@@ -812,6 +1008,29 @@ pub fn upsert_account(
     name: Option<String>,
     token: TokenData,
 ) -> Result<Account, String> {
+    upsert_account_with_provider(email, name, token, "gemini".to_string())
+}
+
+fn provider_matches(existing_provider: &str, requested_provider: &str) -> bool {
+    let existing = if existing_provider.trim().is_empty() {
+        "gemini"
+    } else {
+        existing_provider
+    };
+    let requested = if requested_provider.trim().is_empty() {
+        "gemini"
+    } else {
+        requested_provider
+    };
+    existing == requested
+}
+
+pub fn upsert_account_with_provider(
+    email: String,
+    name: Option<String>,
+    token: TokenData,
+    provider: String,
+) -> Result<Account, String> {
     let _lock = ACCOUNT_INDEX_LOCK
         .lock()
         .map_err(|e| format!("failed_to_acquire_lock: {}", e))?;
@@ -821,7 +1040,7 @@ pub fn upsert_account(
     let existing_account_id = index
         .accounts
         .iter()
-        .find(|s| s.email == email)
+        .find(|s| s.email == email && provider_matches(&s.provider, &provider))
         .map(|s| s.id.clone());
 
     if let Some(account_id) = existing_account_id {
@@ -831,6 +1050,7 @@ pub fn upsert_account(
                 let old_access_token = account.token.access_token.clone();
                 let old_refresh_token = account.token.refresh_token.clone();
                 account.token = token;
+                account.provider = provider.clone();
                 account.name = name.clone();
                 // If an account was previously disabled (e.g. invalid_grant), any explicit token upsert
                 // should re-enable it (user manually updated credentials in the UI).
@@ -848,6 +1068,7 @@ pub fn upsert_account(
                 // Sync name in index
                 if let Some(idx_summary) = index.accounts.iter_mut().find(|s| s.id == account_id) {
                     idx_summary.name = name;
+                    idx_summary.provider = provider.clone();
                     save_account_index(&index)?;
                 }
 
@@ -859,18 +1080,15 @@ pub fn upsert_account(
                     account_id, e
                 ));
                 // Index exists but file is missing, recreating
-                let mut account = Account::new(
-                    account_id.clone(),
-                    email.clone(),
-                    token,
-                    "gemini".to_string(),
-                );
+                let mut account =
+                    Account::new(account_id.clone(), email.clone(), token, provider.clone());
                 account.name = name.clone();
                 save_account(&account)?;
 
                 // Sync name in index
                 if let Some(idx_summary) = index.accounts.iter_mut().find(|s| s.id == account_id) {
                     idx_summary.name = name;
+                    idx_summary.provider = provider.clone();
                     save_account_index(&index)?;
                 }
 
@@ -885,7 +1103,7 @@ pub fn upsert_account(
 
     // Release lock, let add_account handle it
     drop(_lock);
-    add_account(email, name, token)
+    add_account_with_provider(email, name, token, provider)
 }
 
 /// Delete account
