@@ -732,13 +732,27 @@ mod tests {
         assert_eq!(payload.provider, "codex");
     }
 
+    struct OAuthEnvGuard;
+    impl Drop for OAuthEnvGuard {
+        fn drop(&mut self) {
+            std::env::remove_var("ANTIGRAVITY_OAUTH_CLIENTS");
+            std::env::remove_var("ANTIGRAVITY_GOOGLE_OAUTH_CLIENT_ID");
+            std::env::remove_var("ANTIGRAVITY_GOOGLE_OAUTH_CLIENT_SECRET");
+        }
+    }
+
     #[tokio::test]
     async fn ensure_oauth_flow_prepared_replaces_existing_provider_flow() {
-        cancel_oauth_flow();
+        std::env::remove_var("ANTIGRAVITY_OAUTH_CLIENTS");
+        std::env::remove_var("ANTIGRAVITY_GOOGLE_OAUTH_CLIENT_ID");
+        std::env::remove_var("ANTIGRAVITY_GOOGLE_OAUTH_CLIENT_SECRET");
         std::env::set_var(
             "ANTIGRAVITY_OAUTH_CLIENTS",
             "test|client-id|client-secret|Test",
         );
+        let _env_guard = OAuthEnvGuard;
+        crate::modules::oauth::reload_oauth_registry_for_tests();
+        cancel_oauth_flow();
 
         let gemini_url = ensure_oauth_flow_prepared(None, None, None)
             .await

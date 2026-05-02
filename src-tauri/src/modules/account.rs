@@ -52,6 +52,14 @@ mod tests {
         }
     }
 
+    /// Guard that removes ABV_DATA_DIR env var on drop, ensuring cleanup even on panic.
+    struct AbvDataDirGuard;
+    impl Drop for AbvDataDirGuard {
+        fn drop(&mut self) {
+            std::env::remove_var("ABV_DATA_DIR");
+        }
+    }
+
     /// Helper to write corrupted content to accounts.json
     fn write_corrupted_index(path: &Path, content: &[u8]) {
         let index_path = path.join("accounts.json");
@@ -372,8 +380,10 @@ mod tests {
     #[test]
     fn test_upsert_account_with_provider_saves_codex_provider() {
         let _guard = TEST_MUTEX.lock().unwrap();
+        std::env::remove_var("ABV_DATA_DIR");
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", dir.path());
+        let _cleanup = AbvDataDirGuard;
 
         let token = TokenData::new(
             "codex_access_token".to_string(),
@@ -400,15 +410,15 @@ mod tests {
 
         let loaded = load_account(&account.id).expect("account file should be saved");
         assert_eq!(loaded.provider, "codex");
-
-        std::env::remove_var("ABV_DATA_DIR");
     }
 
     #[test]
     fn test_upsert_gemini_reuses_legacy_empty_provider_account() {
         let _guard = TEST_MUTEX.lock().unwrap();
+        std::env::remove_var("ABV_DATA_DIR");
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", dir.path());
+        let _cleanup = AbvDataDirGuard;
 
         let old_token = TokenData::new(
             "old_access_token".to_string(),
@@ -479,15 +489,15 @@ mod tests {
         let saved_index = load_account_index().expect("index should be readable");
         assert_eq!(saved_index.accounts.len(), 1);
         assert_eq!(saved_index.accounts[0].provider, "gemini");
-
-        std::env::remove_var("ABV_DATA_DIR");
     }
 
     #[test]
     fn test_upsert_gemini_reuses_legacy_missing_provider_account() {
         let _guard = TEST_MUTEX.lock().unwrap();
+        std::env::remove_var("ABV_DATA_DIR");
         let dir = TestDataDir::new();
         std::env::set_var("ABV_DATA_DIR", dir.path());
+        let _cleanup = AbvDataDirGuard;
 
         fs::create_dir_all(dir.path().join("accounts")).expect("accounts dir should be created");
         fs::write(
@@ -553,8 +563,6 @@ mod tests {
         let saved_index = load_account_index().expect("index should be readable");
         assert_eq!(saved_index.accounts.len(), 1);
         assert_eq!(saved_index.accounts[0].provider, "gemini");
-
-        std::env::remove_var("ABV_DATA_DIR");
     }
 }
 

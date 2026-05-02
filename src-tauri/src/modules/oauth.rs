@@ -734,6 +734,16 @@ pub async fn ensure_fresh_token(
     .with_oauth_client_key(oauth_client_key))
 }
 
+/// Reload OAuth client registry for tests (call after changing env vars).
+#[cfg(test)]
+pub(crate) fn reload_oauth_registry_for_tests() {
+    let mut registry = OAUTH_CLIENT_REGISTRY
+        .get_or_init(|| std::sync::RwLock::new(build_registry()))
+        .write()
+        .expect("OAuth registry lock poisoned");
+    *registry = build_registry();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
